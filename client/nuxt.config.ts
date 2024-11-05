@@ -1,11 +1,11 @@
 // client/nuxt.config.ts
-import { defineNuxtConfig } from 'nuxt/config';
 import path from 'path';
+import { defineNuxtConfig } from 'nuxt/config';
 
 export default defineNuxtConfig({
+  extends: ['packages/main', 'packages/cms'],
   devtools: { enabled: true },
   compatibilityDate: '2024-07-17',
-  extends: ['packages/main', 'packages/cms'],
   hooks: {
     'pages:extend'(pages) {
       pages.push({
@@ -20,5 +20,4 @@ export default defineNuxtConfig({
       });
     },
   },
-  pages:true,
 });
