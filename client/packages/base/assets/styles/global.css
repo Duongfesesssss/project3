@@ -1,0 +1,22 @@
+html,
+body {
+    font-size: 	0.95rem;
+    font-family: 'Roboto Condensed', sans-serif;
+}
+
+:root {
+    --p-form-field-shadow: none !important;
+}
+
+.required:after {
+    content: " *";
+    color: var(--p-red-400);
+}
+
+.p-inputnumber input {
+    width: 100%;
+}
+
+label {
+    font-weight: 700;
+}

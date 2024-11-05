@@ -1,5 +1,6 @@
 import Aura from '@primevue/themes/aura';
 import { defaultOptions } from 'primevue/config';
+import path from 'path';
 
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
@@ -26,7 +27,7 @@ export default defineNuxtConfig({
       ],
     },
   },
-  css: ['primeicons/primeicons.css'],
+  css: [path.resolve(__dirname, 'assets/styles/global.css'), 'primeicons/primeicons.css'],
   modules: [
     '@primevue/nuxt-module',
     '@nuxt/eslint',
@@ -120,7 +121,7 @@ export default defineNuxtConfig({
   components: true,
   runtimeConfig: {
     public: {
-      baseURL: process.env.BASE_URL,
+      baseURL: process.env.BASE_URL || 'http://localhost:8888',
     },
   },
   routeRules: {
