@@ -1,0 +1,14 @@
+{
+    "dependencies": {
+      "date-fns": "^3.6.0",
+      "chart.js": "^4.4.3",
+      "chartjs-plugin-datalabels": "^2.2.0",
+      "nuxt": "^3.12.4",
+      "vue": "latest"
+    },
+    "name": "main",
+    "private": true,
+    "type": "module",
+    "version": "1.0.0"
+  }
+  

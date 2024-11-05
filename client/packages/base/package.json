@@ -1,0 +1,40 @@
+{
+  "dependencies": {
+    "@nuxtjs/color-mode": "^3.5.2",
+    "@nuxtjs/google-fonts": "^3.2.0",
+    "@nuxtjs/tailwindcss": "^6.12.1",
+    "@primevue/themes": "^4.0.4",
+    "@sidebase/nuxt-auth": "^0.7.2",
+    "bootstrap": "^5.3.3",
+    "datatables.net": "^2.0.8",
+    "datatables.net-bs5": "^2.0.8",
+    "datatables.net-fixedcolumns-bs5": "^5.0.0",
+    "datatables.net-responsive-bs5": "^3.0.2",
+    "datatables.net-rowgroup-bs5": "^1.5.0",
+    "datatables.net-vue3": "^3.0.1",
+    "moment": "^2.30.1",
+    "numeral": "^2.0.6",
+    "nuxt": "^3.12.4",
+    "nuxt-maplibre": "^1.0.0",
+    "popper.js": "^1.16.1",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.2.1",
+    "quill": "^2.0.2",
+    "tailwindcss-primeui": "^0.3.4",
+    "vue": "latest"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "latest",
+    "@primevue/nuxt-module": "^4.0.3",
+    "eslint": "^9.7.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "sass": "^1.77.8",
+    "typescript": "^5.6.2",
+    "vue-tsc": "^2.1.6"
+  },
+  "main": "./nuxt.config.ts",
+  "name": "base",
+  "type": "module",
+  "version": "0.0.1"
+}
