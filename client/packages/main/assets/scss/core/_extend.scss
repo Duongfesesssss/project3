@@ -1,0 +1,95 @@
+/* word break */
+
+%break {
+  word-break: break-all;
+}
+
+%nowrap {
+  white-space: nowrap;
+}
+
+%no-elps {
+  white-space: normal;
+  text-overflow: clip;
+  -webkit-line-clamp: initial;
+}
+
+
+/* single line ellipsis  */
+
+%elps {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* multi line ellipsis */
+
+%ml-elps {
+  @extend %elps;
+  display: -webkit-box;
+  -webkit-line-clamp: 4; //default 4 line
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  &.line2 {
+    -webkit-line-clamp: 2; // 2 line
+  }
+  &.line3 {
+    -webkit-line-clamp: 3;
+  }
+  &.line4 {
+    -webkit-line-clamp: 4;
+  }
+  &.line5 {
+    -webkit-line-clamp: 5;
+  }
+  &.line6 {
+    -webkit-line-clamp: 6;
+  }
+  &.line7 {
+    -webkit-line-clamp: 7;
+  }
+  &.line8 {
+    -webkit-line-clamp: 8;
+  }
+  &.line9 {
+    -webkit-line-clamp: 9;
+  }
+}
+
+//Clearfix
+//Usage
+/* .container-with-floated-children {
+  @extend %clearfix;
+} */
+%clearfix {
+  *zoom: 1;
+  &:before, &:after {
+    content: " ";
+    display: table;
+  }
+  &:after {
+    clear: both;
+  }
+}
+/* Visually hide an element */
+//Usage
+/* <button class="mobile-navigation-trigger">
+  <b class="visually-hidden">Open the navigation</b>
+  <img src="img/mobile-navigation-icon.svg">
+</button>
+.visually-hidden {
+  @extend %visuallyhidden;
+} */
+%visuallyhidden {
+  margin: -1px;
+  padding: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip: rect(0, 0, 0, 0);
+  position: absolute;
+}
+

@@ -1,0 +1,13 @@
+/* Mixins can be extremely useful, keeping your markup free of superfluous 
+classes and establishing conventions, while saving time. 
+Having mixins whose names relate to the CSS properties they contain 
+helps to create associations between the two. */
+
+
+/* Mixin for text truncation, with ellipsis */
+
+@mixin text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

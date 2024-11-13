@@ -1,0 +1,246 @@
+/*************************************
+**************************************
+These are the styles for
+the navigation section
+**************************************
+/* device_change
+================================================== */
+.wrap_mc_pc,
+.wrap_mc_sp {
+  display: none;
+}
+
+.disp_pc .wrap_mc_sp,
+.disp_pc .wrap_mc_sp #tmp_switch_sp_style {
+  display: block;
+}
+
+.disp_pc #nav-control-sp,
+.disp_pc #smartphone-menu,
+.device_sp #smartphone-menu{
+  display: none;
+}
+.wrap-sma {
+  width: 100% !important;
+}
+.close-sma{
+  display: none;
+}
+#menu-sp-btn{
+  position: absolute;
+  right: 15px;
+  top: 14px;
+  z-index: 10;
+  width: 34px;
+  height: 34px;
+  display: none;
+  a{
+    display: block;
+    width: 34px;
+    height: 34px;
+  }
+  p{
+    margin: 0;
+  }
+  @media screen and (max-width: 1020px) {
+    display: block;
+  }
+}
+.slide-nav{
+  position: absolute;
+  right: -54px;
+  top: 0;
+  z-index: 10;
+  width: 54px;
+  height: 54px;
+  border-left: 0;
+  p{
+    margin: 0;
+    a{
+      padding: 4px;
+      width: 54px;
+      height: 54px;
+      border: 1px solid #D7DFEB;
+      display: block;
+      color: map-get($global-color, b);
+      background: map-get($global-color, a) url(#{$base-url}/icon-sidebar-close.svg) no-repeat center center;
+      text-indent: -9999em;
+      &.active{
+        background-image: url(#{$base-url}/icon-sidebar-open.svg);
+      }
+    }
+  }
+}
+/* sp_menu
+================================================== */
+#sub-menu-sp{
+  position: absolute;
+  top: 64px;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
+}
+.menu-sp-close{
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+@media screen and (max-width: 1020px) {
+  .menu-sp-open {
+    position: absolute;
+    width: 100%;
+    min-height: 100%;
+    z-index: 9999;
+    background: #ffffff;
+    color: #222222;
+    &:before {
+      content: "";
+      min-height: 100%;
+      height: 100%;
+      width: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      cursor: pointer;
+    }
+  }
+
+  .menu-sp-open #sub-menu-sp .close_btn {
+    display: block;
+  }
+
+  #nav-control-sp {
+    position: absolute;
+    right: 15px;
+    top: 12px;
+    padding: 0;
+    width: 33px;
+    height: 36px;
+    list-style: none;
+  }
+
+  .menu-sp-open #nav-control-sp {
+    display: inline-block;
+    list-style: none;
+  }
+  .menu-sp-open #sub-menu-sp{
+    display: block;
+  }
+  #nav-control-sp li a {
+    display: block;
+    width: 33px;
+    height: 36px;
+    text-decoration: none;
+  }
+
+  .sma_menu_open .menu_text {
+    padding-top: 33px;
+    display: block;
+    font-size: 14px;
+    color: map-get($global-color, active);
+    line-height: 1.1;
+    font-weight: bold;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .sma_menu_open.active .menu_text {
+    color: map-get($global-color, active);
+  }
+
+  .sma_menu_open {
+    position: relative;
+  }
+
+  .sma_menu_open .menu_icon {
+    @include border-radius(5px);
+    position: absolute;
+    top: 16px;
+    right: 0;
+    margin-left: 1px;
+    width: 30px;
+    height: 3px;
+    color: map-get($global-color, b);
+    background-color: map-get($global-color, a);
+    z-index: 10;
+    -moz-transition: all 0.3s ease 0s;
+    -webkit-transition: all 0.3s ease 0s;
+    transition: all 0.3s ease 0s;
+  }
+
+  .sma_menu_open .menu_icon:before,
+  .sma_menu_open .menu_icon:after {
+    @include border-radius(5px);
+    content: '';
+    height: 3px;
+    right: 0;
+    color: map-get($global-color, b);
+    background-color: map-get($global-color, a);
+    color: #ffffff;
+    position: absolute;
+    top: 0;
+    z-index: 1;
+    -moz-transition: all 0.3s ease 0s;
+    -webkit-transition: all 0.3s ease 0s;
+    transition: all 0.3s ease 0s;
+  }
+
+  .sma_menu_open .menu_icon:before {
+    top: -9px;
+    width: 30px;
+  }
+
+  .sma_menu_open .menu_icon:after {
+    top: 9px;
+    width: 30px;
+  }
+
+  .sma_menu_open.active {
+    // background-color: map-get($global-color, b);
+  }
+
+  .sma_menu_open.active .menu_icon {
+    // background-color: map-get($global-color, b);
+    background-color: transparent;
+  }
+
+  .sma_menu_open.active .menu_icon:before {
+    top: 0;
+    -moz-transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+    color: map-get($global-color, b);
+    background-color: map-get($global-color, a);
+  }
+
+  .sma_menu_open.active .menu_icon:after {
+    width: 30px;
+    -moz-transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+    color: map-get($global-color, b);
+    background-color: map-get($global-color, a);
+    top: 0;
+  }
+  .close_btn{
+    margin: 15px;
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: map-get($global-color, a);
+    a{
+      padding: 10px;
+      border: 2px solid map-get($global-color, a);
+      display: inline-block;
+      min-width: 200px;
+      color: map-get($global-color, a);
+      &:hover,
+      &:focus{
+        color: map-get($global-color, active);
+      }
+    }
+  }
+}

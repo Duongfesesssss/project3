@@ -1,0 +1,69 @@
+/*************************************
+**************************************
+These are the styles for
+the breadcrumb partial
+**************************************
+**************************************/
+.nav-breadcrumb {
+  @include clearfix();
+  position: relative;
+  clear: both;
+  margin: 0;
+  padding: 7px 23px;
+  z-index: 10;
+  display: block;
+  color: map-get($global-color, a);
+  background-color: map-get($global-color, e);
+  .breadcrumb{
+    @include border-radius(0);
+    padding: 0;
+    margin-bottom: 0;
+    list-style: none;
+    background: none;
+    font-size: 14px;
+    .breadcrumb-item{
+      padding-top: 3px;
+      padding-bottom: 3px;
+      font-weight: 600;
+      + .breadcrumb-item{
+        position: relative;
+        padding-left: 33px;
+        color: rgba(255, 255, 255, 0.7);
+        &:before{
+          @include transform(rotate(-45deg));
+          position: absolute;
+          top: 50%;
+          left: 12px;
+          margin-top: -4px;
+          content: '';
+          display: inline-block;
+          vertical-align: middle;
+          border: solid #FFFFFF;
+          border-width: 0 1px 1px 0;
+          display: inline-block;
+          padding: 3px;
+        }
+      }
+      a {
+        color: map-get($global-color, a);
+        &:hover,
+        &:focus {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+  span {
+    a {
+      color: map-get($global-color, title);
+      &:hover,
+      &:focus {
+        text-decoration: underline;
+        color: map-get($global-color, title);
+      }
+    }
+  }
+  @media (max-width: 767px) {
+    padding: 7px 15px;
+  }
+}

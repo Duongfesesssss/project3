@@ -54,15 +54,6 @@ export default defineNuxtConfig({
   webpack: {
     extractCSS: true,
   },
-  eslint: {
-    config: {
-      stylistic: {
-        indent: 2,
-        quotes: 'single',
-        semi: true,
-      },
-    },
-  },
   auth: {
     baseURL: process.env.BASE_URL,
     provider: {

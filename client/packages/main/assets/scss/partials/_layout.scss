@@ -1,0 +1,161 @@
+/*************************************
+**************************************
+Layout
+**************************************
+**************************************/
+
+#region-main {
+  @include clearfix();
+  margin: 0;
+  clear: both;
+  width: 100%;
+  color: map-get($global-color, b);
+  background-color: map-get($global-color, a);
+}
+.wrap-col-left {
+  position: relative;
+  z-index: 1;
+  float: left;
+  @media screen and (max-width: 850px) {
+    z-index: 5;
+    border-right: 1px solid #CCD4E1;
+  }
+}
+
+.wrap-col-right {
+  position: relative;
+  z-index: 1;
+  float: right;
+}
+
+.column-left .wrap-col-main {
+  width: 100%;
+  float: right;
+  @media screen and (max-width: 850px) {
+    float: none;
+    width: 100%;
+  }
+}
+
+.column-rnavi .wrap-col-main {
+  width: 100%;
+  float: left;
+}
+
+.col-main-inner {
+  position: relative;
+  padding: 0;
+}
+
+.define-child .wrap-col-left {
+  @include transition(transform 0.3s ease);
+  @include transform(translateX(0));
+  position: fixed;
+  top: 105px;
+  left: 0;
+  bottom: 0;
+  z-index: 150;
+  height: calc(100vh - 105px);
+  width: 350px;
+  color: map-get($global-color, b);
+  background-color: map-get($global-color, a);
+  &.side-expand{
+    margin-right: 0;
+    @include box-shadow(none);
+    @include transition(transform 0.3s ease);
+    @include transform(translateX(-350px));
+    @media screen and (max-width: 1020px) {
+      @include transform(translateX(-270px));
+    }
+  }
+  @media screen and (max-width: 1020px) {
+    top: 111px;
+    width: 270px;
+  }
+}
+.define-child .col-left-inner {
+  position: relative;
+  padding: 0;
+  height: 100%;
+  overflow-y: auto;
+  color: map-get($global-color, b);
+  background-color: map-get($global-color, a);
+  -webkit-overflow-scrolling: touch;
+  &::-webkit-scrollbar-button {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+  &::-webkit-scrollbar-corner {
+    background-color: transparent;
+  }
+  &::-webkit-scrollbar-track{
+    @include border-radius(0);
+    @include box-shadow(inset 0 0 6px rgba(0,0,0,0.2));
+    background-color: #FFFFFF;
+  }
+  &::-webkit-scrollbar{
+    height: 8px; /* height of horizontal scrollbar ← You're missing this */
+    width: 8px; /* width of vertical scrollbar */
+    background-color: #F5F5F5;
+  }
+  &::-webkit-scrollbar-thumb{
+    @include border-radius(0);
+    @include box-shadow(inset 0 0 6px rgba(0,0,0,0.2));
+    background-color: #e3e7eb;
+  }
+  // &::-webkit-scrollbar {
+  //   width: 10px;
+  //   background-color: #F5F5F5;
+  // }
+  // &::-webkit-scrollbar-track {
+  //   background: rgba(0,0,0,0.1);
+  //   border: 1px solid #ccc;
+  // }
+  // &::-webkit-scrollbar-thumb {
+  //   background: linear-gradient(left, #fff, #e4e4e4);
+  //   border: 1px solid #aaa;
+  // }
+  // &::-webkit-scrollbar-thumb:hover {
+  //   background: #fff;
+  // }
+  // &::-webkit-scrollbar-thumb:active {
+  //   background: linear-gradient(left, #22ADD4, #1E98BA);
+  // }
+  @media screen and (max-width: 850px) {
+    min-height: inherit !important;
+  }
+}
+
+.define-child .wrap-col-right {
+  width: 350px;
+}
+
+.define-child .col-right-inner {
+  padding: 10px;
+  color: inherit;
+  background-color: map-get($global-color, default);
+}
+
+.define-child .column-left .col-main-inner {
+  transition: 0.3s margin-left;
+  -moz-transition: 0.3s margin-left;
+  -webkit-transition: 0.3s margin-left;
+  position: relative;
+  z-index: 2;
+  color: map-get($global-color, b);
+  background-color: map-get($global-color, d);
+  border-left: 1px solid #ccd4e1;
+  @media screen and (max-width: 850px) {
+    margin-left: 0;
+    border-left: 0;
+    min-height: inherit !important;
+  }
+}
+.define-child .column-rnavi .wrap-col-main {
+  margin-right: -350px;
+}
+
+.define-child .column-rnavi .col-main-inner {
+  margin-right: 350px;
+}

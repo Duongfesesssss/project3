@@ -1,0 +1,522 @@
+/*************************************
+**************************************
+These are the styles for
+the flash thumb section
+**************************************
+**************************************/
+
+
+/*part 1*/
+
+.flash-background {
+  -webkit-animation: placeHolderShimmer 1s linear infinite forwards;
+  animation: placeHolderShimmer 1s linear infinite forwards;
+  background-image: -owg-linear-gradient(to right, #f6f7f8 0, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+  background-image: -webkit-linear-gradient(90deg, #f6f7f8 0, #edeef1 20%, #f6f7f8 40%, #f6f7f8);
+  background-image: linear-gradient(90deg, #f6f7f8 0, #edeef1 20%, #f6f7f8 40%, #f6f7f8);
+  background-size: 1300px 104px;
+  position: relative;
+  overflow: hidden
+}
+
+.flash-background .flash-mask {
+  background: #fff;
+  position: absolute
+}
+
+.flash-background.flash-thumbnail {
+  height: 330px
+}
+
+.flash-background.flash-thumbnail .flash-mask:nth-child(1) {
+  top: 180px;
+  left: 0;
+  width: 100%;
+  height: 20px
+}
+
+.flash-background.flash-thumbnail .flash-mask:nth-child(2) {
+  top: 200px;
+  left: 50px;
+  width: calc(100% - 50px);
+  height: 10px
+}
+
+.flash-background.flash-thumbnail .flash-mask:nth-child(3) {
+  top: 210px;
+  left: 50px;
+  width: 10px;
+  height: 10px
+}
+
+.flash-background.flash-thumbnail .flash-mask:nth-child(4) {
+  top: 220px;
+  left: 50px;
+  width: calc(100% - 50px);
+  height: 10px
+}
+
+.flash-background.flash-thumbnail .flash-mask:nth-child(5) {
+  top: 230px;
+  left: 0;
+  width: 100%;
+  height: 30px
+}
+
+.flash-background.flash-thumbnail .flash-mask:nth-child(6) {
+  top: 200px;
+  left: 0;
+  width: 20px;
+  height: 30px
+}
+
+.flash-background.flash-thumbnail .flash-mask:nth-child(7) {
+  top: 200px;
+  right: 0;
+  width: 20px;
+  height: 30px
+}
+
+.flash-background.flash-thumbnail .flash-mask:nth-child(8) {
+  top: 260px;
+  left: 0;
+  width: 20px;
+  height: 50px
+}
+
+.flash-background.flash-thumbnail .flash-mask:nth-child(9) {
+  top: 260px;
+  left: auto;
+  right: 0;
+  width: 20px;
+  height: 50px
+}
+
+.flash-background.flash-thumbnail .flash-mask:nth-child(10) {
+  top: 270px;
+  left: 20px;
+  width: calc(100% - 40px);
+  height: 10px
+}
+
+.flash-background.flash-thumbnail .flash-mask:nth-child(11) {
+  top: 290px;
+  left: 20px;
+  width: calc(100% - 80px);
+  height: 10px
+}
+
+.flash-background.flash-thumbnail .flash-mask:nth-child(12) {
+  top: 310px;
+  left: 0;
+  width: 100%;
+  height: 20px
+}
+
+.flash-background.flash-thumbnail .flash-mask:nth-child(13) {
+  top: 280px;
+  right: 20px;
+  width: 40px;
+  height: 30px
+}
+
+.flash-background.flash-thumbnail .flash-mask:nth-child(14) {
+  top: 300px;
+  right: 60px;
+  width: 30px;
+  height: 10px
+}
+
+@-webkit-keyframes placeHolderShimmer {
+  0% {
+    background-position: -600px 0
+  }
+  to {
+    background-position: 600px 0
+  }
+}
+
+@keyframes placeHolderShimmer {
+  0% {
+    background-position: -600px 0
+  }
+  to {
+    background-position: 600px 0
+  }
+}
+
+
+/*part 2*/
+
+.flash-background.style-3 {
+  margin-bottom: 30px;
+  height: 545px
+}
+
+.flash-background.style-3 .flash-mask {
+  right: 0
+}
+
+.flash-background.style-3 .flash-mask:nth-child(1) {
+  top: 425px;
+  left: 0;
+  height: 20px
+}
+
+.flash-background.style-3 .flash-mask:nth-child(2) {
+  top: 445px;
+  left: 70%;
+  height: 10px
+}
+
+.flash-background.style-3 .flash-mask:nth-child(3) {
+  top: 455px;
+  left: 0;
+  height: 10px
+}
+
+.flash-background.style-3 .flash-mask:nth-child(4) {
+  top: 475px;
+  left: 0;
+  height: 20px
+}
+
+.flash-background.style-3 .flash-mask:nth-child(5) {
+  top: 495px;
+  left: 50px;
+  height: 20px
+}
+
+.flash-background.style-3 .flash-mask:nth-child(6) {
+  top: 515px;
+  left: 50px;
+  width: 20px;
+  height: 10px
+}
+
+.flash-background.style-3 .flash-mask:nth-child(7) {
+  top: 515px;
+  left: 50%;
+  width: 20%;
+  height: 10px
+}
+
+.flash-background.style-3 .flash-mask:nth-child(8) {
+  top: 525px;
+  left: 50px;
+  height: 20px
+}
+
+.flash-background.style-3 .flash-mask:nth-child(9) {
+  top: 545px;
+  left: 0;
+  height: 10px
+}
+
+
+/*part 3*/
+
+.animated-background {
+  -webkit-animation-duration: 1s;
+  animation-duration: 1s;
+  -webkit-animation-fill-mode: forwards;
+  animation-fill-mode: forwards;
+  -webkit-animation-iteration-count: infinite;
+  animation-iteration-count: infinite;
+  -webkit-animation-name: placeHolderShimmerMasker;
+  animation-name: placeHolderShimmerMasker;
+  -webkit-animation-timing-function: linear;
+  animation-timing-function: linear;
+  background: #f6f7f8;
+  background: #eee;
+  background: linear-gradient(to right, #eee 8%, #ddd 18%, #eee 33%);
+  background-size: 800px 104px;
+  height: 96px;
+  position: relative
+}
+
+.background-masker {
+  background: #fff;
+  position: absolute;
+  box-sizing: border-box
+}
+
+.background-masker.header-top,
+.background-masker.header-bottom,
+.background-masker.subheader-bottom {
+  top: 0;
+  left: 40px;
+  right: 0;
+  height: 10px
+}
+
+.background-masker.header-left,
+.background-masker.subheader-left,
+.background-masker.header-right,
+.background-masker.subheader-right {
+  top: 10px;
+  left: 40px;
+  height: 8px;
+  width: 10px
+}
+
+.background-masker.header-bottom {
+  top: 18px;
+  height: 6px
+}
+
+.background-masker.subheader-left,
+.background-masker.subheader-right {
+  top: 24px;
+  height: 6px
+}
+
+.background-masker.header-right,
+.background-masker.subheader-right {
+  width: auto;
+  left: 300px;
+  right: 0
+}
+
+.background-masker.subheader-right {
+  left: 230px
+}
+
+.background-masker.subheader-bottom {
+  top: 30px;
+  height: 10px
+}
+
+.background-masker.content-top,
+.background-masker.content-second-line,
+.background-masker.content-third-line,
+.background-masker.content-second-end,
+.background-masker.content-third-end,
+.background-masker.content-first-end {
+  top: 40px;
+  left: 0;
+  right: 0;
+  height: 6px
+}
+
+.background-masker.content-top {
+  height: 20px
+}
+
+.background-masker.content-top-2 {
+  height: 20px
+}
+
+.background-masker.content-first-end,
+.background-masker.content-second-end,
+.background-masker.content-third-end {
+  width: auto;
+  left: 380px;
+  right: 0;
+  top: 60px;
+  height: 8px
+}
+
+.background-masker.content-second-line {
+  top: 68px
+}
+
+.background-masker.content-second-end {
+  left: 420px;
+  top: 74px
+}
+
+.background-masker.content-third-line {
+  top: 82px
+}
+
+.background-masker.content-third-end {
+  left: 300px;
+  top: 88px
+}
+
+@-webkit-keyframes placeHolderShimmerMasker {
+  0% {
+    background-position: -468px 0
+  }
+  100% {
+    background-position: 468px 0
+  }
+}
+
+@keyframes placeHolderShimmerMasker {
+  0% {
+    background-position: -468px 0
+  }
+  100% {
+    background-position: 468px 0
+  }
+}
+
+@media (max-width:1199px) {
+  .flash-background.style-3 {
+    height: 433px
+  }
+  .flash-background.style-3 .flash-mask {
+    right: 0
+  }
+  .flash-background.style-3 .flash-mask:nth-child(1) {
+    top: 313px;
+    left: 0;
+    height: 20px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(2) {
+    top: 333px;
+    left: 70%;
+    height: 10px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(3) {
+    top: 343px;
+    left: 0;
+    height: 10px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(4) {
+    top: 363px;
+    left: 0;
+    height: 20px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(5) {
+    top: 383px;
+    left: 50px;
+    height: 20px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(6) {
+    top: 403px;
+    left: 50px;
+    width: 20px;
+    height: 10px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(7) {
+    top: 403px;
+    left: 50%;
+    width: 20%;
+    height: 10px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(8) {
+    top: 413px;
+    left: 50px;
+    height: 20px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(9) {
+    top: 433px;
+    left: 0;
+    height: 10px
+  }
+}
+
+@media (max-width:991px) {
+  .flash-background.style-3 {
+    height: 422px
+  }
+  .flash-background.style-3 .flash-mask {
+    right: 0
+  }
+  .flash-background.style-3 .flash-mask:nth-child(1) {
+    top: 302px;
+    left: 0;
+    height: 20px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(2) {
+    top: 322px;
+    left: 70%;
+    height: 10px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(3) {
+    top: 332px;
+    left: 0;
+    height: 10px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(4) {
+    top: 352px;
+    left: 0;
+    height: 20px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(5) {
+    top: 372px;
+    left: 50px;
+    height: 20px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(6) {
+    top: 392px;
+    left: 50px;
+    width: 20px;
+    height: 10px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(7) {
+    top: 392px;
+    left: 50%;
+    width: 20%;
+    height: 10px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(8) {
+    top: 402px;
+    left: 50px;
+    height: 20px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(9) {
+    top: 422px;
+    left: 0;
+    height: 10px
+  }
+}
+
+@media (max-width:767px) {
+  .flash-background.style-3 {
+    height: 320px
+  }
+  .flash-background.style-3 .flash-mask {
+    right: 0
+  }
+  .flash-background.style-3 .flash-mask:nth-child(1) {
+    top: 200px;
+    left: 0;
+    height: 20px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(2) {
+    top: 220px;
+    left: 70%;
+    height: 10px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(3) {
+    top: 230px;
+    left: 0;
+    height: 10px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(4) {
+    top: 250px;
+    left: 0;
+    height: 20px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(5) {
+    top: 270px;
+    left: 50px;
+    height: 20px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(6) {
+    top: 290px;
+    left: 50px;
+    width: 20px;
+    height: 10px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(7) {
+    top: 290px;
+    left: 50%;
+    width: 20%;
+    height: 10px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(8) {
+    top: 300px;
+    left: 50px;
+    height: 20px
+  }
+  .flash-background.style-3 .flash-mask:nth-child(9) {
+    top: 320px;
+    left: 0;
+    height: 10px
+  }
+}

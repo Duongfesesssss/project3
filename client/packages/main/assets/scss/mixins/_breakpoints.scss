@@ -1,0 +1,26 @@
+// This can be stored globally and can be pulled in by the mixin
+//Usage:
+// .sample {
+//   font-size: 30rem;
+//   @include breakpoint(medium) {
+//     font-size: 22rem;
+//   }
+// }
+// $breakpoints: (
+//   'tiny':   ( max-width:  767px ),
+//   'small':  ( min-width:  768px ),
+//   'medium': ( min-width:  992px ),
+//   'large':  ( min-width: 1200px ),
+//   'custom': ( min-height:  40em )
+// );
+// Creating the mixin
+// @mixin breakpoint($name) {
+//   @if map-has-key($breakpoints, $name) {
+//     @media #{inspect(map-get($breakpoints, $name))} {
+//       @content;
+//     }
+//   }
+//   @else {
+//     @warn "Couldn't find a your breakpoint named `#{$name}`.";
+//   }
+// }

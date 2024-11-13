@@ -1,0 +1,23 @@
+// Generating CSS multiline text with ellipsis
+// Example
+//.text-multiline {
+//  @include text-multiline();
+//}
+$font-size: 26px;
+$line-height: 1.4;
+$lines-to-show: 3;
+@mixin text-multiline {
+  display: block;
+  /* Fallback for non-webkit */
+  display: -webkit-box;
+  max-width: 400px;
+  height: $font-size*$line-height*$lines-to-show;
+  /* Fallback for non-webkit */
+  margin: 0 auto;
+  font-size: $font-size;
+  line-height: $line-height;
+  -webkit-line-clamp: $lines-to-show;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

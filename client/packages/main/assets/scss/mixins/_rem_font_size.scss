@@ -1,0 +1,23 @@
+// Set a rem font size with pixel fallback
+//Usage
+
+/* p {
+  @include font-size(14px)
+} */
+
+//Output
+
+/* p {
+  font-size: 14px; //Will be overridden if browser supports rem
+  font-size: 0.8rem;
+} */
+
+@function calculateRem($size) {
+  $remSize: $size / 16px;
+  @return $remSize * 1rem;
+}
+
+@mixin font-size($size) {
+  font-size: $size;
+  font-size: calculateRem($size);
+}

@@ -1,0 +1,17 @@
+// Very simple and pragmatic mixin for applying hover and active states in one go
+// When we give an element some 'attention'
+//
+// Example usage (.scss):
+//
+// a {
+//   @include attention {
+//     color: #aaa;
+//   }
+// }
+@mixin attention() {
+  &:hover,
+  &:active,
+  &:focus {
+    @content;
+  }
+}

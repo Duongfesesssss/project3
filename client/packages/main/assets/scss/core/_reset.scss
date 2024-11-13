@@ -1,0 +1,148 @@
+//-------------------------------------
+//  Reset a.k.a @include global-reset
+//-------------------------------------
+// Based on Eric Meyer's reset 2.0 Global reset rules. 
+// For more specific resets, use the reset mixins provided below
+// http://meyerweb.com/eric/tools/css/reset/
+
+/*----- reset -----*/
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+img {
+  vertical-align: top
+}
+/*----- common -----*/
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  color: map-get($global-color, b);
+  background-color: map-get($global-color, content);
+  font-size: 100%;
+  font-weight: 400;
+  font-family: "Roboto Condensed", sans-serif;
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+textarea:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+select:-webkit-autofill:active {
+  background-color: #fff !important;
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  outline: none !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+a {
+  &:link,
+  &:visited,
+  &:hover,
+  &:focus {
+    //@include transition(all 0.3s ease-in-out);
+    color: map-get($global-color, active);
+    text-decoration: none;
+    
+  }
+  &:link{
+    color: map-get($global-color, active);
+  }
+  &:focus {
+    // outline: thin dotted;
+    // outline: 5px auto -webkit-focus-ring-color;
+    // outline-offset: -2px;
+  }
+  &:hover,
+  &:focus {
+    // outline: thin dotted;
+    // outline: 5px auto -webkit-focus-ring-color;
+    // outline-offset: -2px;
+    color: map-get($global-color, active_hvr);
+  }
+}
+.btn,
+.btn:hover,
+.btn:active {
+  // @include transition(all 0.3s ease-in-out);
+  outline: 0 !important;
+}
+img {
+  width: auto\9;
+  height: auto;
+  max-width: 100%;
+  vertical-align: middle;
+  object-fit: cover;
+  -ms-interpolation-mode: bicubic;
+  -webkit-animation: smooth-image 1.2s;
+  -moz-animation: smooth-image 1.2s;
+  animation: smooth-image 1.2s;
+}
+img:not([src]):not([srcset]) {
+  visibility: hidden
+}
+
+@-moz-document url-prefix() {
+  img:-moz-loading {
+    visibility: hidden
+  }
+}
+.fade.in {
+  opacity: 1;
+}
+.fade {
+  -webkit-transition: opacity .15s linear;
+  -o-transition: opacity .15s linear;
+  transition: opacity .15s linear;
+}
+.img {
+  opacity: 0;
+  visibility: hidden;
+  position: relative;
+  display: block;
+  overflow: hidden
+}
+
+.img::before {
+  background: -webkit-gradient(linear, left top, right top, from(rgba(255, 255, 255, 0)), color-stop(10%, #fff), to(white));
+  background: linear-gradient(to right, rgba(255, 255, 255, 0) 0, #fff 10%, #fff 100%);
+  position: absolute;
+  content: '';
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 110%;
+  -webkit-transition: -webkit-transform 1s cubic-bezier(.19, 1, .22, 1);
+  transition: -webkit-transform 1s cubic-bezier(.19, 1, .22, 1);
+  transition: transform 1s cubic-bezier(.19, 1, .22, 1);
+  transition: transform 1s cubic-bezier(.19, 1, .22, 1), -webkit-transform 1s cubic-bezier(.19, 1, .22, 1)
+}
+
+.img.loaded:not(.mask-cover) {
+  opacity: 1;
+  visibility: visible;
+  -webkit-transition: opacity 1s;
+  transition: opacity 1s
+}
+
+.img.loaded:not(.mask-cover):before {
+  -webkit-transform: translateX(100%);
+  transform: translateX(100%)
+}
+
+.full-width-dark .img:before {
+  background: -webkit-gradient(linear, left top, right top, from(rgba(30, 33, 34, 0)), color-stop(10%, #1e2122), to(#1e2122));
+  background: linear-gradient(to right, rgba(30, 33, 34, 0) 0, #1e2122 10%, #1e2122 100%)
+}

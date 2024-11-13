@@ -1,0 +1,353 @@
+/*************************************
+**************************************
+These are the styles for
+the search result page
+**************************************
+**************************************/
+.modal{
+  z-index: 9999;
+}
+.modal-general{
+  .modal-header{
+    @include border-radius(12px 12px 0 0);
+    padding: 16px 35px 15px 20px;
+    border-bottom: 0;
+    color: map-get($global-color, a);
+    background-color: map-get($global-color, active);
+    .close{
+      right: 12px;
+      top: 15px;
+      margin: 0;
+      padding: 3px;
+      border: 0;
+      color: inherit;
+      background-color: transparent;
+      opacity: 1;
+    }
+    .modal-title{
+      font-size: 100%;
+      font-weight: 700;
+      color: map-get($global-color, a);
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+  }
+  .modal-body{
+    position: relative;
+    padding: 17px 20px 20px;
+    background-color: map-get($global-color, a);
+    &:after{
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: 0;
+      right: 0;
+      z-index: 1;
+      height: 4px;
+      color: map-get($global-color, b);
+      background-color: map-get($global-color, a);
+    }
+  }
+  .modal-content{
+    @include border-radius(12px);
+    @include box-shadow(0 4px 22px 0 rgba(0,0,0,0.12));
+    color: map-get($global-color, b);
+    background-color: transparent;
+    border: 0;
+  }
+  .modal-footer{
+    @include border-radius(0 0 12px 12px);
+    padding: 20px;
+    color: map-get($global-color, b);
+    background-color: map-get($global-color, a);
+    justify-content: space-between;
+    border: 0;
+    border-top: 1px solid #d7dfeb;
+    p{
+      margin-bottom: 0;
+      &.modal-footer-paragraph{
+        font-size: 14px;
+      }
+    }
+    &.justify-right{
+      justify-content: flex-end;
+    }
+    @media screen and (max-width: 600px) {
+      padding: 20px 15px;
+    }
+  }
+}
+.link-bold{
+  font-weight: 700;
+}
+.modal-login,
+.modal-registries{
+  .checkbox__styled__label{
+    line-height: 1.3;
+  }
+  .size-label{
+    font-size: 87.5%;
+    text-transform: inherit;
+    a{
+      color: map-get($global-color, g);
+      &:hover,
+      &:focus{
+        color: map-get($global-color, active);
+      }
+    }
+  }
+}
+.label-form{
+  margin-bottom: 4px;
+  font-size: 93.75%;
+  font-weight: 500;
+  color: map-get($global-color, b);
+  .require_color{
+    color: #ac1919;
+    font-weight: 700;
+  }
+}
+.paragraph-forgot{
+  margin-bottom: 1.7rem;
+  font-size: 1.3rem;
+  color: map-get($global-color, b);
+}
+.forgot-link{
+  padding: 0;
+  text-align: right;
+  font-size: 14px;
+  a{
+    color: #0267CD;
+    background-color: transparent;
+    font-weight: 500;
+    text-decoration: underline;
+    &:hover,
+    &:focus{
+      color: map-get($global-color, active);
+      background-color: transparent;
+      text-decoration: none;
+    }
+  }
+}
+.captcha-box{
+  @include clearfix();
+  text-align: center;
+}
+.link-login-modal,
+.link-registration,
+a.link-registration,
+a.link-login-modal{
+  color: map-get($global-color, active);
+  background-color: transparent;
+  font-weight: 700;
+  text-decoration: none;
+  &:hover,
+  &:focus{
+    color: #fc1c03;
+    background-color: transparent;
+    text-decoration: underline;
+  }
+}
+.modal-form {
+  .form-group {
+    @include clearfix();
+    margin-bottom: 0;
+    .form-input{
+      position: relative;
+      margin-bottom: 15px;
+      &.form-input-email{
+        text-align: center;
+        .btn-contact{
+          text-align: center;
+          display: block;
+          width: 100%;
+        }
+      }
+    }
+  }
+  .panel-password{
+    @include clearfix();
+    position: relative;
+    .form-control{
+      padding-right: 30px
+    }
+  }
+  .form-control {
+    @include border-radius(3px);
+    font-size: 14px;
+    border: 1px solid #D7DFEB;
+    padding: 3px 10px;
+    height: 42px;
+    color: map-get($global-color, b);
+    &:focus{
+      @include box-shadow(0 0 0 0.2rem rgba(4, 91, 216, 0.5));
+      border-color: map-get($global-color, d);
+      outline: 0;
+    }
+  }
+  textarea.form-control{
+    resize: vertical;
+    height: 114px;
+    overflow-y: auto;
+  }
+  select.form-control:not([size]):not([multiple]),
+  select.form-control {
+    height: 32px !important;
+  }
+  .checkbox__styled{
+    padding: 0;
+  }
+  .has-error{
+    .label-control,
+    .label-form{
+      color: #a94442;
+    }
+    .form-control{
+      @include box-shadow(inset 0 1px 1px rgba(0, 0, 0, 0.075));
+      border-color: #a94442;
+      &:focus{
+        @include box-shadow(inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #ce8483);
+        border-color: #843534;
+        outline: 0;
+      }
+    }
+    .paragraph-error{
+      margin: 7px 0 0;
+      font-size: 14px;
+      color: #a94442;
+    }
+  }
+  @media(max-width: 767px) {
+    margin-bottom: 0;
+  }
+}
+.note-login{
+  font-size: 14px;
+  color: #2C2C2C;
+}
+.form-submit{
+  text-align: center;
+  .btn-contact{
+    text-align: center;
+    display: block;
+    width: 100%;
+  }
+}
+.modal-dike,
+  .modal-indicator{
+    .modal-dialog {
+      .modal-body{
+        padding: 0;
+      }
+    }
+  }
+@media (min-width: 470px) {
+  .modal-general {
+    .modal-dialog {
+      max-width: 450px;
+      margin: 0 auto;
+      padding: 2rem 0;
+    }
+  }
+}
+@media (max-width: 470px) {
+  .modal-general {
+    .modal-dialog {
+      margin: 1.5rem 15px;
+    }
+  }
+}
+.link-registration{
+  @media (max-width: 400px) {
+    display: inline-block;
+    clear: both;
+  }
+}
+.contact-form-forgot {
+  .label-control{
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #9B9B9B;
+  }
+  .form-group {
+    @include clearfix();
+    margin-bottom: 15px;
+    .btn-registry{
+      margin-left: 5px;
+      float: right;
+      @media screen and (max-width: 767px) {
+        float: none;
+        display: block;
+        max-width: 160px;
+        margin: 15px auto 0;
+      }
+    }
+  }
+  .form-control {
+    @include border-radius(2px);
+    font-size: 1.3rem;
+    border-color: #DBDFE4;
+    padding: 5px 10px;
+    height: 32px;
+    &:focus{
+      @include box-shadow(0 0 0 0.2rem rgba(4, 91, 216, 0.25));
+      border-color: map-get($global-color, accent);
+      outline: 0;
+    }
+  }
+  textarea.form-control{
+    resize: vertical;
+    height: 100px;
+    overflow-y: auto;
+  }
+  select.form-control:not([size]):not([multiple]),
+  select.form-control {
+    height: 4rem !important;
+  }
+  .btn-contact{
+    margin-top: 10px;
+    .icons-send{
+      margin-right: 7px;
+    }
+    @media screen and (max-width: 767px) {
+      display: block;
+      margin: 18px auto 0;
+    }
+  }
+  @media screen and (max-width: 1050px) {
+    padding-bottom: 2rem;
+  }
+}
+.toggle-password{
+  position: absolute;
+  right: 10px;
+  top: 11px;
+  z-index: 5;
+  padding: 3px;
+  font-size: 14px;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+  cursor: pointer;
+}
+.form-duality{
+  @include clearfix();
+  .checkbox__styled{
+    float: left;
+    @media (max-width: 350px) {
+      float: none;
+    }
+  }
+  .forgot-link{
+    padding-top: 2px;
+    float: right;
+    @media (max-width: 350px) {
+      float: none;
+    }
+  }
+}
+.paragraph-forgot{
+  margin-bottom: 0;
+  font-size: 87.5%;
+}

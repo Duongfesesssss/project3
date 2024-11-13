@@ -1,0 +1,13 @@
+// Generating word-wrap
+// Example
+//.flexbox {
+//  @include flexbox();
+//}
+// flexbox
+@mixin flexbox {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-flex;
+  display: -ms-flexbox;
+  display: flex;
+}

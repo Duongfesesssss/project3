@@ -1,0 +1,49 @@
+/*************************************
+**************************************
+These are the styles for
+the icons section
+**************************************
+**************************************/
+
+[class^="icons-"],
+[class*=" icons-"] {
+	position: relative;
+	z-index: 10;
+  display: inline-block;
+  *margin-right: .3em;
+  vertical-align: middle;
+  background-image: url("../images/front/sprite.png") !important;
+}
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  [class^="icons-"],
+  [class*=" icons-"] {
+    background-image: url("../images/front/sprite@2x.png") !important;
+  }
+}
+//icons normal
+//@include sprites($spritesheet-sprites);
+//icons retina
+@include retina-sprites($retina-groups);
+/*************************************
+**************************************
+icon svg
+**************************************
+**************************************/
+[class^="icon-"],
+[class*=" icon-"] {
+	position: relative;
+	z-index: 10;
+  display: inline-block;
+  *margin-right: .3em;
+  color: inherit;
+  vertical-align: top;
+}
+.icon-popup{
+  width: 16px;
+  height: 16px;
+  vertical-align: top;
+  background: url(#{$base-url}/icon-close-popup.svg) no-repeat scroll transparent;
+  background-size: 100%;
+  -webkit-background-size: 100%;
+}
