@@ -1,0 +1,8 @@
+// For better font-rendering on OS X
+// Example: @include scale($factor)
+@mixin scale ($factor) {
+  -webkit-transform: scale($factor);
+  -moz-transform: scale($factor);
+  -ms-transform: scale($factor);
+  -o-transform: scale($factor);
+}

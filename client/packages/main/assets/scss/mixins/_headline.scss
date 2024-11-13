@@ -1,0 +1,9 @@
+// Generating headline
+// Example: @include headline(10px, #000);
+// h1 {
+//   @include headline($color: blue, $size: 12px);
+// }
+@mixin headline($size, $color: red) {
+  color: $color;
+  font-size: $size;
+}

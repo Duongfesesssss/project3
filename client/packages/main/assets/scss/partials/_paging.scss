@@ -1,0 +1,112 @@
+/*************************************
+**************************************
+These are the styles for
+the paging section
+**************************************
+**************************************/
+
+.section-paging {
+  @include clearfix();
+  @include border-radius(0 0 6px 6px);
+  margin-bottom: 0;
+  padding: 20px 0 15px;
+  border-top: 0;
+  text-align: center;
+  color: map-get($global-color, b);
+  background-color: map-get($global-color, a);
+  border: 1px solid #D2D9E8;
+  border-top: 0;
+  .pagination {
+    @include border-radius(0);
+    position: relative;
+    padding: 0 36px 0 40px;
+    margin-bottom: 0;
+    display: inline-block;
+    min-height: 32px;
+    .prev-arrow,
+    .next-arrow{
+      @include border-radius(0);
+      position: absolute;
+      top: 12px;
+      display: inline-block;
+      font-size: 0;
+      border: solid #ADB3BA;
+      border-width: 0 1px 1px 0;
+      display: inline-block;
+      padding: 3px;
+      margin: 0;
+      width: auto;
+      height: auto;
+      font-weight: normal;
+      background-color: transparent;
+    }
+    .prev-arrow{
+      left: 13px;
+      @include transform(rotate(135deg));
+    }
+    .next-arrow{
+      left: 10px;
+      @include transform(rotate(-45deg));
+    }
+    li {
+      margin: 0 4px 10px 0;
+      display: inline-block;
+      vertical-align: top;
+      a,span {
+        @include border-radius(6px);
+        @include transition(0.2s all ease-in-out);
+        position: relative;
+        display: block;
+        margin-left: -1px;
+        line-height: 1.1;
+        font-size: 1.3rem;
+        border: solid 1px #D2D9E8;
+        font-weight: 400;
+        color: map-get($global-color, b);
+        background-color: map-get($global-color, a);
+        padding: .9rem .2rem .7rem;
+        width: 32px;
+        height: 32px;
+        &:hover,
+        &:focus {
+          @include transition(0.2s all ease-in-out);
+          font-weight: 600;
+          color: map-get($global-color, a);
+          border-color: map-get($global-color, active);
+          background-color: map-get($global-color, active);
+        }
+      }
+      &.prev,
+      &.next{
+        position: absolute;
+        top: 0;
+        margin: 0;
+      }
+      &.prev{
+        left: 0;
+      }
+      &.next{
+        right: 0;
+      }
+      &.prev a,
+      &.next a {
+        position: relative;
+        display: block;
+        cursor: pointer;
+      }
+      &.active a {
+        @include box-shadow(0 4px 8px 0 rgba(91, 87, 75, 0.12));
+        font-weight: 600;
+        color: map-get($global-color, active);
+        border-color: map-get($global-color, active);
+        background-color: map-get($global-color, a);
+      }
+      &.prev a:hover .prev-arrow,
+      &.prev a:focus .prev-arrow,
+      &.next a:hover .next-arrow,
+      &.next a:focus .next-arrow {
+        border-color: #ffffff;
+      }
+    }
+  }
+}

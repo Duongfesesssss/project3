@@ -1,0 +1,218 @@
+/*************************************
+**************************************
+These are the styles for
+the main content section
+**************************************
+**************************************/
+
+.container {
+  @include clearfix();
+  padding: 0;
+  @media screen and (min-width: 992px) {
+    max-width: 100%;
+  }
+
+  @media screen and (min-width: 1200px) {
+    max-width: 100%;
+  }
+
+  @media screen and (max-width: 1180px) {
+    max-width: 100%;
+  }
+  @include media-breakpoint-down(md) {
+    max-width: 100%;
+    padding: 0;
+  }
+}
+.define-management {
+  .container {
+    padding: 0 15px;
+  }
+}
+#region-contents{
+  h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6{
+    line-height: 1.4;
+  }
+}
+
+#wrapper {
+  position: relative;
+  margin: 0 auto;
+}
+
+
+/*----- Content -----*/
+
+#page-content {
+  @include clearfix();
+}
+
+.main-content {
+  // @include word-wrap();
+  // position: absolute;
+  // top: 0;
+  // left: 0;
+  // right: 0;
+  // bottom: 0;
+  padding: 10px;
+  color: map-get($global-color, b);
+  background-color: map-get($global-color, content);
+  min-height: calc(100vh - 105px - 116px);
+  width: 100%;
+  overflow-y: auto;
+  &::-webkit-scrollbar-button {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+  &::-webkit-scrollbar-corner {
+    background-color: transparent;
+  }
+  &::-webkit-scrollbar-track{
+    @include border-radius(0);
+    @include box-shadow(inset 0 0 6px rgba(0,0,0,0.2));
+    background-color: #FFFFFF;
+  }
+  &::-webkit-scrollbar{
+    height: 8px; /* height of horizontal scrollbar ← You're missing this */
+    width: 8px; /* width of vertical scrollbar */
+    background-color: #F5F5F5;
+  }
+  &::-webkit-scrollbar-thumb{
+    @include border-radius(0);
+    @include box-shadow(inset 0 0 6px rgba(0,0,0,0.2));
+    background-color: #9d9ea0;
+  }
+  .region-inner{
+    @include clearfix();
+    height: 100%;
+  }
+  @media screen and (max-width: 1200px) {
+    min-height: calc(100vh - 64px);
+  }
+}
+
+.right-content {
+  @media screen and (max-width: 767px) {
+    margin-top: 2rem;
+  }
+}
+
+#page-content:before,
+#page-content:after {
+  content: "";
+  display: table;
+}
+
+#page-content:after {
+  clear: both;
+}
+
+.tab-content{
+  position: relative;
+  >.tab-pane{
+    display: block !important;
+    visibility: hidden;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+  >.active {
+    visibility: visible;
+    position: relative;
+    width: 100%;
+    height: auto;
+    display: block;
+    overflow: visible;
+  }
+}
+/*equal-height*/
+
+.equal-height-item {
+  @include equal_height();
+
+  .catagory-item {
+    @include flexbox();
+  }
+}
+
+.effect-image {
+  overflow: hidden;
+  position: relative;
+}
+
+.effect-image img {
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  -webkit-transition: all 1s cubic-bezier(0.23, 1, 0.32, 1);
+  -moz-transition: all 1s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: all 1s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.effect-image:hover img,
+.effect-image:focus img {
+  -webkit-transform: scale(1.1);
+  -ms-transform: scale(1.1);
+  transform: scale(1.1);
+  -webkit-transition: all 1.3s cubic-bezier(0.23, 1, 0.32, 1);
+  -moz-transition: all 1.3s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: all 1.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+/* ==================================================
+skip
+================================================== */
+
+.paragraph-skip {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.skip {
+  width: 1px;
+  color: #000000;
+  font-size: 0.1%;
+  line-height: 0.1;
+  background-color: #FFFFFF;
+  position: absolute;
+  left: -3000px;
+  z-index: 9999;
+}
+
+a.skip {
+  color: #003377;
+  background-color: #FFFFFF;
+  text-align: center;
+  padding: 5px 0 7px;
+  top: auto;
+}
+
+a.skip:active {
+  display: block;
+  width: 99.99%;
+  font-size: 100%;
+  line-height: 1.6;
+  top: 0;
+  left: 0;
+}
+
+a.skip:focus {
+  display: block;
+  width: 99.99%;
+  font-size: 100%;
+  line-height: 1.6;
+  top: 0;
+  left: 0;
+}
+
+/* ==================================================
+No Javascript
+================================================== */
+
+.no-js .mean-aside {
+  display: none;
+}

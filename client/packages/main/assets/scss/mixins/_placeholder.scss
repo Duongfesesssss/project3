@@ -1,0 +1,36 @@
+// Placeholder
+//
+// A mixin to style placeholders in HTML5 form elements.
+// Includes also a .placeholder class to be used with a polyfill e.g.
+// https://github.com/mathiasbynens/jquery-placeholder
+// Requires Sass 3.2.
+//
+// Example usage (.scss):
+//
+// input {
+//   @include placeholder {
+//     /* styles for placeholder here */
+//   }
+// }
+@mixin placeholder {
+  // Safari and Chrome
+  &::-webkit-input-placeholder {
+    @content;
+  }
+  // Firefox 18-
+  &:-moz-placeholder {
+    @content;
+  }
+  // Firefox 19+ (See https://github.com/twbs/bootstrap/pull/11526)
+  &::-moz-placeholder {
+    @content;
+  }
+  // Internet Explorer 10+
+  &:-ms-input-placeholder {
+    @content;
+  }
+  // Fallback
+  &.placeholder {
+    @content;
+  }
+}

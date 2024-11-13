@@ -1,0 +1,62 @@
+/*************************************
+**************************************
+These are the styles for
+the footer section
+**************************************
+**************************************/
+
+#footer {
+  @include clearfix();
+  // position: absolute;
+  // left: 0;
+  // bottom: 0;
+  // right: 0;
+  // z-index: 10;
+  // border-top: 1px solid #CCD4E1;
+  color: #ffffff;
+  // background-color: map-get($global-color, a);
+  background-color: #0091FF;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
+
+  p {
+    margin-bottom: 3px;
+  }
+
+  .footer-nav {
+    @include clearfix();
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+
+    a {
+      padding: 15px 18px 16px;
+      display: block;
+      font-size: 87.5%;
+      font-weight: 500;
+
+      .icon-back-page {
+        position: relative;
+        left: -2px;
+      }
+
+      &.active {
+        .icon-back-page {
+          left: 0;
+          @include transform(rotate(180deg));
+          @include transition(0.3s all ease-in-out);
+        }
+      }
+    }
+  }
+
+  @media screen and (max-width: 850px) {
+    display: none;
+    height: 0;
+    visibility: hidden;
+  }
+}

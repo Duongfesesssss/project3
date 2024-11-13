@@ -1,0 +1,270 @@
+.slide_navl,
+.slide_navr {
+  padding: 20px 10px;
+  font-size: 30px;
+  color: #fff;
+}
+
+// Z-levels
+.z-depth-0 {
+  box-shadow: none !important;
+}
+
+.z-depth-1 {
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+}
+
+.z-depth-1-half {
+  box-shadow: 0 5px 11px 0 rgba(0, 0, 0, 0.18), 0 4px 15px 0 rgba(0, 0, 0, 0.15);
+}
+
+.z-depth-2 {
+  box-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.z-depth-3 {
+  box-shadow: 0 12px 15px 0 rgba(0, 0, 0, 0.24), 0 17px 50px 0 rgba(0, 0, 0, 0.19);
+}
+
+.z-depth-4 {
+  box-shadow: 0 16px 28px 0 rgba(0, 0, 0, 0.22), 0 25px 55px 0 rgba(0, 0, 0, 0.21);
+}
+
+.z-depth-5 {
+  box-shadow: 0 27px 24px 0 rgba(0, 0, 0, 0.2), 0 40px 77px 0 rgba(0, 0, 0, 0.22);
+}
+
+
+/* 11. Global
+   ========================================================================== */
+
+// Media Query Ranges
+$medium-screen: 992px !default;
+$medium-and-down: "only screen and (max-width : #{$medium-screen})" !default;
+
+/* 14. Side Navigation
+   ========================================================================== */
+
+$sidenav-font-size: 14px !default;
+$sidenav-font-color: rgba(0, 0, 0, .87) !default;
+$sidenav-bg-color: #fff !default;
+$sidenav-padding: 16px !default;
+$sidenav-item-height: 48px !default;
+// Raised buttons
+$button-raised-background: #000;
+$button-raised-background-hover: lighten($button-raised-background, 5%) !default;
+$button-raised-color: #fff !default;
+// Flat buttons
+$button-flat-color: #343434 !default;
+$button-flat-disabled-color: lighten(#999, 10%) !default;
+.side-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: fixed;
+  width: 300px;
+  left: 0;
+  top: 0;
+  margin: 0;
+  -ms-transform: translateX(-100%);
+  -webkit-transform: translateX(-100%);
+  transform: translateX(-100%);
+  height: 100%;
+  height: calc(100% + 60px);
+  height: -moz-calc(100%); //Temporary Firefox Fix
+  padding-bottom: 60px;
+  background-color: $sidenav-bg-color;
+  z-index: 999;
+  backface-visibility: hidden;
+  overflow-y: auto;
+  will-change: transform;
+  backface-visibility: hidden;
+  -ms-transform: translateX(-105%);
+  -webkit-transform: translateX(-105%);
+  transform: translateX(-105%);
+  @extend .z-depth-1;
+  // Right Align
+  &.right-aligned {
+    right: 0;
+    -ms-transform: translateX(105%);
+    -webkit-transform: translateX(105%);
+    transform: translateX(105%);
+    left: auto;
+    -ms-transform: translateX(100%);
+    -webkit-transform: translateX(100%);
+    transform: translateX(100%);
+  }
+  .divider {
+    height: 1px;
+    overflow: hidden;
+    background-color: #e0e0e0;
+  }
+  .collapsible {
+    margin: 0;
+  }
+  li {
+    float: none;
+    line-height: $sidenav-item-height;
+    &.active {
+      background-color: rgba(0, 0, 0, .05);
+    }
+  }
+  a {
+    color: $sidenav-font-color;
+    display: block;
+    font-size: $sidenav-font-size;
+    font-weight: 500;
+    height: $sidenav-item-height;
+    line-height: $sidenav-item-height;
+    padding: 0 ($sidenav-padding * 2);
+    &:hover {
+      background-color: rgba(0, 0, 0, .05);
+    }
+    &.btn,
+    &.btn-large,
+    &.btn-flat,
+    &.btn-floating {
+      margin: 10px 15px;
+    }
+    &.btn,
+    &.btn-large,
+    &.btn-floating {
+      color: $button-raised-color;
+    }
+    &.btn-flat {
+      color: $button-flat-color;
+    }
+    &.btn:hover,
+    &.btn-large:hover {
+      background-color: lighten($button-raised-background, 5%);
+    }
+    &.btn-floating:hover {
+      background-color: $button-raised-background;
+    }
+  }
+  .divider {
+    margin: ($sidenav-padding / 2) 0 0 0;
+  }
+  .subheader {
+    &:hover {
+      background-color: transparent;
+    }
+    cursor: initial;
+    pointer-events: none;
+    color: rgba(0, 0, 0, .54);
+    font-size: $sidenav-font-size;
+    font-weight: 500;
+    line-height: $sidenav-item-height;
+  }
+  .userView {
+    overflow: hidden;
+    position: relative;
+    padding: ($sidenav-padding * 2) ($sidenav-padding * 2) 0;
+    margin-bottom: $sidenav-padding / 2;
+    a {
+      &:hover {
+        background-color: transparent;
+      }
+      height: auto;
+      padding: 0;
+    }
+    .background {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: -1;
+    }
+    .circle,
+    .name,
+    .email {
+      display: block;
+    }
+    .circle {
+      @include border-radius(50%);
+      height: 64px;
+      width: 64px;
+    }
+    .name,
+    .email {
+      font-weight: $sidenav-font-size;
+      line-height: 24px;
+    }
+    .name {
+      margin-top: 16px;
+      font-weight: 500;
+    }
+    .email {
+      padding-bottom: 16px;
+      font-weight: 400;
+    }
+  }
+}
+
+// Touch interaction
+.drag-target {
+  height: 100%;
+  width: 10px;
+  position: fixed;
+  top: 0;
+  z-index: 998;
+}
+
+// Hidden side-nav for all sizes
+.side-nav.fixed {
+  a {
+    display: block;
+    padding: 0 $sidenav-padding;
+    color: $sidenav-font-color;
+  }
+}
+
+// Fixed side-nav shown
+.side-nav.fixed {
+  left: 0;
+  transform: translateX(0);
+  position: fixed;
+  // Right Align
+  &.right-aligned {
+    right: 0;
+    left: auto;
+  }
+}
+
+// Fixed sideNav hide on smaller
+@media #{$medium-and-down} {
+  .side-nav {
+    &.fixed {
+      transform: translateX(-105%);
+      &.right-aligned {
+        transform: translateX(105%);
+      }
+    }
+    a {
+      padding: 0 $sidenav-padding;
+    }
+    .userView {
+      padding: $sidenav-padding $sidenav-padding 0;
+    }
+  }
+}
+
+.side-nav .collapsible-body li.active,
+.side-nav.fixed .collapsible-body li.active {
+  background-color: #fff;
+  a {
+    color: $sidenav-bg-color;
+  }
+}
+
+#sidenav-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120vh;
+  background-color: rgba(0, 0, 0, .5);
+  z-index: 997;
+  will-change: opacity;
+}

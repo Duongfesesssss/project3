@@ -1,0 +1,475 @@
+/*************************************
+**************************************
+These are the styles for
+the button section
+**************************************
+**************************************/
+
+//@include button-size($padding-vertical, $padding-horizontal, $font-size, $line-height, $border-radius);
+.btn:focus,
+.btn:active:focus,
+.btn.active:focus,
+.btn.focus,
+.btn:active.focus,
+.btn.active.focus {
+  outline: thin dotted;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+
+.btn {
+  @include transition(all 0.2s ease-out 0s);
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+  -moz-box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+  -webkit-box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  text-decoration: none;
+  border: 0;
+  font-size: 100%;
+  &:hover {
+    box-shadow: 0 5px 11px 0 rgba(0, 0, 0, 0.18), 0 4px 15px 0 rgba(0, 0, 0, 0.15);
+    -moz-box-shadow: 0 5px 11px 0 rgba(0, 0, 0, 0.18), 0 4px 15px 0 rgba(0, 0, 0, 0.15);
+    -webkit-box-shadow: 0 5px 11px 0 rgba(0, 0, 0, 0.18), 0 4px 15px 0 rgba(0, 0, 0, 0.15);
+  }
+}
+/* .btn:not(:disabled):not(.disabled):active, 
+.btn:not(:disabled):not(.disabled).active{
+  background-image: initial;
+} */
+.btn-search,
+a.btn-search{
+  @include border-radius(6px);
+  @include box-shadow(none);
+  @include transition(all 0.15s ease 0s);
+  position: relative;
+  padding: 8px 15px 6px 34px;
+  display: inline-block;
+  min-height: 32px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: map-get($global-color, a);
+  background: map-get($global-color, btn) url(#{$base-url}/icon-search.svg) no-repeat 12px center scroll;
+  border: 0;
+  text-align: center;
+  cursor: pointer;
+  &:after{
+    content: '';
+    position: absolute;
+  }
+  &:after {
+    @include transform(scaleX(0));
+    @include border-radius(6px);
+    z-index: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.04);
+    -webkit-transform-origin: 50%;
+    transform-origin: 50%;
+    -webkit-transition: all .5s ease-out;
+    -moz-transition: all .5s ease-out;
+    transition: all .5s ease-out;
+  }
+  &:hover, &:focus, &:active, &:first-child:active{
+    @include box-shadow(none);
+    @include transition(all 0.15s ease 0s);
+    color: map-get($global-color, a);
+    &:after {
+      @include transform(scaleX(1));
+    }
+  }
+}
+.btn-filter-search,
+a.btn-filter-search{
+  @include border-radius(3px);
+  @include box-shadow(none);
+  @include transition(all 0.15s ease 0s);
+  position: relative;
+  padding: 6px 10px 4px 34px;
+  display: inline-block;
+  height: 32px;
+  font-size: 14px;
+  min-width: 100px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: map-get($global-color, a);
+  background: #e6751d url(#{$base-url}/icon-search-wh.svg) no-repeat 12px center scroll;
+  border: 0;
+  text-align: center;
+  cursor: pointer;
+  &:after{
+    content: '';
+    position: absolute;
+  }
+  &:after {
+    @include transform(scaleX(0));
+    @include border-radius(3px);
+    z-index: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.04);
+    -webkit-transform-origin: 50%;
+    transform-origin: 50%;
+    -webkit-transition: all .5s ease-out;
+    -moz-transition: all .5s ease-out;
+    transition: all .5s ease-out;
+  }
+  &:hover, &:focus, &:active, &:first-child:active{
+    @include box-shadow(none);
+    @include transition(all 0.15s ease 0s);
+    color: map-get($global-color, a);
+    background-color: #e6751d;
+    &:after {
+      @include transform(scaleX(1));
+    }
+  }
+}
+.btn-filter-excel,
+a.btn-filter-excel{
+  @include border-radius(3px);
+  @include box-shadow(none);
+  @include transition(all 0.15s ease 0s);
+  position: relative;
+  padding: 6px 10px 4px 34px;
+  display: inline-block;
+  height: 32px;
+  font-size: 14px;
+  min-width: 77px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: map-get($global-color, a);
+  background: map-get($global-color, clexcel) url(#{$base-url}/icon-excel.svg) no-repeat 12px center scroll;
+  border: 0;
+  text-align: center;
+  cursor: pointer;
+  &:after{
+    content: '';
+    position: absolute;
+  }
+  &:after {
+    @include transform(scaleX(0));
+    @include border-radius(3px);
+    z-index: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.04);
+    -webkit-transform-origin: 50%;
+    transform-origin: 50%;
+    -webkit-transition: all .5s ease-out;
+    -moz-transition: all .5s ease-out;
+    transition: all .5s ease-out;
+  }
+  &:hover, &:focus, &:active, &:first-child:active{
+    @include box-shadow(none);
+    @include transition(all 0.15s ease 0s);
+    color: map-get($global-color, a);
+    background-color: map-get($global-color, clexcel_hvr);
+    &:after {
+      @include transform(scaleX(1));
+    }
+  }
+}
+.btn-water-excel,
+.btn-water-pdf,
+a.btn-water-excel,
+a.btn-water-pdf{
+  @include border-radius(3px);
+  @include box-shadow(none);
+  @include transition(all 0.15s ease 0s);
+  position: relative;
+  padding: 10px 12px 4px 34px;
+  margin-right: 6px;
+  display: inline-block;
+  min-height: 32px;
+  font-size: 14px;
+  min-width: 77px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: map-get($global-color, a);
+  background: map-get($global-color, active_navi) url(#{$base-url}/icon-excel.svg) no-repeat 12px center scroll;
+  border: 0;
+  text-align: center;
+  cursor: pointer;
+  &:after{
+    content: '';
+    position: absolute;
+  }
+  &:after {
+    @include transform(scaleX(0));
+    @include border-radius(3px);
+    z-index: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.04);
+    -webkit-transform-origin: 50%;
+    transform-origin: 50%;
+    -webkit-transition: all .5s ease-out;
+    -moz-transition: all .5s ease-out;
+    transition: all .5s ease-out;
+  }
+  &:hover, &:focus, &:active, &:first-child:active{
+    @include box-shadow(none);
+    @include transition(all 0.15s ease 0s);
+    color: map-get($global-color, a);
+    background-color: map-get($global-color, signin_hvr);
+    &:after {
+      @include transform(scaleX(1));
+    }
+  }
+}
+.btn-signin,
+a.btn-signin{
+  @include border-radius(3px);
+  @include box-shadow(none);
+  @include transition(all 0.1s ease 0s);
+  position: relative;
+  padding: 12px 15px 11px;
+  min-height: 33px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: map-get($global-color, a);
+  background-color: map-get($global-color, active);
+  border: 1px solid map-get($global-color, active);
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-align: center;
+  &:hover,&:focus, &:active, &:first-child:active {
+    @include transition(all 0.3s ease 0s);
+    color: map-get($global-color, a);
+    background-color: map-get($global-color, header);
+    border-color: map-get($global-color, header);
+    opacity: 0.9;
+  }
+}
+.btn-login,
+a.btn-login{
+  @include border-radius(50px);
+  @include box-shadow(none);
+  @include transition(all 0.1s ease 0s);
+  position: relative;
+  padding: 5px 13px 3px 12px;
+  color: map-get($global-color, a);
+  background-color: map-get($global-color, g);
+  border: 0;
+  cursor: pointer;
+  display: inline-block;
+  text-align: center;
+  vertical-align: top;
+  min-height: 32px;
+  .login-text{
+    padding-left: 5px;
+    display: inline-block;
+    font-weight: 400;
+    font-size: 12px;
+    color: map-get($global-color, a);
+    vertical-align: middle;
+    max-height: 21px;
+    text-transform: uppercase;
+    line-height: 1.6;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  img {
+    position: relative;
+    top: -1px;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: middle;
+    @media (max-width: 1020px) {
+      top: -2px;
+    }
+  }
+  &:hover,
+  &:focus,
+  &:active,
+  &:first-child:active{
+    @include box-shadow(none);
+    @media (max-width: 1020px) {
+      color: map-get($global-color, a);
+      background-color: map-get($global-color, title);
+    }
+  }
+  @media (max-width: 1020px) {
+    float: none;
+    color: map-get($global-color, a);
+    background-color: map-get($global-color, b);
+  }
+}
+.btn-search-group,
+a.btn-search-group{
+  @include border-radius(4px);
+  @include transition(all 0.1s ease 0s);
+  position: relative;
+  padding: 5px 12px;
+  font-size: 87.5%;
+  font-weight: 500;
+  color: map-get($global-color, a);
+  background-color: map-get($global-color, active);
+  border: 1px solid map-get($global-color, active);
+  cursor: pointer;
+  display: inline-block;
+  text-align: center;
+  vertical-align: top;
+  .icon-search{
+    position: relative;
+    top: -1px;
+    margin-right: 3px;
+  }
+  &:hover,&:focus, &:active, &:first-child:active {
+    @include transition(all 0.3s ease 0s);
+    color: map-get($global-color, a);
+    background-color: map-get($global-color, active_hvr);
+    border-color: map-get($global-color, active_hvr);
+    opacity: 0.9;
+  }
+}
+.btn-info-edit,
+a.btn-info-edit{
+  @include border-radius(3px);
+  @include box-shadow(none);
+  @include transition(all 0.15s ease 0s);
+  position: relative;
+  padding: 10px 13px 4px 34px;
+  display: inline-block;
+  min-height: 32px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: map-get($global-color, a);
+  background: map-get($global-color, active) url(#{$base-url}/icon-edit.svg) no-repeat 12px center scroll;
+  border: 0;
+  text-align: center;
+  cursor: pointer;
+  &:after{
+    content: '';
+    position: absolute;
+  }
+  &:after {
+    @include transform(scaleX(0));
+    @include border-radius(3px);
+    z-index: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.04);
+    -webkit-transform-origin: 50%;
+    transform-origin: 50%;
+    -webkit-transition: all .5s ease-out;
+    -moz-transition: all .5s ease-out;
+    transition: all .5s ease-out;
+  }
+  &:hover, &:focus, &:active, &:first-child:active{
+    @include box-shadow(none);
+    @include transition(all 0.15s ease 0s);
+    color: map-get($global-color, a);
+    background-color: map-get($global-color, active_hvr);
+    &:after {
+      @include transform(scaleX(1));
+    }
+  }
+}
+.btn-info-doc,
+a.btn-info-doc{
+  @include border-radius(3px);
+  @include box-shadow(none);
+  @include transition(all 0.15s ease 0s);
+  position: relative;
+  padding: 10px 13px 4px 34px;
+  display: inline-block;
+  min-height: 32px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: map-get($global-color, a);
+  background: map-get($global-color, active) url(#{$base-url}/icon-folder.svg) no-repeat 12px center scroll;
+  border: 0;
+  text-align: center;
+  cursor: pointer;
+  &:after{
+    content: '';
+    position: absolute;
+  }
+  &:after {
+    @include transform(scaleX(0));
+    @include border-radius(3px);
+    z-index: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.04);
+    -webkit-transform-origin: 50%;
+    transform-origin: 50%;
+    -webkit-transition: all .5s ease-out;
+    -moz-transition: all .5s ease-out;
+    transition: all .5s ease-out;
+  }
+  &:hover, &:focus, &:active,&:first-child:active{
+    @include box-shadow(none);
+    @include transition(all 0.15s ease 0s);
+    color: map-get($global-color, a);
+    background-color: map-get($global-color, active_hvr);
+    &:after {
+      @include transform(scaleX(1));
+    }
+  }
+}
+.btn-search{
+  @include border-radius(3px);
+  @include box-shadow(none);
+  @include transition(all 0.15s ease 0s);
+  position: relative;
+  padding: 4px 15px 4px 34px;
+  display: inline-block;
+  min-height: 32px;
+  font-size: 82.25%;
+  font-weight: 400;
+  line-height: 1.1;
+  color: map-get($global-color, a);
+  background: map-get($global-color, btn) url(#{$base-url}/icon-search-wht.svg) no-repeat 11px center scroll;
+  border: 0;
+  text-align: center;
+  cursor: pointer;
+  &:after{
+    content: '';
+    position: absolute;
+  }
+  &:after {
+    @include transform(scaleX(0));
+    @include border-radius(6px);
+    z-index: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.04);
+    -webkit-transform-origin: 50%;
+    transform-origin: 50%;
+    -webkit-transition: all .5s ease-out;
+    -moz-transition: all .5s ease-out;
+    transition: all .5s ease-out;
+  }
+  &:hover, &:focus, &:active{
+    @include box-shadow(none);
+    @include transition(all 0.15s ease 0s);
+    color: map-get($global-color, a);
+    &:after {
+      @include transform(scaleX(1));
+    }
+  }
+}

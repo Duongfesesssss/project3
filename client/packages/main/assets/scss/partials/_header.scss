@@ -1,0 +1,637 @@
+/*************************************
+**************************************
+These are the styles for
+the header section
+**************************************
+**************************************/
+.define-fixed{
+  #wrapper{
+    padding-top: 0;
+    @media screen and (max-width: 1020px) {
+      padding-top: 0;
+    }
+  }
+  .header-wrap{
+    @include box-shadow(0 2px 4px rgba(0, 0, 0, 0.05));
+    position: relative;
+    top: 0;
+    left: 0;
+    z-index: 200;
+    width: 100%;
+  }
+}
+#header {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 2000;
+  height: 64px;
+  width: 100%;
+  color: map-get($global-color, a);
+  background-color: map-get($global-color, header);
+  .container{
+    position: relative;
+  }
+  .logo {
+    margin: 10px 0 0 15px;
+    float: left;
+    width: 431px;
+    h1,
+    p {
+      margin: 0;
+      font-size: 1rem;
+      width: 432px;
+      height: 44px;
+      color: map-get($global-color, a);
+      background: url(#{$base-url}/logo-pc.svg) no-repeat scroll transparent;
+      -webkit-background-size: 100% auto;
+      background-size: 100% auto;
+      text-indent: -9999em;
+      a {
+        display: block;
+        width: 432px;
+        height: 44px;
+        @media screen and (max-width: 1050px) {
+          height: 44px;
+          width: 44px;
+        }
+      }
+      span {
+        position: relative;
+        z-index: -1;
+        overflow: hidden;
+        display: block;
+        width: 435px;
+        height: 44px;
+        @media screen and (max-width: 1050px) {
+          height: 44px;
+          width: 44px;
+        }
+      }
+      @media screen and (max-width: 1050px) {
+        height: 44px;
+        width: 44px;
+        background: transparent url(#{$base-url}/logo-sp.svg) no-repeat scroll;
+        -webkit-background-size: 100%;
+        background-size: 100%;
+      }
+    }
+    @media screen and (max-width: 1050px) {
+      margin-right: 0;
+      width: 44px;
+    }
+  }
+  &.fixed-top {
+    position: fixed;
+    background-color: #fff;
+    -webkit-transition: background-color 0.25s ease-out 0.5s;
+    -moz-transition: background-color 0.25s ease-out 0.5s;
+    -o-transition: background-color 0.25s ease-out 0.5s;
+    transition: background-color 0.25s ease-out 0.5s;
+  }
+}
+.header-main{
+  @include clearfix();
+  margin-left: 455px;
+  .header-main-inner{
+    @include clearfix();
+    padding: 16px 15px 5px 0;
+    float: right;
+  }
+  @media screen and (max-width: 1050px) {
+    margin-left: 70px;
+  }
+}
+.nav-top{
+  @include clearfix();
+  list-style: none;
+  padding: 4px 0 0;
+  margin: 0 5px 0 0;
+  float: left;
+  li{
+    display: inline-block;
+    margin-right: 26px;
+    a{
+      position: relative;
+      font-size: 12px;
+      text-transform: uppercase;
+      color: map-get($global-color, a);
+      &:before {
+        @include border-radius(0);
+        @include transform(translate3d(0, 0, 0));
+        @include transition(0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55));
+        position: absolute;
+        left: 51%;
+        right: 51%;
+        height: 2px;
+        bottom: -6px;
+        content: '';
+        color: map-get($global-color, b);
+        background-color: map-get($global-color, a);
+        @media screen and (max-width: 1020px) {
+          background-color: map-get($global-color, active);
+        }
+      }
+      &:hover,
+      &:focus{
+        text-decoration: none;
+        &:before {
+          left: 0;
+          right: 0;
+        }
+      }
+      @media screen and (max-width: 1020px) {
+        font-size: 14px;
+        color: map-get($global-color, title);
+      }
+    }
+    &.active{
+      a{
+        &:before {
+          left: 0;
+          right: 0;
+        }
+      }
+    }
+    @media screen and (max-width: 1020px) {
+      margin-right: 0;
+      padding: 3px 0;
+      display: block;
+    }
+  }
+  @media screen and (max-width: 1020px) {
+    padding: 12px 16px;
+    margin: 0;
+    float: none;
+    border-bottom: 1px solid #d4dbe6;
+  }
+}
+#sma-navi{
+  overflow: hidden;
+  color: map-get($global-color, title);
+  background-color: map-get($global-color, a);
+}
+.group-action{
+  padding-right: 25px;
+  float: right;
+  @media screen and (max-width: 1170px) {
+    padding-right: 0;
+    float: none;
+  }
+}
+/*************************************
+**************************************
+These are the styles for
+the user-account
+**************************************
+**************************************/
+.user-account {
+  @include clearfix();
+  padding: 0;
+  float: right;
+  vertical-align: top;
+  min-height: 32px;
+  .btn-acount {
+    @include box-shadow(none);
+    @include border-radius(0);
+    margin: 0;
+    padding: 6px 16px 10px 14px;
+    border: 0;
+    color: map-get($global-color, a);
+    background: none;
+    font-size: 12px;
+    display: block;
+    cursor: pointer;
+    &:hover,
+    &:focus{
+      span{
+        text-decoration: underline;
+      }
+    }
+    &.dropdown-toggle:after {
+      @include transform(rotate(45deg));
+      position: relative;
+      top: 1px;
+      margin-right: 3px;
+      display: inline-block;
+      content: '';
+      border: solid #FFFFFF;
+      border-width: 0 1px 1px 0;
+      display: inline-block;
+      padding: 3px;
+    }
+    .acount-username{
+      padding: 0 5px;
+      display: inline-block;
+      font-weight: 400;
+      color: map-get($global-color, a);
+      vertical-align: middle;
+      max-width: 100px;
+      max-height: 21px;
+      line-height: 1.6;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    img {
+      position: relative;
+      top: 0;
+      width: 16px;
+      height: 16px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    &:hover,
+    &:focus {
+      @include box-shadow(none);
+      border: 0;
+      outline: 0;
+    }
+    @media screen and (max-width: 1020px) {
+      padding: 3px;
+      min-height: inherit;
+      background-color: transparent;
+    }
+  }
+  .dropdown-menu {
+    @include border-radius(4px);
+    @include box-shadow(0 4px 16px 0 rgba(0,0,0,0.30));
+    transform: translate3d(0, 0, 0) !important;
+    -moz-transform: translate3d(0, 0, 0) !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    top: 40px !important;
+    left: auto !important;
+    right: 5px !important;
+    padding: 0;
+    width: 180px;
+    margin: 10px 0 0 0;
+    background-color: #FFFFFF;
+    border: 1px solid #E5E5E5;
+    font-size: 87.5%;
+    &:after,
+    &:before {
+      bottom: 100%;
+      left: auto;
+      right: 10px;
+      border: solid transparent;
+      content: " ";
+      height: 0;
+      width: 0;
+      position: absolute;
+      pointer-events: none;
+      @media screen and (max-width: 1020px) {
+        display: none;
+      }
+    }
+    &:after {
+      border-color: rgba(255, 255, 255, 0);
+      border-bottom-color: #ffffff;
+      border-width: 6px;
+      margin-left: -3px;
+    }
+    &:before {
+      border-color: rgba(216, 216, 216, 0);
+      border-bottom-color: #D8D8D8;
+      border-width: 6px;
+      margin-left: -3px;
+    }
+    >li {
+      border-bottom: 1px solid #ECECEC;
+      a {
+        padding: 9px 14px 9px;
+        color: map-get($global-color, b);
+        display: block;
+        font-weight: normal;
+        &:hover,
+        &:focus {
+          color: map-get($global-color, active);
+        }
+      }
+      &:last-child{
+        @include border-radius(0 0 4px 4px);
+        border-bottom: 0;
+      }
+    }
+    @media screen and (max-width: 1020px) {
+      position: static !important;
+      right: 0 !important;
+      margin-top: 10px !important;
+      width: auto !important;
+      transform: none !important;
+    }
+  }
+  @media screen and (max-width: 1020px) {
+    padding: 16px;
+    float: none;
+    min-height: inherit;
+    border-bottom: 1px solid #d4dbe6;
+    background-color: #e96900;
+  }
+}
+/*************************************
+**************************************
+search-pc
+**************************************
+**************************************/
+.setting-wrap{
+  margin: 22px 0 0;
+  display: inline-block;
+  @media screen and (max-width: 1170px) {
+    margin: 0;
+    display: block;
+  }
+}
+/*************************************
+**************************************
+Navigation
+**************************************
+**************************************/
+.front-top{
+  @include clearfix();
+  position: relative;
+  color: map-get($global-color, b);
+  background-color: map-get($global-color, a);
+  min-height: 40px;
+  .user-account{
+    @media screen and (max-width: 1020px) {
+      display: none;
+    }
+  }
+  @media screen and (max-width: 1020px) {
+    display: none;
+  }
+}
+.navigation{
+  @include clearfix();
+}
+.menu {
+  @include clearfix();
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  > .menu-item {
+    position: relative;
+    margin-right: 0;
+    float: left;
+    border-right: 1px solid #d4dbe6;
+    > a {
+      @include transition(0.2s background-color ease-in-out);
+      position: relative;
+      padding: 11px 10px;
+      display: block;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.4;
+      min-height: 40px;
+      color: map-get($global-color, b);
+      background-color: map-get($global-color, a);
+      text-transform: uppercase;
+      &:hover,
+      &:focus {
+        color: map-get($global-color, a);
+        background-color: map-get($global-color, active);
+      }
+      &.sub-arr{
+        padding-right: 35px;
+        background: map-get($global-color, a) url(#{$base-url}/icon-arrow-nav-down.svg) no-repeat right 17px center scroll;
+        &:hover,
+        &:focus {
+          background: map-get($global-color, active) url(#{$base-url}/icon-arrow-nav-down-wh.svg) no-repeat right 17px center scroll;
+        }
+      }
+      &.hover-rule{
+        color: map-get($global-color, a);
+        background: map-get($global-color, active) url(#{$base-url}/icon-arrow-nav-down-wh.svg) no-repeat right 17px center scroll;
+      }
+    }
+    > .sub-menu{
+      @include clearfix();
+      @include border-radius(0 0 6px 6px);
+      @include box-shadow(0 4px 8px rgba(0, 0, 0, 0.05));
+      border-top: 1px solid #d4dbe6;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 10;
+      display: none;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      min-width: 245px;
+      color: map-get($global-color, b);
+      background-color: map-get($global-color, a);
+      > li{
+        position: relative;
+        border-bottom: 1px solid #d4dbe6;
+        a{
+          position: relative;
+          padding: 11px 14px;
+          text-transform: none;
+          font-size: 14px;
+          display: block;
+          color: map-get($global-color, title);
+          &:before{
+            @media screen and (max-width: 1020px) {
+              content: '';
+              position: absolute;
+              left: 14px;
+              top: 50%;
+              margin-top: -2px;
+              width: 6px;
+              height: 2px;
+              color: map-get($global-color, a);
+              background-color: map-get($global-color, b);
+            }
+          }
+          &.sub-arr-right{
+            padding-right: 10px;
+            background: map-get($global-color, a) url(#{$base-url}/icon-arr-right.svg) no-repeat right 10px center scroll;
+            &:hover,
+            &:focus{
+              background: map-get($global-color, navi_hvr) url(#{$base-url}/icon-arr-right-hvr.svg) no-repeat right 10px center scroll;
+              @media screen and (max-width: 1020px) {
+                background: map-get($global-color, navi_hvr) url(#{$base-url}/icon-arrow-nav-down.svg) no-repeat right 10px center scroll;
+              }
+            }
+            @media screen and (max-width: 1020px) {
+              padding-right: 35px;
+              background: map-get($global-color, a) url(#{$base-url}/icon-arrow-nav-down.svg) no-repeat right 10px center scroll;
+            }
+          }
+          &:hover,
+          &:focus{
+            color: map-get($global-color, active);
+            background-color: map-get($global-color, navi_hvr);
+          }
+          @media screen and (max-width: 1020px) {
+            padding-left: 30px;
+            text-transform: uppercase;
+          }
+        }
+        &.active,
+        &.current-menu-item,
+        &.current-category-ancestor,
+        &.current-post-parent {
+          >a {
+            color: map-get($global-color, active);
+            &.sub-arr-right{
+              background: map-get($global-color, navi_hvr) url(#{$base-url}/icon-arr-right-hvr.svg) no-repeat right 17px center scroll;
+              @media screen and (max-width: 1020px) {
+                background: map-get($global-color, a) url(#{$base-url}/icon-arrow-nav-down.svg) no-repeat right 17px center scroll;
+              }
+            }
+          }
+        }
+        &:last-child{
+          border-bottom: 0;
+          a{
+            @include border-radius(0 0 6px 6px);
+          }
+        }
+        > .sub-menu{
+          @include clearfix();
+          position: absolute;
+          top: 0;
+          left: 100%;
+          display: none;
+          list-style: none;
+          padding: 0 0 0 10px;
+          margin: 0;
+          min-width: 135px;
+          color: map-get($global-color, b);
+          &:after{
+            @include border-radius(6px);
+            @include box-shadow(0 4px 8px rgba(0, 0, 0, 0.05));
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            color: map-get($global-color, b);
+            background-color: map-get($global-color, a);
+          }
+          &:before{
+            position: absolute;
+            left: 4px;
+            top: 13px;
+            content: '';
+            width: 0; 
+            height: 0; 
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent; 
+            border-right: 6px solid #FFFFFF; 
+            @media screen and (max-width: 1020px) {
+              display: none;
+            }
+          }
+          > li{
+            position: relative;
+            border-bottom: 1px solid #d4dbe6;
+            a{
+              padding: 11px 14px;
+              text-transform: none;
+              display: block;
+              color: map-get($global-color, title);
+              font-size: 14px;
+              &:before{
+                @media screen and (max-width: 1020px) {
+                  left: 32px;
+                }
+              }
+              &:hover,
+              &:focus{
+                color: map-get($global-color, active);
+              }
+              @media screen and (max-width: 1020px) {
+                padding-left: 50px;
+                text-transform: uppercase;
+              }
+            }
+            &.active,
+            &.current-menu-item,
+            &.current-category-ancestor,
+            &.current-post-parent {
+              >a {
+                color: map-get($global-color, active);
+              }
+            }
+            &:first-child{
+              a{
+                @include border-radius(6px 6px 0 0);
+              }
+            }
+            &:last-child{
+              border-bottom: 0;
+              a{
+                @include border-radius(0 0 6px 6px);
+              }
+            }
+          }
+          @media screen and (max-width: 1020px) {
+            position: static;
+            padding-left: 0;
+            border-top: 1px solid #d4dbe6;
+            width: 100%;
+          }
+        }
+        &:hover,
+        &:focus{
+          > .sub-menu{
+            display: block;
+            @media screen and (max-width: 1020px) {
+              display: none;
+            }
+          }
+        }
+      }
+      @media screen and (max-width: 1020px) {
+        position: static;
+        width: 100%;
+      }
+    }
+    &.active,
+    &.current-menu-item,
+    &.current-category-ancestor,
+    &.current-post-parent {
+      >a {
+        font-weight: 700;
+        color: map-get($global-color, a);
+        background-color: map-get($global-color, active);
+        &.sub-arr{
+          background: map-get($global-color, active) url(#{$base-url}/icon-arrow-nav-down-wh.svg) no-repeat right 17px center scroll;
+        }
+      }
+    }
+    &:hover,
+    &:focus{
+      > .sub-menu{
+        display: block;
+        @media screen and (max-width: 1020px) {
+          display: none;
+        }
+      }
+    }
+    @media screen and (max-width: 1020px) {
+      float: none;
+      border-right: 0;
+      border-bottom: 1px solid #d4dbe6;
+    }
+  }
+}
+/*************************************
+**************************************
+No Javascript
+**************************************
+**************************************/
+.no-javascript #header {
+  -moz-transform: translateY(0);
+  -webkit-transform: translateY(0);
+  transform: translateY(0);
+}
+.no-javascript .navigation{
+  display: none;
+}

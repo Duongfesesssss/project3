@@ -1,0 +1,331 @@
+/*
+ *=============================
+ * helper class INDEX
+ *=============================
+ * display
+ * position
+ * width
+ * float
+ * border
+ * background-color
+ * color
+ * font-size
+ * font-weight
+ * line-height
+ * text-align
+ * text-decoration
+ * vertical-align
+ * margin
+ *   margin-top
+ *   margin-right
+ *   margin-bottom
+ *   margin-left
+ * padding
+ *   padding-top
+ *   padding-right
+ *   padding-bottom
+ *   padding-left
+ * utility
+ * box-shadow
+ */
+
+
+/**********************************
+  display
+**********************************/
+
+.is-block {
+  display: block !important;
+}
+
+.is-solid {
+  display: inline-block !important;
+}
+
+.is-inline {
+  display: inline !important;
+}
+
+.is-table {
+  display: table !important;
+}
+
+.is-cell {
+  display: table-cell !important;
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+
+/**********************************
+  box-sizing
+**********************************/
+
+.is-border-box {
+  box-sizing: border-box !important;
+}
+
+
+/**********************************
+  position
+**********************************/
+
+.abs {
+  position: absolute !important;
+}
+
+.rel {
+  position: relative !important;
+}
+
+.t0 {
+  top: 0 !important;
+}
+
+.r0 {
+  right: 0 !important;
+}
+
+.b0 {
+  bottom: 0 !important;
+}
+
+.l0 {
+  left: 0 !important
+}
+
+
+/**********************************
+  width
+**********************************/
+
+.full {
+  width: 100% !important;
+}
+
+.three-quarters {
+  width: 75% !important;
+}
+
+.half {
+  width: 50% !important;
+}
+
+.tri {
+  width: 33.3333% !important;
+}
+
+.quarter {
+  width: 25% !important;
+}
+
+.fifth {
+  width: 20% !important;
+}
+
+
+/**********************************
+  float
+**********************************/
+
+.fl {
+  float: left !important;
+}
+
+.fr {
+  float: right !important;
+}
+
+.fc {
+  float: none !important;
+}
+
+.clear {
+  clear: both !important;
+}
+
+
+/**********************************
+  font-size
+**********************************/
+
+.f10 {
+  font-size: 10px !important;
+}
+
+.f11 {
+  font-size: 11px !important;
+}
+
+.f12 {
+  font-size: 12px !important;
+}
+
+.f13 {
+  font-size: 14px !important;
+}
+
+.f14 {
+  font-size: 14px !important;
+}
+
+.f15 {
+  font-size: 15px !important;
+}
+
+.f16 {
+  font-size: 16px !important;
+}
+
+.f17 {
+  font-size: 17px !important;
+}
+
+.f18 {
+  font-size: 18px !important;
+}
+
+.f19 {
+  font-size: 19px !important;
+}
+
+.f20 {
+  font-size: 20px !important;
+}
+
+.f21 {
+  font-size: 21px !important;
+}
+
+.f22 {
+  font-size: 22px !important;
+}
+
+
+/**********************************
+  font-weight
+**********************************/
+
+.n {
+  font-weight: normal !important;
+}
+
+.b {
+  font-weight: bold !important;
+}
+
+
+/**********************************
+  line-height
+**********************************/
+
+
+
+/**********************************
+  text-align
+**********************************/
+
+.l {
+  text-align: left !important;
+}
+
+.r {
+  text-align: right !important;
+}
+
+.c {
+  text-align: center !important;
+}
+
+
+/**********************************
+  text-decoration
+**********************************/
+
+.lt {
+  text-decoration: line-through !important;
+}
+
+
+/*._   { text-decoration: underline !important; }*/
+
+
+/**********************************
+  vertical-align
+**********************************/
+
+.vt {
+  vertical-align: top !important;
+}
+
+.vm {
+  vertical-align: middle !important;
+}
+
+.vb {
+  vertical-align: bottom !important;
+}
+
+
+/**********************************
+  margin
+**********************************/
+
+
+
+
+/**********************************
+  padding
+**********************************/
+
+
+// padding-left
+
+
+/**********************************
+  utility
+**********************************/
+
+.break {
+  @extend %break;
+}
+
+.nowrap {
+  @extend %nowrap;
+}
+
+.ofh {
+  overflow: hidden;
+}
+
+.clearfix {
+  @extend %clearfix;
+}
+
+.elps {
+  @extend %elps;
+}
+
+.ml-elps {
+  @extend %ml-elps;
+}
+.color-error{
+  color: map-get($global-color, ak);
+}
+.color-highlight{
+  color: map-get($global-color, ap);
+}
+.label-proviso{
+  color: map-get($global-color, h);
+}
+.text-emphasis{
+  color: map-get($global-color, an);
+}
+.label-payment,.label-robotobold{
+  font-family: 'robotobold';
+}
+.label-orderbuy{
+  color: map-get($global-color, e);
+}

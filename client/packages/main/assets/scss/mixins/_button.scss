@@ -1,0 +1,20 @@
+// button
+@mixin button($padding, $bg-color, $font-color, $font-size, $font-weight, $hover-color, $borderradius) {
+  border: 0;
+  margin: 0;
+  display: inline-block;
+  padding: $padding;
+  background: $bg-color;
+  color: $font-color;
+  font-size: $font-size;
+  font-weight: $font-weight;
+  -webkit-border-radius: $borderradius;
+  -moz-border-radius: $borderradius;
+  border-radius: $borderradius;
+  text-decoration: none;
+  cursor: pointer;
+  &:hover,
+  &:active {
+    background: $hover-color;
+  }
+}

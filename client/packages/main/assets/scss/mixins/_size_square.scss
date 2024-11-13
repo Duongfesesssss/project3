@@ -1,0 +1,5 @@
+// Set the size of something that has equal width and height
+// Example: @include square(30px);
+@mixin square($size) {
+  @include size($size, $size);
+}
