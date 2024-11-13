@@ -35,7 +35,7 @@ router.post('/register', async (req, res) => {
 
 
 // Đăng nhập
-router.post('/user', async (req, res) => {
+router.post('/login', async (req, res) => {
     const { user_name, password } = req.body;
 
     try {

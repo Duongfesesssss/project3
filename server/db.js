@@ -4,7 +4,7 @@ const config = {
     user: 'sa',
     password: 'Duong0948173074',
     server: 'MSI', 
-    database: 'BookShop',
+    database: 'BookStoreDB',
     options: {
         encrypt: true,
         trustServerCertificate: true,
