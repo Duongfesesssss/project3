@@ -40,49 +40,5 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useAuth } from '@sidebase/nuxt-auth';
-import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
-import Checkbox from 'primevue/checkbox';
-import { useToast } from 'primevue/usetoast';  // Importing Toast to show success/error messages
 
-// Declare the reactive variables
-const loginEmail = ref('');
-const loginPassword = ref('');
-const checked1 = ref(false); // Remember me checkbox state
-
-// Accessing the signIn method from useAuth
-const { signIn } = useAuth();
-const toast = useToast(); // Initialize toast
-
-// Login handler
-const doLogin = async () => {
-  try {
-    const response = await signIn(
-      {
-        username: loginEmail.value,
-        password: loginPassword.value,
-      },
-      {
-        callbackUrl: '/',  // Redirect after login
-        external: true,
-      }
-    );
-    console.log(response);
-    toast.add({
-      severity: 'success',
-      summary: 'Đăng nhập',
-      detail: 'Đăng nhập thành công',
-      life: 2000,
-    });
-  } catch (error) {
-    console.error(error);
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: 'Sai thông tin đăng nhập, vui lòng nhập lại!',
-      life: 2000,
-    });
-  }
-};
 </script>

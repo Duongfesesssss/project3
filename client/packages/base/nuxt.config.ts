@@ -4,7 +4,6 @@ import path from 'path';
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: false },
-
   app: {
     head: {
       charset: 'utf-8',
@@ -82,31 +81,6 @@ export default defineNuxtConfig({
         maxAgeInSeconds: 60 * 24 * 30, // 5 min
         sameSiteAttribute: 'lax',
       },
-      sessionDataType: {
-        data: {
-          roles: 'string[]',
-          user: {
-            id: 'string',
-            user_name: 'string',
-            user_info: {
-              full_name: 'string',
-              commune: {
-                area_id: 'string',
-                name_vn: 'string',
-              },
-              district: {
-                area_id: 'string',
-                name_vn: 'string',
-              },
-              province: {
-                area_id: 'string',
-                name_vn: 'string',
-              },
-            },
-          },
-        },
-        status: 'string',
-      },
     },
     globalAppMiddleware: {
       isEnabled: false,
@@ -120,12 +94,12 @@ export default defineNuxtConfig({
   components: true,
   runtimeConfig: {
     public: {
-      baseURL: 'http://localhost:3000',
+      baseURL: 'http://localhost:8888',
     },
   },
   routeRules: {
     '/api/**': {
-      proxy: 'http://localhost:3000/api/**',  //cố định
+      proxy: 'http://localhost:8888/api/**',  // Cố định proxy
     },
   },
   
