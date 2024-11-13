@@ -3,11 +3,11 @@ import type { Config } from 'tailwindcss';
 /** @type {import('tailwindcss').Config} */
 export default <Partial<Config>>{
   content: [
-    './client/**/*.{vue,js,ts,jsx,tsx}', // Quét tất cả các file trong thư mục client
-    './server/**/*.{vue,js,ts,jsx,tsx}', // Quét tất cả các file trong thư mục server
-    './packages/**/*.{vue,js,ts,jsx,tsx}', // Quét tất cả các file trong thư mục packages
-    './components/**/*.{vue,js,ts,jsx,tsx}', // Các file trong components
-    './pages/**/*.{vue,js,ts,jsx,tsx}', // Các file trong pages
+    './client/**/*.{vue,js,ts,jsx,tsx}',
+    './server/**/*.{vue,js,ts,jsx,tsx}',
+    './packages/**/!(*node_modules)/**/*.{vue,js,ts,jsx,tsx}',
+    './components/**/*.{vue,js,ts,jsx,tsx}',
+    './pages/**/*.{vue,js,ts,jsx,tsx}',
   ],
   darkMode: ['selector', '[class*="app-dark"]'],
   plugins: [require('tailwindcss-primeui')],

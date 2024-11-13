@@ -1,7 +1,6 @@
 import Aura from '@primevue/themes/aura';
 import { defaultOptions } from 'primevue/config';
 import path from 'path';
-
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: false },
@@ -121,14 +120,15 @@ export default defineNuxtConfig({
   components: true,
   runtimeConfig: {
     public: {
-      baseURL: process.env.BASE_URL || 'http://localhost:8888',
+      baseURL: 'http://localhost:3000',
     },
   },
   routeRules: {
     '/api/**': {
-      proxy: process.env.BASE_URL + '/api/**',
+      proxy: 'http://localhost:3000/api/**',  //cố định
     },
   },
+  
   typescript: {
     typeCheck: false,
   },

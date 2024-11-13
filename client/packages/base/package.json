@@ -3,6 +3,7 @@
     "@nuxtjs/color-mode": "^3.5.2",
     "@nuxtjs/google-fonts": "^3.2.0",
     "@nuxtjs/tailwindcss": "^6.12.1",
+    "@primevue/monorepo": "github:primefaces/primevue#master",
     "@primevue/themes": "^4.0.4",
     "@sidebase/nuxt-auth": "^0.7.2",
     "bootstrap": "^5.3.3",
@@ -21,7 +22,9 @@
     "primevue": "^4.2.1",
     "quill": "^2.0.2",
     "tailwindcss-primeui": "^0.3.4",
-    "vue": "latest"
+    "vee-validate": "^4.14.7",
+    "vue": "latest",
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@nuxt/eslint": "latest",

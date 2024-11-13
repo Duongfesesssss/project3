@@ -1,14 +1,14 @@
 {
     "dependencies": {
-      "date-fns": "^3.6.0",
-      "chart.js": "^4.4.3",
-      "chartjs-plugin-datalabels": "^2.2.0",
-      "nuxt": "^3.12.4",
-      "vue": "latest"
+        "chart.js": "^4.4.3",
+        "chartjs-plugin-datalabels": "^2.2.0",
+        "date-fns": "^3.6.0",
+        "nuxt": "^3.12.4",
+        "vue": "latest",
+        "yup": "^1.4.0"
     },
     "name": "main",
     "private": true,
     "type": "module",
     "version": "1.0.0"
-  }
-  
+}
