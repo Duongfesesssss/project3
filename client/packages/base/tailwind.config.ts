@@ -3,9 +3,8 @@ import type { Config } from 'tailwindcss';
 /** @type {import('tailwindcss').Config} */
 export default <Partial<Config>>{
   content: [
-    './client/**/*.{vue,js,ts,jsx,tsx}',
-    './server/**/*.{vue,js,ts,jsx,tsx}',
-    './packages/**/!(*node_modules)/**/*.{vue,js,ts,jsx,tsx}',
+    './client/main/**/*.{vue,js,ts,jsx,tsx}',
+    './client/cms/**/*.{vue,js,ts,jsx,tsx}',
     './components/**/*.{vue,js,ts,jsx,tsx}',
     './pages/**/*.{vue,js,ts,jsx,tsx}',
   ],

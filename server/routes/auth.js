@@ -43,8 +43,6 @@ router.post('/login', async (req, res) => {
         if (!user) {
             return res.status(400).send('Tài khoản không tồn tại.');
         }
-        console.log('Input password:', password);
-    console.log('User password from DB:', user.password);
     ;
 
     const isMatch = await argon2.verify(user.password, password);
