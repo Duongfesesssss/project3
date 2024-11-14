@@ -15,7 +15,6 @@ router.get('/profile', authMiddleware, (req, res) => {
     res.send(`Welcome, user ${req.user.email}`);
 });
 
-// Route yêu cầu xác thực và phân quyền (chỉ cho admin)
 router.get('/admin', authMiddleware, authorize(['admin']), (req, res) => {
     res.send('Welcome Admin!');
 });

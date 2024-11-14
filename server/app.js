@@ -6,9 +6,8 @@ const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const app = express();
 const port = process.env.PORT || 8888;
-const userRoutes = require('./routes/userRoutes');
-const authRoutes = require("./routes/auth")
-const dmRouter = require('./routes/dm');
+const authRoutes = require("./routes/auth");
+const bookRouter = require("./routes/book");
 // Sử dụng middleware để xử lý dữ liệu JSON
 app.use(express.json());
 
@@ -21,7 +20,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/dm_theloai_sach', dmRouter);
+app.use('/api/book', bookRouter);
 
 
 const swaggerOptions = {
