@@ -1,2 +1,2 @@
-select *
-from auth.users;
+SELECT *
+FROM bookschema.books
