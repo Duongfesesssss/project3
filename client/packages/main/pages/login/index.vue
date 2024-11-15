@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent="doLogin">
+  <form>
     <div class="bg-surface-50 dark:bg-surface-950 px-6 py-20 md:px-12 lg:px-20">
       <div class="bg-surface-0 dark:bg-surface-900 p-6 shadow rounded-border w-full lg:w-6/12 mx-auto">
         <div class="text-center mb-8">
@@ -23,7 +23,7 @@
             <a class="font-medium no-underline ml-2 text-primary text-right cursor-pointer">Forgot password?</a>
           </div>
 
-          <Button label="Sign In" icon="pi pi-user" class="w-full" @click="AB" />
+          <Button label="Sign In" icon="pi pi-user" class="w-full" @click="doLogin" />
         </div>
       </div>
     </div>
@@ -126,7 +126,7 @@ const doLogin = handleLoginSubmit(async () => {
   try {
     const response = await signIn(
       {
-        username: loginEmail.value,
+        user_name: loginEmail.value,
         password: loginPassword.value,
       },
       {
@@ -155,14 +155,5 @@ const doLogin = handleLoginSubmit(async () => {
   }
 });
 
-
-const AB = (() => {
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: 'Sai thông tin đăng nhập, vui lòng nhập lại!',
-      life: 2000,
-    });
-  })
   
 </script>
