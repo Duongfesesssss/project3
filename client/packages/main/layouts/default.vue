@@ -66,13 +66,16 @@ const items = ref([
 </script>
 
 <template>
+  
+  <div class="card" style="height: 80px;">
+      <Menubar :model="items" />
+  </div>
   <div
     style="height:700px"
     id="wrapper"
     :class="isMenuSpActive ? 'menu-sp-open menu-sp' : ''"
   >
     <NuxtLoadingIndicator />
-    <SharedHeader />
     <main
       id="page-content"
       class="layout-equal"
@@ -103,14 +106,6 @@ const items = ref([
         class="wrap-sma"
         :class="isMenuSpActive ? 'active d-block' : 'd-none'"
       >
-        <div id="sma-navi">
-          <SharedNavTop
-            v-if="isMobileSp"
-          />
-          <SharedNav
-            v-if="isMobileSp"
-          />
-        </div>
         <div class="menu-sp-close">
           <a
             href="javascript:;;"
@@ -124,9 +119,6 @@ const items = ref([
     <!-- end sub-menu-sp -->
   </div>
 
-  <div class="card" style="height: 80px; background-color: brown;">
-      <Menubar :model="items" />
-  </div>
   <!-- end wrapper -->
 </template>
 

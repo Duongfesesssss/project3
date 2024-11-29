@@ -1,6 +1,3 @@
-// packages/cms/nuxt.config.ts
-import { defineNuxtConfig } from 'nuxt/config';
-
 export default defineNuxtConfig({
   extends: ['../base'],
   compatibilityDate: '2024-04-03',
@@ -16,5 +13,7 @@ export default defineNuxtConfig({
       ],
     },
   },
-  pages: true, // Cho phép tự động nhận diện các trang
+  pages: true, 
+  components: true,
+  
 });
