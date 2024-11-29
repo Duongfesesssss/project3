@@ -6,3 +6,9 @@
     </div>
   </template>
   
+
+<script setup lang="ts">
+definePageMeta({
+  layout: 'cms-default',
+});
+</script>
