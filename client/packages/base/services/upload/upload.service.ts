@@ -3,7 +3,7 @@ import { BaseService } from '../base.service';
 
 class _UploadService extends BaseService {
   async Images(form: FormData) {
-    const res = await $api<RestData<string[]>>(`${this.baseApiUrl}/_upload/images`, {
+    const res = await $api<RestData<string[]>>(`${this.baseApiUrl}/upload/images`, {
       method: 'POST',
       body: form,
     });
@@ -13,8 +13,8 @@ class _UploadService extends BaseService {
     return null;
   }
 
-  async Documents(form: FormData) {
-    const res = await $api<RestData<string[]>>(`${this.baseApiUrl}/_upload/documents`, {
+  async Videos(form: FormData) {
+    const res = await $api<RestData<string[]>>(`${this.baseApiUrl}/upload/videos`, {
       method: 'POST',
       body: form,
     });

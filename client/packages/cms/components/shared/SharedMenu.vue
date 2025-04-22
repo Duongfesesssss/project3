@@ -11,10 +11,10 @@ const model = ref([
     label: 'Quản lý',
     items: [
       {
-        label: 'Quản lý sách',
-        icon: 'pi pi-fw pi-objects-column',
-        to: '/cms/book',
-      },
+            label: 'Quản lý sách',
+            icon: 'pi pi-fw pi-objects-column',
+            to: '/cms/ke-hoach',
+          },
       {
         label: 'Hệ thống',
         items: [
@@ -27,7 +27,7 @@ const model = ref([
             to: '/cms/user-group',
           },
           {
-            label: 'Quản lý danh mục',
+            label: 'Quản lý sách',
             to: '/cms/ke-hoach',
           },
         ],

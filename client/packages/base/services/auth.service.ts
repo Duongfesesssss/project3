@@ -94,7 +94,43 @@ class _AuthService extends BaseService {
     }
     return EnumStatus.ERROR;
   }
-}
+
+  async signUp(userDto: UserAuthDTO) {
+    const res = await useFetch<RestBase>(
+      `${this.baseApiUrl}/api/auth/register`,
+      {
+        method: 'POST',
+        body: userDto,
+      },
+    );
+    
+    if (res != null && res.data.value?.status === EnumStatus.OK) {
+      console.log('Đăng ký thành công:', res.data.value);
+      return res.data.value;
+    }
+    console.error('Đăng ký thất bại:', res);
+    return EnumStatus.ERROR;
+  }
+
+  // async signIn(userDto: { email: string; password: string }) {
+  //     const res = await useFetch<RestBase>(
+  //       `${this.baseApiUrl}/api/auth/login`,
+  //       {
+  //         method: 'POST',
+  //         body: userDto,
+  //       },
+  //     );
+  
+  //     if (res != null && res.data.value?.status === EnumStatus.OK) {
+  //       console.log('Đăng nhập thành công:', res.data.value);
+  //       return res.data.value; // Trả về dữ liệu từ API
+  //     }
+  
+  //     console.error('Đăng nhập thất bại:', res);
+  //     return { status: 'error', message: res?.data?.value};
+  //   }
+  }
+
 
 const AuthService = new _AuthService();
 export { AuthService };

@@ -72,7 +72,7 @@ const dangXuat = () => {
         to="/"
         class="layout-topbar-logo"
       >
-        <span>VN-CBDRM</span>
+        <span>Bookie</span>
       </NuxtLink>
     </div>
 

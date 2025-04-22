@@ -124,7 +124,7 @@ const onSubmit = handleRequestSubmit(async () => {
 const { signIn } = useAuth();
 const doLogin = handleLoginSubmit(async () => {
   try {
-    const response = await signIn(
+    await signIn(
       {
         user_name: loginEmail.value,
         password: loginPassword.value,
@@ -134,7 +134,6 @@ const doLogin = handleLoginSubmit(async () => {
         external: true,
       },
     );
-    console.log(response);
     toast.add({
       severity: 'success',
       summary: 'Đăng nhập',
@@ -143,17 +142,18 @@ const doLogin = handleLoginSubmit(async () => {
     });
   }
   catch (error) {
-    console.log(error);
-    console.error(error);
-
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: 'Sai thông tin đăng nhập, vui lòng nhập lại!',
-      life: 2000,
-    });
-  }
-});
-
+    if (error.response) {
+      // lấy dữ liệu message lỗi khi được trả về
+      const responseErrors = error.response._data;
+      if (responseErrors) {
+        toast.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: '' + responseErrors.message,
+          life: 2000,
+        });
+      }
   
+}}});
+
 </script>

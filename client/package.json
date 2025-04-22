@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "caniuse-lite": "^1.0.30001715",
     "nuxt": "^3.14.0",
     "primevue": "^4.2.1",
     "sass": "^1.81.0",

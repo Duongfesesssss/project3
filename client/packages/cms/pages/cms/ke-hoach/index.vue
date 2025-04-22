@@ -42,6 +42,7 @@
               label="Thêm mới"
               icon="pi pi-plus"
               class="mr-2"
+              @click="onModalOpen"
             />
           </div>
         </div>
@@ -49,25 +50,22 @@
     </ToolBar>
 
     <DataTable
-      ref="dt"
       v-model:expandedRows="expandedRows"
       v-model:rows="filterProject.rows"
-      :first="filterProject.first"
-      data-key="id"
-      column-resize-mode="expand"
-      show-gridlines
-      :total-records="totalRecords"
-      :value="projectData"
-      removable-sort
-      :loading="loading"
-      :rows-per-page-options="[5, 10, 20, 50]"
-      :lazy="true"
-      sort-field="ngay_phathanh"
+      sort-field="ho_ten"
       :sort-order="-1"
+      :rows-per-page-options="[1, 10, 20, 50]"
+      column-resize-mode="expand"
+      removable-sort
+      show-gridlines
+      :lazy="true"
+      :value="dataBook"
       paginator
-      scrollable
       paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-      current-page-report-template="hiển thị {first} đến {last} trong {totalRecords} kế hoạch"
+      current-page-report-template="hiển thị {first} đến {last} trong {totalRecords} công trình"
+      :total-records="totalRecords"
+      :loading="loading"
+      data-key="id"
       @page="onPage($event as PageEvent)"
       @sort="onSort($event as SortEvent)"
     >
@@ -85,94 +83,6 @@
               />
             </IconField>
             <span class="text-red-500">{{ errors.keyWords }}</span>
-          </div>
-          <div
-            v-if="phanLoaiId == '7' || phanLoaiId == '8'"
-            class="col-span-1"
-          >
-            <Select
-              v-model="filter.capTaiLieuId"
-              :options="listCapDonViId || []"
-              :max-selected-labels="3"
-              option-label="mo_ta"
-              option-value="id"
-              fulid
-              placeholder="Chọn cấp đơn vị"
-              filter
-              :show-clear="filter.capTaiLieuId > 0 && filter.capTaiLieuId != null"
-              class="w-full"
-            />
-          </div>
-          <div class="col-span-1">
-            <MultiSelect
-              v-model="filter.listDonViPhatHanhId"
-              :options="listDonViPhatHanhId || []"
-              :max-selected-labels="3"
-              :selected-items-label="`${filter.listDonViPhatHanhId.length} đơn vị phát hành`"
-              option-label="mo_ta"
-              option-value="id"
-              fulid
-              placeholder="Chọn đơn vị ban hành"
-              filter
-              class="w-full"
-            />
-          </div>
-          <div class="col-span-1">
-            <DatePicker
-              v-model="filter.from"
-              :max-date="filter.to"
-              show-icon
-              icon-display="input"
-              date-format="dd/mm/yy"
-              placeholder="Thời gian ban hành từ"
-              class="w-full"
-              show-button-bar
-            />
-          </div>
-          <div class="col-span-1">
-            <DatePicker
-              v-model="filter.to"
-              :min-date="filter.from"
-              show-icon
-              icon-display="input"
-              date-format="dd/mm/yy"
-              placeholder="Thời gian ban hành đến"
-              class="w-full"
-              show-button-bar
-            />
-          </div>
-          <div
-            v-if="phanLoaiId == '7' || phanLoaiId == '9'"
-            class="col-span-1"
-          >
-            <MultiSelect
-              v-model="filter.listGiaiDoanId"
-              :options="listGiaiDoanId || []"
-              :max-selected-labels="3"
-              :selected-items-label="`${filter.listGiaiDoanId.length} giai đoạn`"
-              option-label="mo_ta"
-              option-value="id"
-              placeholder="Chọn giai đoạn"
-              filter
-              class="w-full"
-            />
-          </div>
-          <div
-            v-if="phanLoaiId == '8' || phanLoaiId == '23'"
-            class="col-span-1"
-          >
-            <MultiSelect
-              v-model="filter.listNamTaiLieu"
-              :options="listNamTaiLieu || []"
-              :max-selected-labels="3"
-              :selected-items-label="`${filter.listNamTaiLieu.length} năm tài liệu`"
-              option-label="mo_ta"
-              option-value="id"
-              fulid
-              placeholder="Chọn năm kế hoạch"
-              filter
-              class="w-full"
-            />
           </div>
           <div class="col-span-1">
             <Button
@@ -198,13 +108,13 @@
       </template>
       <template #empty>
         <div class="text-center">
-          <span class="font-bold">Không có kế hoạch nào!</span>
+          <span class="font-bold">Không có sách nào!</span>
         </div>
       </template>
-      <Column
+      <!-- <Column
         expander
         style="padding: 10px; width: 2rem"
-      />
+      /> -->
       <Column
         class="text-center"
         body-style="text-align:center"
@@ -218,73 +128,58 @@
       </Column>
 
       <Column
-        field="so_vanban"
-        header="Số Văn Bản"
+  field="image_link"
+  header="Ảnh"
+  :exportable="false"
+  body-style="text-align:center"
+>
+  <template #body="slotProps">
+    <img
+      v-if="slotProps.data.image_link"
+      :src="slotProps.data.image_link"
+      alt="Ảnh sách"
+      class="h-20 w-20 object-cover rounded"
+    />
+    <span v-else>Không có ảnh</span>
+  </template>
+</Column>
+      <Column
+        field="title"
+        header="Tên sách"
         sortable
       />
       <Column
-        field="ten_tailieu"
-        header="Tên kế hoạch"
+        field="published_date"
+        header="Thể loại sách"
+        :show-filter-match-modes="false"
         sortable
       >
-        <template #body="slotProps">
-          <b>{{ slotProps.data.ten_tailieu }}</b>
-        </template>
+      <template #body="slotProps">
+        {{ slotProps.data.genres.map(genre => genre.name).join(' & ') || '' }}
+      </template>
       </Column>
       <Column
-        field="ngay_phathanh"
-        header="Ngày ban hành"
+        field="author"
+        header="Tác giả"
         sortable
-      >
-        <template #body="slotProps">
+      />
+      <Column
+        field="publisher"
+        header="Nhà xuất bản"
+        :show-filter-match-modes="false"
+        sortable
+      />
 
-        </template>
-      </Column>
       <Column
-        v-if="phanLoaiId == '7' || phanLoaiId == '9'"
-        field="giaiDoanId"
-        header="Giai đoạn"
+        field="published_date"
+        header="Ngày xuất bản"
         :show-filter-match-modes="false"
         sortable
       >
-        <template #body="slotProps">
-          {{ slotProps.data.giaidoan || '' }}
+      <template #body="slotProps">
+          {{ slotProps.data.published_date || '' }} 
         </template>
       </Column>
-      <Column
-        v-if="phanLoaiId == '8' || phanLoaiId == '23'"
-        field="nam_tailieu"
-        header="Năm kế hoạch"
-        :show-filter-match-modes="false"
-        sortable
-      >
-        <template #body="slotProps">
-          {{ slotProps.data.nam_tailieu || '' }}
-        </template>
-      </Column>
-      <Column
-        header="Đơn vị ban hành"
-        filter-field="donViPhatHanhId"
-        field="donvi_phathanh_id"
-        :show-filter-match-modes="false"
-        sortable
-      >
-        <template #body="slotProps">
-          {{ slotProps.data.donvi_phathanh || '' }}
-        </template>
-      </Column>
-      <Column
-        header="Phân loại"
-        sortable
-        filter-field="phanloaiTaiLieuId"
-        field="phanloai_tailieu_id"
-        :show-filter-match-modes="false"
-      >
-        <template #body="slotProps">
-          {{ slotProps.data.phanloai_tailieu || '' }}
-        </template>
-      </Column>
-
       <Column
         :exportable="false"
         style="min-width: 9rem"
@@ -297,32 +192,17 @@
         </template>
         <template #body="slotProps">
           <div class="flex justify-center items-center space-x-4">
-            <a
-              v-if="slotProps.data.url"
-              :href="`${UploadService.baseApiUrl}/_documents/${slotProps.data.tenfile_luutru}`"
-              target="_blank"
-              class="button-like"
-            >
-              <Button
-                v-tooltip="'Xem kế hoạch'"
-                icon="pi pi-eye"
-                outlined
-                rounded
-                severity="primary"
-                class="mr-2"
-              />
-            </a>
             <Button
-              v-tooltip="'Chỉnh sửa kế hoạch'"
+              v-tooltip="'Chỉnh sửa sách'"
               icon="pi pi-pencil"
               outlined
               rounded
               severity="warn"
               class="mr-2"
-              @click="onEditProject(slotProps.data)"
+              @click="onModalOpenEdit(slotProps.data)"
             />
             <Button
-              v-tooltip="'Xoá kế hoạch'"
+              v-tooltip="'Xoá sách'"
               icon="pi pi-trash"
               outlined
               rounded
@@ -334,6 +214,14 @@
         </template>
       </Column>
     </DataTable>
+    <ClientOnly>
+      <BookModal
+        :is-visible="isOpenModal"
+        :book="bookData"
+        @reload-data-table="reloadDataTable()"
+        @hide-modal="isOpenModal = false"
+      />
+    </ClientOnly>
   </div>
 </template>
 
@@ -343,17 +231,12 @@ import { useForm } from 'vee-validate';
 import { useToast } from 'primevue/usetoast';
 import { useDialog } from 'primevue/usedialog';
 import { useConfirm } from 'primevue/useconfirm';
-import type { RouteLocationPathRaw } from 'vue-router';
-// import { KeHoachModel } from '~/packages/base/models/dto/request/tai-lieu/ke-hoach.model';
-import { CategoryService } from '~/packages/base/services/category/category.service';
-import { KeHoachService } from '~/packages/base/services/tai-lieu/ke-hoach.service';
-import { UploadService } from '~/packages/base/services/upload/upload.service';
 import type { PageEvent, SortEvent } from '~/packages/base/models/event';
-import { TaiLieuService } from '~/packages/base/services/tai-lieu/tai-lieu.service';
-
+import { BookService } from '~/packages/base/services/book.service';
+import { BookModel } from '~/packages/base/models/dto/response/book/book.model';
+import BookModal from '~/packages/cms/components/shared/book/BookModal.vue';
 definePageMeta({
   layout: 'cms-default',
-  middleware: 'auth',
 });
 
 const route = useRoute();
@@ -365,67 +248,24 @@ const home = ref({
   route: '/cms',
 });
 
-const items = ref([{ label: 'Quản lý' }, { label: 'Kế hoạch' }, { label: 'Kế Hoạch PCTT' }]);
-
-const switchLabel = (phanLoaiId: string) => {
-  switch (phanLoaiId) {
-    case '7':
-      items.value = [];
-      items.value = [{ label: 'Quản lý' }, { label: 'Kế hoạch' }, { label: 'Kế hoạch 05 năm' }];
-      break;
-    case '8':
-      items.value = [];
-      items.value = [{ label: 'Quản lý' }, { label: 'Kế hoạch' }, { label: 'Kế hoạch hàng năm' }];
-      break;
-    case '9':
-      items.value = [];
-      items.value = [
-        { label: 'Quản lý' },
-        { label: 'Kế hoạch' },
-        { label: 'Kế hoạch PCTT cấp tỉnh' },
-        { label: '05 năm' },
-      ];
-      break;
-    case '23':
-      items.value = [];
-      items.value = [
-        { label: 'Quản lý' },
-        { label: 'Kế hoạch' },
-        { label: 'Kế hoạch PCTT cấp tỉnh' },
-        { label: 'Hàng năm' },
-      ];
-      break;
-  }
-};
-
-switchLabel(phanLoaiId.value);
-
 const getRowSTT = (index: number): number => {
-  return filterProject.value.first + index + 1;
+  return currentPageNumber.value * 10 + index + 1;
 };
 
-// const listNamTaiLieu = ref<Array<{ id: number; mo_ta: string }>>([]);
-// for (let i = new Date().getFullYear(); i >= new Date().getFullYear() - 10; i--) {
-//   listNamTaiLieu.value.push({
-//     id: i,
-//     mo_ta: i.toString(),
-//   });
-// }
+
 
 const toast = useToast();
 const dialog = useDialog();
 const confirm = useConfirm();
-// const KeHoachModal = defineAsyncComponent(() => import('../../../../components/ke-hoach/ke-hoach-modal.vue'));
+const dataBook = ref<BookModel[]>([]);
+const items = ref([{ label: 'Quản lý' }, { label: 'Quản lý sách' }]);
+const currentPageNumber = ref(0);
+const isOpenModal = ref<boolean>(false);
+const bookData = ref<BookModel>(new BookModel());
 
-definePageMeta({
-  layout: 'cms-default',
-  middleware: 'auth',
-});
 
-const dt = ref();
-const projectData = ref();
 const totalRecords = ref(0);
-const filter = ref();
+const filters = ref();
 
 const schema = yup.object({
   keyWords: yup
@@ -437,36 +277,19 @@ const { defineField, handleSubmit, errors } = useForm({
   validationSchema: schema,
 });
 const [keyWords] = defineField('keyWords');
+
 const filterProject = ref({
   rows: 10,
   first: 0,
   page: 0,
-  keyword: '',
-  nam_tailieu: 0,
-  sortField: 'ngay_phathanh',
+  sortField: '',
   sortOrder: 'desc',
 });
 
 const initFilters = () => {
-  filter.value = {
+  filters.value = {
     keyword: '',
-    giaiDoanId: 0,
-    donViPhatHanhId: 0,
-    phanLoaiTaiLieuId: phanLoaiId.value || 0,
-    nam_tailieu: null,
-    listDonViPhatHanhId: [],
-    listGiaiDoanId: [],
-    listNamTaiLieu: [],
-    listNgayBanHanh: [],
-    listNgayHieuLuc: [],
-    from: null,
-    to: null,
-    capTaiLieuId: 0,
   };
-
-  if (phanLoaiId.value == '9' || phanLoaiId.value == '23') {
-    filter.value.capTaiLieuId = 1;
-  }
 };
 
 initFilters();
@@ -474,216 +297,43 @@ initFilters();
 const clearFilter = () => {
   initFilters();
   filterProject.value.first = 0;
-  filter.value.phanLoaiTaiLieuId = phanLoaiId.value;
   setTimeout(() => {
     reloadDataTable();
     keyWords.value = '';
   }, 200);
 };
 
-// get newRoute when change route
-onBeforeRouteUpdate((newRoute: RouteLocationPathRaw) => {
-  phanLoaiId.value = newRoute.query?.phanLoaiId ?? 0;
-  if (phanLoaiId.value == '9' || phanLoaiId.value == '23') {
-    filter.value.capTaiLieuId = 1;
-  }
-  switchLabel(phanLoaiId.value);
-  clearFilter();
-});
 
-const loading = ref(true);
-
-const { data: listNamTaiLieu } = await useAsyncData('listNamTaiLieu', () => CategoryService.ListNamTaiLieu());
-
-const { data: listGiaiDoanId } = await useAsyncData('listGiaiDoanId', () => CategoryService.ListGiaiDoanId());
-
-const { data: listDonViPhatHanhId } = await useAsyncData('listDonViPhatHanhId', () =>
-  filter.value.capTaiLieuId
-    ? CategoryService.ListDonViPhatHanhByCapDonVi(filter.value.capTaiLieuId)
-    : CategoryService.ListDonViPhatHanhId(),
-);
-
-const { data: listPhanLoaiTaiLieuId } = await useAsyncData('listPhanLoaiTaiLieuId', () =>
-  CategoryService.ListPhanLoaiTaiLieuId(2),
-);
-
-const { data: listCapDonViId } = await useAsyncData('listCapDonViId', () => CategoryService.ListCapDonVi());
-
-const { data: listCapTinh } = await useAsyncData('listCapTinh', () => CategoryService.ListCapTinh());
-const parentProvinceId = 'parent_id_value';
-const { data: listCapHuyen } = await useAsyncData('listCapHuyen', () => CategoryService.ListCapHuyen(parentProvinceId));
-
-const { data: listCapXa } = await useAsyncData('listCapXa', () => CategoryService.ListCapXa(parentProvinceId));
-
-watch(
-  () => filter.value.capTaiLieuId,
-  async () => {
-    if (filter.value.capTaiLieuId != null && filter.value.capTaiLieuId > 0) {
-      await CategoryService.ListDonViPhatHanhByCapDonVi(filter.value.capTaiLieuId).then((response) => {
-        if (response != null) {
-          listDonViPhatHanhId.value = response;
-        }
-        else {
-          listDonViPhatHanhId.value = [];
-        }
-      });
-      filter.value.listDonViPhatHanhId = [];
-    }
-    else {
-      await CategoryService.ListDonViPhatHanhId().then((response) => {
-        if (response != null) {
-          listDonViPhatHanhId.value = response;
-        }
-        else {
-          listDonViPhatHanhId.value = [];
-        }
-      });
-      filter.value.listDonViPhatHanhId = [];
-    }
-  },
-  { deep: true },
-);
+const loading = ref(false);
 
 const onLoadTable = () => {
-  if (filter.value.from != null && filter.value.to != null) {
-    if (filter.value.from > filter.value.to) {
-      toast.add({
-        severity: 'warn',
-        summary: 'Cảnh báo',
-        detail: 'Thời gian bàn hành từ ngày lớn hơn đến!',
-        life: 3000,
-      });
+  loading.value = true;
+  BookService.BookDataTable( Object.assign(filterProject.value, filters.value))
+    .then((res) => {
+      if (res) {
+        dataBook.value = res.data || [];
+        totalRecords.value = res.totalRecords ?? 0;
+      }
+    })
+    .catch((error) => {
+      console.error('Error loading data:', error);
+    })
+    .finally(() => {
       loading.value = false;
-      return;
-    }
-  }
-
-  filter.value.capTaiLieuId = filter.value.capTaiLieuId != null ? filter.value.capTaiLieuId : 0;
-  KeHoachService.KeHoachDatatable(Object.assign(filterProject.value, filter.value)).then((result) => {
-    projectData.value = result?.data;
-    totalRecords.value = result?.recordsFiltered ?? 0;
-    loading.value = false;
-  });
-
-  expandedRows.value = null;
+      expandedRows.value = null;
+    });
 };
+
 
 const reloadDataTable = () => {
   loading.value = true;
+  expandedRows.value = [];
   onLoadTable();
 };
 
-// const onCreateProject = () => {
-//   dialog.open(KeHoachModal, {
-//     props: {
-//       header: 'Thêm mới kế hoạch',
-//       style: {
-//         width: '50vw',
-//       },
-//       breakpoints: {
-//         '960px': '75vw',
-//         '640px': '90vw',
-//       },
-//       modal: true,
-//     },
-//     onClose: (options) => {
-//       const data = options?.data ?? null;
-//       if (data) {
-//         const buttonType = data;
-//         if (buttonType === 'Save') {
-//           reloadDataTable();
-//         }
-//       }
-//     },
-//     data: {
-//       KeHoachModel: new KeHoachModel(),
-//       listGiaiDoanId: listGiaiDoanId,
-//       listDonViPhatHanhId: listDonViPhatHanhId,
-//       listPhanLoaiTaiLieuId: listPhanLoaiTaiLieuId,
-//       listCapTinh: listCapTinh,
-//       listCapHuyen: listCapHuyen,
-//       listCapXa: listCapXa,
-//       phanLoaiId: phanLoaiId.value,
-//       listCapDonViId: listCapDonViId,
-//       listNamTaiLieu: listNamTaiLieu,
-//     },
-//   });
-// };
-
-// const onEditProject = async (props: KeHoachModel) => {
-//   const taiLieuData = await TaiLieuService.getItem(props.id ?? 0);
-//   props.cap_donvi_id = taiLieuData?.donViPhatHanh?.cap_donvi_id;
-
-//   dialog.open(KeHoachModal, {
-//     props: {
-//       header: 'Cập nhật thông tin kế hoạch',
-//       style: {
-//         width: '50vw',
-//       },
-//       breakpoints: {
-//         '960px': '75vw',
-//         '640px': '90vw',
-//       },
-//       modal: true,
-//     },
-//     onClose: (options) => {
-//       const data = options?.data ?? null;
-//       if (data) {
-//         const buttonType = data;
-//         if (buttonType === 'Save') {
-//           reloadDataTable();
-//         }
-//       }
-//     },
-//     data: {
-//       KeHoachModel: props,
-//       listGiaiDoanId: listGiaiDoanId,
-//       listDonViPhatHanhId: listDonViPhatHanhId,
-//       listPhanLoaiTaiLieuId: listPhanLoaiTaiLieuId,
-//       listCapTinh: listCapTinh,
-//       listCapHuyen: listCapHuyen,
-//       listCapXa: listCapXa,
-//       phanLoaiId: phanLoaiId.value,
-//       listCapDonViId: listCapDonViId,
-//       listNamTaiLieu: listNamTaiLieu,
-//     },
-//   });
-// };
-
-// const confirmDeleteProject = (props: KeHoachModel) => {
-//   ConfirmDialog.showConfirmDialog(
-//     confirm,
-//     'Bạn có chắc chắn muốn xóa thông tin này?',
-//     'Xác nhận',
-//     'pi pi-question-circle',
-//     () => {
-//       KeHoachService.delete(props).then((result) => {
-//         if (result?.status == EnumStatus.OK) {
-//           toast.add({
-//             severity: 'success',
-//             summary: 'Thành công',
-//             detail: 'Xóa thông tin kế hoạch thành công!',
-//             life: 3000,
-//           });
-//           reloadDataTable();
-//         }
-//         else {
-//           toast.add({
-//             severity: 'error',
-//             summary: 'Lỗi',
-//             detail: 'Xóa thông tin kế hoạch thất bại!',
-//             life: 3000,
-//           });
-//         }
-//       });
-//     },
-//     () => {},
-//     '',
-//     ' p-button-danger',
-//   );
-// };
 
 const onPage = (event: PageEvent) => {
+  currentPageNumber.value = event.page;
   filterProject.value.first = event.first;
   reloadDataTable();
 };
@@ -704,10 +354,53 @@ onMounted(() => {
 });
 
 const timKiem = handleSubmit(async () => {
-  filter.value.keyword = keyWords.value;
+  filters.value.keyword = keyWords.value;
   filterProject.value.first = 0;
   reloadDataTable();
 });
+
+const onModalOpen = () => {
+  isOpenModal.value = true;
+  bookData.value = new BookModel();
+};
+
+const onModalOpenEdit = (data: BookModel) => {
+  console.log('Editing book:', data);
+  isOpenModal.value = true;
+  bookData.value = data;
+};
+
+const confirmDeleteProject = (props: BookModel) => {
+  ConfirmDialog.showConfirmDialog(
+    confirm,
+    'Bạn có muốn xóa thông tin sách này?',
+    'Xác nhận',
+    'pi pi-question-circle',
+    () => {
+      BookService.delete(props).then((result) => {
+        if (result?.status == EnumStatus.OK) {
+          toast.add({
+            severity: 'success',
+            summary: 'Xóa thông tin sách thành công !',
+            life: 3000,
+          });
+          reloadDataTable();
+        }
+        else {
+          toast.add({
+            severity: 'error',
+            summary: 'Xóa thông tin sách thất bại !',
+            life: 3000,
+          });
+        }
+      });
+    },
+    () => {},
+    '',
+    ' p-button-danger',
+  );
+};
+
 </script>
 
 <style lang="scss" scoped></style>

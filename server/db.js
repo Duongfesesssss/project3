@@ -1,23 +1,13 @@
-const sql = require('mssql');
+const mongoose = require('mongoose');
+require('dotenv').config();
 
-const config = {
-    user: 'sa',
-    password: 'Duong0948173074',
-    server: 'MSI', 
-    database: 'BookStoreDB',
-    options: {
-        encrypt: true,
-        trustServerCertificate: true,
-    }
+const connectToDB = async () => {
+        await mongoose.connect(process.env.DATABASE_URL, {
+            dbName: 'BookStoreDB',
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        console.log('MongoDB connected successfully!');
 };
-
-async function connectToDB() {
-    try {
-        await sql.connect(config);
-        console.log('Connected to SQL Server successfully!');
-    } catch (err) {
-        console.error('Database connection failed:', err);
-    }
-}
 
 module.exports = { connectToDB };
