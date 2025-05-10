@@ -1,7 +1,8 @@
 class BookModel {
     id?: string;               
     title?: string;            
-    author?: string;           
+    author?: string;       
+    description?: string;    
     publisher?: string;        
     published_date?: string;   
     isbn?: string;             

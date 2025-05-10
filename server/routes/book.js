@@ -7,13 +7,15 @@ router.get('/', async (req, res) => {
   try {
     const bookList = await Book.find({});
     res.status(200).json({
-      success: true,
+      status: 'OK',
+      metadata: null,
       data: bookList,
     });
   } catch (error) {
     console.error('Lỗi lấy danh sách sách:', error);
     res.status(500).json({
-      success: false,
+      status: 'ERROR',
+      metadata: null,
       message: 'Lỗi server. Không thể lấy danh sách sách.',
     });
   }
@@ -55,6 +57,22 @@ router.post('/datatable', async (req, res) => {
           as: 'genres', // Tên key mới chứa thông tin thể loại
         },
       },
+      {
+        $project: {
+          title: 1,
+          author: 1,
+          genres: 1,
+          image_link: 1,
+          publisher: 1,
+          published_date: 1,
+          isbn: 1,
+          price: 1,
+          language: 1,
+          pages: 1,
+          genre_ids: 1,
+          description: 1,
+        },
+      },
     ]);
 
     const totalPages = Math.ceil(totalRecords / rows);
@@ -79,20 +97,44 @@ router.post('/datatable', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const newBook = new Book(req.body);
+    const { title, author, genre_ids, image_link, publisher,
+      published_date,
+      isbn,
+      price,
+      language,
+      pages,
+      description,
+       } = req.body;
+
+    const newBook = new Book({
+      title,
+      author,
+      genre_ids,
+      image_link,
+      publisher,
+      published_date,
+      isbn,
+      price,
+      language,
+      pages,
+      genre_ids,
+      description,
+    });
+
     const savedBook = await newBook.save();
 
     res.status(201).json({
       status: 'OK',
       metadata: null,
       message: 'Thêm sách thành công.',
+      data: savedBook,
     });
   } catch (error) {
     if (error.code === 11000) {
       res.status(400).json({
         status: 'ERROR',
         metadata: null,
-        message: 'ISBN đã tồn tại.',
+        message: 'Slug hoặc ISBN đã tồn tại.',
       });
     } else {
       console.error('Lỗi thêm sách:', error);
@@ -146,7 +188,7 @@ router.delete('/', async (req, res) => {
 // Cập nhật thông tin sách
 router.put('/', async (req, res) => {
   try {
-    const { _id, ...updatedData } = req.body;
+    const { _id, image_link, ...updatedData } = req.body; // Nhận image_link từ request body
 
     // Kiểm tra nếu không có _id
     if (!_id) {
@@ -166,10 +208,14 @@ router.put('/', async (req, res) => {
     }
 
     // Cập nhật sách
-    const updatedBook = await Book.findByIdAndUpdate(_id, updatedData, {
-      new: true, // Trả về bản ghi đã cập nhật
-      runValidators: true, // Chạy các validator trong schema
-    });
+    const updatedBook = await Book.findByIdAndUpdate(
+      _id,
+      { ...updatedData, image_link }, // Cập nhật image_link
+      {
+        new: true, // Trả về bản ghi đã cập nhật
+        runValidators: true, // Chạy các validator trong schema
+      }
+    );
 
     res.status(200).json({
       status: 'OK',
@@ -180,20 +226,40 @@ router.put('/', async (req, res) => {
   } catch (error) {
     console.error('Lỗi cập nhật sách:', error);
 
-    // Trả về lỗi chi tiết hơn nếu có
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        status: 'ERROR',
-        metadata: null,
-        message: 'Dữ liệu không hợp lệ.',
-        errors: error.errors,
-      });
-    }
-
     res.status(500).json({
       status: 'ERROR',
       metadata: null,
       message: 'Lỗi server. Không thể cập nhật sách.',
+    });
+  }
+});
+
+// Lấy thông tin sách theo slug
+router.get('/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const book = await Book.findOne({ slug });
+
+    if (!book) {
+      return res.status(404).json({
+        status: 'ERROR',
+        metadata: null,
+        message: 'Không tìm thấy sách với slug đã cung cấp.',
+      });
+    }
+
+    res.status(200).json({
+      status: 'OK',
+      metadata: null,
+      data: book,
+    });
+  } catch (error) {
+    console.error('Lỗi lấy thông tin sách theo slug:', error);
+    res.status(500).json({
+      status: 'ERROR',
+      metadata: null,
+      message: 'Lỗi server. Không thể lấy thông tin sách.',
     });
   }
 });

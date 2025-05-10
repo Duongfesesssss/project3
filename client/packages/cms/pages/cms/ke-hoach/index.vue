@@ -181,6 +181,25 @@
         </template>
       </Column>
       <Column
+        field="price"
+        :show-filter-match-modes="false"
+        sortable
+        >
+        <template #header>
+          <span class="m-auto"><b>Giá tiền(nghìn đồng)</b></span>
+        </template>
+        </Column>
+      
+      <Column
+        field="pages"
+        :show-filter-match-modes="false"
+        sortable
+        >
+        <template #header>
+          <span class="m-auto"><b>Số lượng (cuốn)</b></span>
+        </template>
+        </Column>
+      <Column
         :exportable="false"
         style="min-width: 9rem"
         body-style="text-align:center"

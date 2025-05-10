@@ -16,6 +16,11 @@ const model = ref([
             to: '/cms/ke-hoach',
           },
       {
+            label: 'Quản lý khuyến mãi',
+            icon: 'pi pi-fw pi-paypal',
+            to: '/cms/khuyen-mai',
+          },
+      {
         label: 'Hệ thống',
         items: [
           {

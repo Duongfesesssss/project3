@@ -9,6 +9,8 @@ const userSchema = new mongoose.Schema({
     address: { type: String, default: '' },
     role: { type: String, default: 'customer' },
     avatar: { type: String, default: '' },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now },
   });
