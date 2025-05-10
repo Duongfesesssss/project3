@@ -8,6 +8,7 @@ const app = express();
 const port = process.env.PORT || 8888;
 const authRoutes = require("./routes/auth");
 const bookRouter = require("./routes/book");
+const voucherRouter = require("./routes/voucherRoute");
 const multer = require('multer');
 const path = require('path');
 // Sử dụng middleware để xử lý dữ liệu JSON
@@ -43,15 +44,11 @@ const storage = multer.diskStorage({
   const upload = multer({ storage });
 
 // API tải ảnh lên
-// API tải ảnh
 app.post('/api/upload/images', upload.single('file'), (req, res) => {
+  console.log('Yêu cầu tải ảnh:', req.file); // Log thông tin file
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Không có file ảnh nào được tải lên' });
-    }
-
-    if (!req.file.mimetype.startsWith('image/')) {
-      return res.status(400).json({ error: 'File không hợp lệ! Chỉ chấp nhận file ảnh.' });
     }
 
     const fileUrl = `${req.protocol}://${req.get('host')}/uploads/images/${req.file.filename}`;
@@ -69,6 +66,8 @@ app.post('/api/upload/images', upload.single('file'), (req, res) => {
 
 // API tải video
 app.post('/api/upload/videos', upload.single('file'), (req, res) => {
+  console.log('Yêu cầu tải ảnh:', req.file); // Log thông tin file
+
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Không có file video nào được tải lên' });
@@ -102,7 +101,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/book', bookRouter);
-
+app.use('/api/voucher', voucherRouter);
 
 const swaggerOptions = {
     swaggerDefinition: {

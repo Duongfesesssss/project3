@@ -1,40 +1,72 @@
 <template>
   <form>
-    <div class="bg-surface-50 dark:bg-surface-950 px-6 py-20 md:px-12 lg:px-20">
-      <div class="bg-surface-0 dark:bg-surface-900 p-6 shadow rounded-border w-full lg:w-6/12 mx-auto">
+    <div class="bg-gray-50 dark:bg-gray-900 min-h-screen flex items-center justify-center px-4">
+      <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md">
         <div class="text-center mb-8">
-          <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Welcome Back</div>
-          <span class="text-surface-600 dark:text-surface-200 font-medium leading-normal">Don't have an account?</span>
-          <a class="font-medium no-underline ml-2 text-primary cursor-pointer">Create today!</a>
+          <h2 class="text-3xl font-semibold text-gray-900 dark:text-white mb-2">Chào mừng trở lại</h2>
+          <p class="text-gray-600 dark:text-gray-300">Đăng nhập để tiếp tục</p>
+
         </div>
 
-        <div>
-          <label for="email1" class="text-surface-900 dark:text-surface-0 font-medium mb-2 block">Email</label>
-          <InputText v-model="loginEmail" id="email1" type="text" placeholder="Email address" class="w-full mb-4" />
+        <!-- Google Sign In -->
+        <div class="border-t border-gray-300 dark:border-gray-600 mb-6"></div>
 
-          <label for="password1" class="text-surface-900 dark:text-surface-0 font-medium mb-2 block">Password</label>
-          <InputText v-model="loginPassword" id="password1" type="password" placeholder="Password" class="w-full mb-4" />
-
-          <div class="flex items-center justify-between mb-12">
-            <div class="flex items-center">
-              <Checkbox v-model="checked1" id="rememberme1" :binary="true" class="mr-2" />
-              <label for="rememberme1">Remember me</label>
-            </div>
-            <a class="font-medium no-underline ml-2 text-primary text-right cursor-pointer">Forgot password?</a>
+        <!-- Email/Password Login -->
+        <div class="space-y-6">
+          <div>
+            <label for="email1" class="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1">Email</label>
+            <InputText v-model="loginEmail" id="email1" type="email" placeholder="Nhập địa chỉ email" class="w-full" />
+            <span v-if="loginErrors.email" class="text-sm text-red-500 mt-1 block">{{ loginErrors.email }}</span>
+          </div>
+          
+          <div>
+            <label for="password1" class="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1">Mật khẩu</label>
+            <InputText v-model="loginPassword" id="password1" type="password" placeholder="Nhập mật khẩu" class="w-full" />
+            <span v-if="loginErrors.password" class="text-sm text-red-500 mt-1 block">{{ loginErrors.password }}</span>
           </div>
 
-          <Button label="Sign In" icon="pi pi-user" class="w-full" @click="doLogin" />
+          <div class="flex items-center justify-between text-sm">
+            <div class="flex items-center">
+              <Checkbox v-model="checked1" id="rememberme1" :binary="true" class="mr-2" />
+              <label for="rememberme1" class="text-gray-700 dark:text-gray-300">Lưu mật khẩu</label>
+            </div>
+            <p>
+            <NuxtLink to="/forgot-password" class="ml-1 text-blue-600 hover:underline cursor-pointer">Quên mật khẩu?</NuxtLink> </p>
+
+          </div>
+
+          <Button 
+            label="Đăng nhập" 
+            icon="pi pi-user" 
+            class="w-full justify-center !bg-blue-600 hover:!bg-blue-700 !border-none !text-white" 
+            @click="doLogin" 
+          />
+        </div>
+
+        <!-- Sign In with Google -->
+        <div class="text-center mt-8">
+          <p class="text-gray-600 dark:text-gray-300">
+            Bạn chưa có tài khoản? 
+            <NuxtLink to="/register" class="ml-1 text-blue-600 hover:underline cursor-pointer">Đăng ký ngay</NuxtLink>          </p>
+          <Button 
+            label="Đăng nhâp với Google" 
+            icon="pi pi-google" 
+            class="w-full mb-6 justify-center !bg-red-500 hover:!bg-red-600 !border-none !text-white" 
+            @click="loginWithGoogle" 
+          />
         </div>
       </div>
     </div>
+    <Toast />
   </form>
-  <Toast />
 </template>
 
 <script setup>
 import { ref } from 'vue';
 import { useForm } from 'vee-validate';
 import * as yup from 'yup';
+import { useToast } from 'primevue/usetoast';
+import { useAuth } from '#imports';
 import { AuthService } from '~/packages/base/services/auth.service';
 
 definePageMeta({
@@ -45,94 +77,46 @@ definePageMeta({
   },
 });
 
-const isOpenSendRequestForm = ref(false);
+const checked1 = ref(false);
 const loading = ref(false);
 const toast = useToast();
 
-const openClickInfoModal = () => {
-  isOpenSendRequestForm.value = !isOpenSendRequestForm.value;
-};
-
-// Schema cho form đăng nhập
 const loginSchema = yup.object({
-  email: yup
-    .string()
-    .required('Vui lòng nhập tài khoản!')
-    .min(2, 'Tài khoản phải có ít nhất 2 ký tự!'),
-  password: yup
-    .string()
-    .required('Vui lòng nhập mật khẩu!')
-    .min(6, 'Mật khẩu phải có ít nhất 6 ký tự!'),
+  email: yup.string().required('Vui lòng nhập địa chỉ email!').min(2, 'Tài khoản phải có ít nhất 2 ký tự!'),
+  password: yup.string().required('Vui lòng nhập mật khẩu!').min(6, 'Mật khẩu phải có ít nhất 6 ký tự!'),
 });
 
-const {
-  defineField: defineLoginField,
-  handleSubmit: handleLoginSubmit,
-  errors: loginErrors,
-} = useForm({
+const { defineField: defineLoginField, handleSubmit: handleLoginSubmit, errors: loginErrors } = useForm({
   validationSchema: loginSchema,
 });
+
 const [loginEmail] = defineLoginField('email');
 const [loginPassword] = defineLoginField('password');
-
-// Schema cho form gửi yêu cầu quên mật khẩu
-const requestSchema = yup.object({
-  email: yup
-    .string()
-    .required('Vui lòng nhập địa chỉ email!')
-    .email('Vui lòng nhập địa chỉ email hợp lệ!'),
-});
-
-const {
-  defineField: defineRequestField,
-  handleSubmit: handleRequestSubmit,
-  errors: requestErrors,
-} = useForm({
-  validationSchema: requestSchema,
-});
-const [requestEmail] = defineRequestField('email');
-
-// Hàm xử lý gửi yêu cầu
-const onSubmit = handleRequestSubmit(async () => {
-  loading.value = true;
-
-  try {
-    const res = await AuthService.resetPasswordUserAuth({ email: requestEmail.value });
-    if (res.value === 'success') {
-      toast.add({
-        severity: 'success',
-        summary: 'Thành công',
-        detail: 'Gửi yêu cầu thành công',
-        life: 2000,
-      });
-    }
-    else {
-      toast.add({
-        severity: 'error',
-        summary: 'Lỗi',
-        detail: 'Địa chỉ email không tồn tại trên hệ thống!',
-        life: 2000,
-      });
-    }
-  }
-  finally {
-    loading.value = false;
-  }
-});
-
-// Hàm xử lý đăng nhập
 const { signIn } = useAuth();
+
+// Google login
+const loginWithGoogle = async () => {
+  try {
+    await signIn('google', { callbackUrl: '/' });
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Đăng nhập Google thất bại!',
+      life: 2000,
+    });
+  }
+};
+
+// Email/Password login
 const doLogin = handleLoginSubmit(async () => {
   try {
     await signIn(
       {
-        user_name: loginEmail.value,
+        email: loginEmail.value,
         password: loginPassword.value,
       },
-      {
-        callbackUrl: '/',
-        external: true,
-      },
+      { callbackUrl: '/', external: true }
     );
     toast.add({
       severity: 'success',
@@ -140,10 +124,8 @@ const doLogin = handleLoginSubmit(async () => {
       detail: 'Đăng nhập thành công',
       life: 2000,
     });
-  }
-  catch (error) {
+  } catch (error) {
     if (error.response) {
-      // lấy dữ liệu message lỗi khi được trả về
       const responseErrors = error.response._data;
       if (responseErrors) {
         toast.add({
@@ -153,7 +135,7 @@ const doLogin = handleLoginSubmit(async () => {
           life: 2000,
         });
       }
-  
-}}});
-
+    }
+  }
+});
 </script>

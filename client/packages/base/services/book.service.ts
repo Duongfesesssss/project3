@@ -42,6 +42,50 @@ import type { BookGenresModel } from '../models/dto/response/book/book-genres.mo
       return null;
     }
 
+    async getAllBook() {
+      const res = await $api<RestPagedDataTable<BookModel[]>>(
+        `/api/book`,
+        {
+          method: 'GET',
+        },
+      );
+      if (res && res.status === EnumStatus.OK) {
+        return res;
+      }
+      return null;
+    }
+    async getBookById(id: string) {
+      const res = await $api<RestPagedDataTable<BookModel>>(
+        `/api/book/${id}`,
+        {
+          method: 'GET',
+        },
+      );
+    
+      if (res && res.status === EnumStatus.OK) {
+        return res.data; // Trả về dữ liệu từ `res.data`
+      }
+    
+      console.error('Không tìm thấy sách với ID:', id);
+      return null;
+    }
+
+    async getBookBySlug(slug: string) {
+      const res = await $api<RestPagedDataTable<BookModel>>(
+        `/api/book/${slug}`,
+        {
+          method: 'GET',
+        },
+      );
+    
+      if (res && res.status === EnumStatus.OK) {
+        return res.data;
+      }
+    
+      console.error('Không tìm thấy sách với slug:', slug);
+      return null;
+    }
+    
     async getTheLoaiSach() {
         const res = await $api<RestData<BookGenresModel[]>>(
           `/api/book/genres`,
@@ -114,7 +158,6 @@ import type { BookGenresModel } from '../models/dto/response/book/book-genres.mo
     }
   }
   
-  // Tạo instance duy nhất cho service
   const BookService = new _BookService();
   export { BookService };
   

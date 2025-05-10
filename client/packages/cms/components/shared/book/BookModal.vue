@@ -2,8 +2,6 @@
 
 import { useForm } from 'vee-validate';
 import * as yup from 'yup';
-import { HoKhauModel } from '~/packages/base/models/dto/response/ho-khau/ho-khau.model';
-import { HoKhauService } from '~/packages/base/services/ho-khau.service';
 import { BookService } from '~/packages/base/services/book.service';
 import { BookModel } from '~/packages/base/models/dto/response/book/book.model';
 import type { BookGenresModel } from '~/packages/base/models/dto/response/book/book-genres.model';
@@ -17,6 +15,7 @@ const closeEscapeKeyModalInfo = ref<boolean>(true);
 const closeEscapeKeyModalMap = ref<boolean>(false);
 const visible_map = ref(false);
 const theLoaiSach = ref<BookGenresModel[]>([]);
+const imageLink = ref<string | null>(null); // URL ảnh sau khi tải lên
 
 const props = defineProps({
   isVisible: {
@@ -56,7 +55,7 @@ const { defineField, handleSubmit, errors, resetForm } = useForm({
 });
 
 const [_id] = defineField('_id');
-const [image_link] = defineField('image_link');
+const [description] = defineField('description');
 const [title] = defineField('title');
 const [author] = defineField('author');
 const [publisher] = defineField('publisher');
@@ -80,8 +79,10 @@ const onSubmit = handleSubmit(async () => {
     pages: pages.value,
     genre_ids: genre_ids.value,
     image_link: imageLink.value,
+    description: description.value,
+    
   };
-
+  console.log('Image Link:', imageLink.value);
   console.log('BookDTO:', BookDTO);
 
   ConfirmDialog.showConfirmDialog(
@@ -177,10 +178,12 @@ const onSubmit = handleSubmit(async () => {
 watch(
   () => props.book,
   (newBook) => {
+    console.log('newBook:', newBook);
     if (newBook) {
       _id.value = newBook._id;
       title.value = newBook.title;
       author.value = newBook.author;
+      description.value = newBook.description;
       publisher.value = newBook.publisher;
       published_date.value = newBook.published_date;
       isbn.value = newBook.isbn;
@@ -188,29 +191,13 @@ watch(
       language.value = newBook.language;
       pages.value = newBook.pages;
       genre_ids.value = newBook.genre_ids;
+      imageLink.value = newBook.image_link || null;
+      console.log('Image Link after assignment:', imageLink.value);
     }
   },
   { immediate: true }
 );
 
-
-watchEffect(() => {
-  if (thongTin.value?._id != undefined) {
-    id.value = thongTin.value._id;
-    ma_ho_khau.value = thongTin.value?.ma_ho_khau;
-    so_thanh_vien.value = thongTin.value?.so_thanh_vien;
-    dia_chi_thuong_tru.value = thongTin.value?.dia_chi_thuong_tru;
-    noi_cap.value = thongTin.value?.noi_cap;
-    ngay_cap.value = thongTin.value?.ngay_cap;
-
-  }
-});
-
-watch(visible_map, () => {
-  if (!visible_map.value) {
-    closeEscapeKeyModalInfo.value = true;
-  }
-});
 
 const emit = defineEmits(['hideModal', 'reloadDataTable']);
 
@@ -220,17 +207,21 @@ const handleHideModal = () => {
 
 
 const fileUpload = ref<any>(null); // Tham chiếu đến FileUpload
-const imageLink = ref<string | null>(null); // URL ảnh sau khi tải lên
 
 const onUploadBookImage = async (event: any) => {
-  const file = event.files[0]; // Lấy file từ sự kiện upload
+  const file = event.files[0];
+  console.log('Đang tải ảnh lên:', file);
   const formData = new FormData();
   formData.append('file', file);
 
   try {
     const response = await UploadService.Images(formData);
-    if (response && response.data) {
-      imageLink.value = response.data[0]; // Lấy URL ảnh từ API
+    console.log('Phản hồi từ API:', response);
+
+    // Lấy URL ảnh từ phản hồi
+    if (response && response.url) {
+      imageLink.value = response.url;
+      console.log('URL ảnh:', imageLink.value);
       toast.add({
         severity: 'success',
         summary: 'Thành công',
@@ -350,7 +341,7 @@ const formatSize = (bytes: number) => {
               </div>
             </div>
 
-            <div class="gap-4 grid grid-cols-1 sm:grid-cols-2">
+            <div class="gap-4 grid grid-cols-1 sm:grid-cols-3">
               <div class="min-w-40 flex space-x-4">
                 <div class="flex-1">
                   <label
@@ -381,12 +372,38 @@ const formatSize = (bytes: number) => {
                   placeholder="Nhập giá tiền"
                 />
               </div>
+              <div class="min-w-40">
+                <label class="block font-bold mb-3">Số lượng(cuốn)</label>
+                <InputNumber
+                  id="pages"
+                  v-model="pages"
+                  fluid
+                  filter
+                  show-clear
+                  placeholder="Nhập số lượng cuốn trong kho"
+                />
+              </div>
             </div>
+            <div class="gap-4 grid grid-cols-1">
+        <div class="min-w-40">
+          <label
+            for="mo_ta"
+            class="block font-bold mb-3"
+          >Mô tả</label>
+          <Textarea
+            id="description"
+            v-model="description"
+            rows="5"
+            fluid
+            placeholder="Nhập mô tả sách"
+          />
+        </div>
+      </div>
             <div class="gap-4 grid grid-cols-1 start-0">
         <div class="min-w-40">
           <FileUpload
   ref="fileUpload"
-  url="/api/upload"
+  name="file"
   :file-limit="1"
   accept="image/jpeg,image/jpg,image/png,image/bmp"
   :auto="true"
@@ -396,67 +413,64 @@ const formatSize = (bytes: number) => {
   :max-file-size="10485760"
   invalid-file-size-message="File quá lớn (tối đa 10MB)!"
   invalid-file-type-message="Chỉ chấp nhận jpeg, jpg, png, bmp!"
+  @select="onUploadBookImage"
 >
-  <template #content="{ files, uploadedFiles, removeFileCallback }">
-    <!-- File đang chờ upload -->
-    <div
-      v-if="files.length > 0"
-      class="flex flex-col gap-4 mb-4"
-    >
-      <div
-        v-for="(file, index) in files"
-        :key="file.name + index"
-        class="flex items-center gap-4 border p-3 rounded"
-      >
-        <img :src="fileObjectURL(file)" alt="Preview" width="50" height="50" />
-        <div class="flex-1">
-          <div class="font-semibold truncate w-40">{{ file.name }}</div>
-          <div>{{ formatSize(file.size) }}</div>
-        </div>
-        <Badge value="Chờ duyệt" severity="warn" />
-        <Button
-          icon="pi pi-times"
-          outlined
-          rounded
-          severity="danger"
-          @click="removeFileCallback(index)"
-        />
+<template #content="{ files, uploadedFiles, removeFileCallback }">
+  <!-- File đã có sẵn -->
+  <div
+    v-if="imageLink"
+    class="flex flex-col gap-4 mb-4"
+  >
+    <div class="flex items-center gap-4 border p-3 rounded">
+      <img :src="imageLink" alt="Ảnh sách" width="50" height="50" />
+      <div class="flex-1">
+        <div class="font-semibold truncate w-40">Ảnh đã tải lên</div>
+        <div>{{ formatSize(1024 * 1024) }}</div> <!-- Thay thế bằng kích thước thực tế nếu có -->
       </div>
+      <Badge value="Hoàn tất" severity="success" />
+      <Button
+        icon="pi pi-times"
+        outlined
+        rounded
+        severity="danger"
+        @click="imageLink = null"
+      />
     </div>
+  </div>
 
-    <!-- File đã upload thành công -->
+  <!-- File đang chờ upload -->
+  <div
+    v-if="files.length > 0"
+    class="flex flex-col gap-4 mb-4"
+  >
     <div
-      v-if="uploadedFiles.length > 0"
-      class="flex flex-col gap-4"
+      v-for="(file, index) in files"
+      :key="file.name + index"
+      class="flex items-center gap-4 border p-3 rounded"
     >
-      <div
-        v-for="(file, index) in uploadedFiles"
-        :key="file.name + index"
-        class="flex items-center gap-4 border p-3 rounded"
-      >
-        <img :src="fileObjectURL(file)" alt="Ảnh sách" width="50" height="50" />
-        <div class="flex-1">
-          <div class="font-semibold truncate w-40">{{ file.name }}</div>
-          <div>{{ formatSize(file.size) }}</div>
-        </div>
-        <Badge value="Hoàn tất" severity="success" />
-        <Button
-          icon="pi pi-times"
-          outlined
-          rounded
-          severity="danger"
-          @click="onRemoveBookImage(index)"
-        />
+      <img :src="fileObjectURL(file)" alt="Preview" width="50" height="50" />
+      <div class="flex-1">
+        <div class="font-semibold truncate w-40">{{ file.name }}</div>
+        <div>{{ formatSize(file.size) }}</div>
       </div>
+      <Badge value="Chờ duyệt" severity="warn" />
+      <Button
+        icon="pi pi-times"
+        outlined
+        rounded
+        severity="danger"
+        @click="removeFileCallback(index)"
+      />
     </div>
-  </template>
+  </div>
 
-  <template #empty>
-    <div class="text-center flex flex-col items-center justify-center">
-      <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-4" />
-      <p>Kéo thả hoặc chọn ảnh sách</p>
-    </div>
-  </template>
+  <!-- Hiển thị thông báo nếu không có file -->
+  <div v-if="!imageLink && files.length === 0" class="text-center flex flex-col items-center justify-center">
+    <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-4" />
+    <p>Kéo thả hoặc chọn ảnh sách</p>
+  </div>
+</template>
+
 </FileUpload>
 
         </div>
