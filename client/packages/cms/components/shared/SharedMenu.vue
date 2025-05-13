@@ -13,12 +13,22 @@ const model = ref([
       {
             label: 'Quản lý sách',
             icon: 'pi pi-fw pi-objects-column',
-            to: '/cms/ke-hoach',
+            to: '/cms/kho-sach',
           },
       {
             label: 'Quản lý khuyến mãi',
             icon: 'pi pi-fw pi-paypal',
             to: '/cms/khuyen-mai',
+          },
+          {
+            label: 'Quản lý nhà cung cấp',
+            icon: 'pi pi-fw pi-building-columns',
+            to: '/cms/nha-cung-cap',
+          },
+          {
+            label: 'Quản lý thể loại',
+            icon: 'pi pi-fw pi-book',
+            to: '/cms/the-loai',
           },
       {
         label: 'Hệ thống',
@@ -31,19 +41,10 @@ const model = ref([
             label: 'Quản lý nhóm người dùng',
             to: '/cms/user-group',
           },
-          {
-            label: 'Quản lý sách',
-            to: '/cms/ke-hoach',
-          },
         ],
         icon: 'pi pi-cog',
         to: '',
       },
-      // {
-      //   label: 'Mô hình quản lý rủi ro thiên tai dựa vào cộng đồng',
-      //   icon: 'pi pi-fw pi-user',
-      //   to: '/cms/manageModel',
-      // },
     ],
     separator: null,
   },

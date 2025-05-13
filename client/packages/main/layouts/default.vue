@@ -9,11 +9,21 @@ useHead({
 });
 
 const { data } = useAuth();
-console.log('data user', data.value);
+const { signOut } = useAuth();
+const toast = useToast();
 const { isMenuSpActive, toggleMenuSp, isMobileSp, doCheckSp } = useMainLayout();
+const isShowDropdown = ref(false);
+const user = ref(null);
+
+// Cập nhật user data khi data thay đổi
+watch(data, (newData) => {
+  user.value = newData?.user;
+}, { immediate: true });
+
 onMounted(() => {
   doCheckSp();
 });
+
 window?.addEventListener('resize', () => {
   doCheckSp();
 });
@@ -66,6 +76,28 @@ const items = ref([
         root: true
     }
 ]);
+
+const doLogout = async () => {
+  try {
+    await signOut({
+      callbackUrl: '/',
+      external: false,
+    });
+    // Reset user data
+    user.value = null;
+    isShowDropdown.value = false;
+    toast.add({
+      severity: 'success',
+      summary: 'Đăng xuất',
+      detail: 'Đăng xuất thành công',
+      life: 2000,
+      closable: true,
+    });
+    navigateTo('/');
+  } catch (error) {
+    console.error('Lỗi khi đăng xuất:', error);
+  }
+};
 </script>
 
 <template>
@@ -103,57 +135,80 @@ const items = ref([
                     <Button :label="item.label" outlined />
                 </div>
             </template>
-            <template #end>
-  <div class="flex items-center gap-4">
-    <OverlayBadge value="4" class="inline-flex">
-      <Avatar icon="pi pi-shopping-cart" size="large" />
-    </OverlayBadge>
 
-    <template v-if="session?.user">
-      <div class="relative group">
-        <button class="flex items-center gap-2 text-white font-medium px-4 py-2 rounded-full hover:bg-white/10 transition">
-          <Avatar image="https://primefaces.org/cdn/primevue/images/avatar/amyelsner.png" shape="circle" size="large" />
-          <span class="hidden sm:inline">Chào, {{ session.user.name }}</span>
-          <i class="pi pi-chevron-down"></i>
-        </button>
-
-        <!-- Dropdown menu -->
-        <div
-          class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-2 z-50 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all"
-        >
-          <NuxtLink to="/profile" class="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Thông tin</NuxtLink>
-          <NuxtLink to="/admin" class="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Quản lý</NuxtLink>
-          <button @click="handleLogout" class="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700">Đăng xuất</button>
+            <template #middle>
+        <div class="flex justify-center items-center w-full">
+          <div class="relative w-full max-w-md">
+            <input
+              type="text"
+              placeholder="Tìm kiếm..."
+              class="border rounded-full px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <button
+              type="button"
+              class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+            >
+              <i class="pi pi-search"></i>
+            </button>
+          </div>
         </div>
-      </div>
-    </template>
+      </template>
 
-    <template v-else>
-      <NuxtLink to="/login" class="bg-white text-blue-600 px-4 py-2 rounded-full font-medium hover:bg-gray-100 transition">
-        Đăng nhập
-      </NuxtLink>
-    </template>
-  </div>
-</template>
+            <template #end>
+              <div class="flex items-center gap-4">
+                <OverlayBadge value="4" class="inline-flex">
+                  <NuxtLink to="/gio-hang" class="no-underline">
+                    <Avatar icon="pi pi-shopping-cart" size="large" />
+                  </NuxtLink>
+                </OverlayBadge>
+
+                <template v-if="user">
+                  <div class="relative">
+                    <button 
+                      @click="isShowDropdown = !isShowDropdown"
+                      class="flex items-center gap-2 text-white font-medium px-4 py-2 rounded-full hover:bg-white/10 transition"
+                    >
+                      <Avatar image="https://primefaces.org/cdn/primevue/images/avatar/amyelsner.png" shape="circle" size="large" />
+                      <span class="hidden sm:inline">Chào, {{ user.user_name }}</span>
+                      <i class="pi pi-chevron-down"></i>
+                    </button>
+
+                    <!-- Dropdown menu -->
+                    <div
+                      v-show="isShowDropdown"
+                      class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-2 z-50"
+                    >
+                      <NuxtLink to="/profile" class="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Thông tin</NuxtLink>
+                      <NuxtLink to="/cms" class="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Quản lý</NuxtLink>
+                      <button @click="doLogout" class="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700">Đăng xuất</button>
+                    </div>
+                  </div>
+                </template>
+
+                <template v-else>
+                  <NuxtLink to="/login" class="bg-white text-blue-600 px-4 py-2 rounded-full font-medium hover:bg-gray-100 transition">
+                    Đăng nhập
+                  </NuxtLink>
+                </template>
+              </div>
+            </template>
         </MegaMenu>
     <main>
-      <NuxtPage /> <!-- Quan trọng: Thêm NuxtPage để render nội dung trang -->
+      <NuxtPage />
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white shadow-md py-4 mt-auto">
-      <div class="max-w-7xl mx-auto text-center text-sm text-gray-500">
+    <footer class="mt-16 bg-gray-100 text-center text-sm text-gray-600 py-6">
+      <div>
         © 2025 Hệ thống bán sách online dựa trên nền tảng web.
       </div>
     </footer>
   </div>
+      <Toast />
+
 </template>
 
 <style lang="scss">
 
 
 </style>
-
-
-
-

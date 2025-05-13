@@ -8,7 +8,8 @@ const app = express();
 const port = process.env.PORT || 8888;
 const authRoutes = require("./routes/auth");
 const bookRouter = require("./routes/book");
-const voucherRouter = require("./routes/voucherRoute");
+const publisherRouter = require("./routes/publisherRoutes");
+const genreRouter = require("./routes/genre-book");
 const multer = require('multer');
 const path = require('path');
 // Sử dụng middleware để xử lý dữ liệu JSON
@@ -101,7 +102,8 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/book', bookRouter);
-app.use('/api/voucher', voucherRouter);
+app.use('/api/publisher', publisherRouter);
+app.use('/api/genre', genreRouter);
 
 const swaggerOptions = {
     swaggerDefinition: {

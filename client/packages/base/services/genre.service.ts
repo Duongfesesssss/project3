@@ -2,14 +2,14 @@ import {
     type RestData,
     type RestPagedDataTable,
   } from '../models/base-response.model';
-import type { VoucherModel } from '../models/dto/response/voucher/voucher.model';
+import type { BookGenresModel } from '../models/dto/response/book/book-genres.model';
   import { BaseService } from './base.service';
   
-  class _VoucherService extends BaseService {
-    async getVoucherDataTable(filterProject: any) {
+  class _GenreService extends BaseService {
+    async getGenreDataTable(filterProject: any) {
       try {
-        const res = await $api<RestPagedDataTable<VoucherModel[]>>(
-          '/api/voucher/datatable', // nếu có endpoint này
+        const res = await $api<RestPagedDataTable<BookGenresModel[]>>(
+          '/api/genre/datatable',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -29,8 +29,8 @@ import type { VoucherModel } from '../models/dto/response/voucher/voucher.model'
       }
     }
   
-    async getAllVouchers() {
-      const res = await $api<RestData<VoucherModel[]>>('/api/voucher', {
+    async getAllGenres() {
+      const res = await $api<RestData<BookGenresModel[]>>('/api/genre', {
         method: 'GET',
       });
   
@@ -40,8 +40,8 @@ import type { VoucherModel } from '../models/dto/response/voucher/voucher.model'
       return null;
     }
   
-    async getVoucherById(id: string) {
-      const res = await $api<RestData<VoucherModel>>(`/api/voucher/${id}`, {
+    async getGenreById(id: string) {
+      const res = await $api<RestData<BookGenresModel>>(`/api/genre/${id}`, {
         method: 'GET',
       });
   
@@ -49,12 +49,12 @@ import type { VoucherModel } from '../models/dto/response/voucher/voucher.model'
         return res.data;
       }
   
-      console.error('Không tìm thấy voucher với ID:', id);
+      console.error('Không tìm thấy thể loại với ID:', id);
       return null;
     }
   
-    async validateVoucher(code: string) {
-      const res = await $api<RestData<VoucherModel>>(`/api/voucher/validate`, {
+    async validateGenre(code: string) {
+      const res = await $api<RestData<BookGenresModel>>(`/api/genre/validate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code }),
@@ -68,8 +68,8 @@ import type { VoucherModel } from '../models/dto/response/voucher/voucher.model'
       return null;
     }
   
-    async insert(entity: VoucherModel) {
-      const response = await $api<RestData<VoucherModel>>(`/api/voucher`, {
+    async insert(entity: BookGenresModel) {
+      const response = await $api<RestData<BookGenresModel>>(`/api/genre`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,8 +80,8 @@ import type { VoucherModel } from '../models/dto/response/voucher/voucher.model'
       return response ?? null;
     }
   
-    async update(entity: VoucherModel) {
-      const response = await $api<RestData<VoucherModel>>(`/api/voucher`, {
+    async update(entity: BookGenresModel) {
+      const response = await $api<RestData<BookGenresModel>>(`/api/genre`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -92,8 +92,8 @@ import type { VoucherModel } from '../models/dto/response/voucher/voucher.model'
       return response ?? null;
     }
   
-    async delete(entity: VoucherModel) {
-      const response = await $api<RestData<null>>(`/api/voucher`, {
+    async delete(entity: BookGenresModel) {
+      const response = await $api<RestData<null>>(`/api/genre`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -105,6 +105,6 @@ import type { VoucherModel } from '../models/dto/response/voucher/voucher.model'
     }
   }
   
-  const VoucherService = new _VoucherService();
-  export { VoucherService };
+  const GenreService = new _GenreService();
+  export { GenreService };
   

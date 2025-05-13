@@ -159,4 +159,44 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { login, register, forgotPassword, resetPassword };
+const logout = async (req, res) => {
+  try {
+    // Nếu sử dụng Refresh Token trong cookie, xóa cookie
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'Strict',
+    });
+
+    res.status(200).json({ status: 'OK', success: true, message: 'Đăng xuất thành công!' });
+  } catch (error) {
+    console.error('Lỗi trong quá trình đăng xuất:', error);
+    res.status(500).json({ status: 'ERROR', success: false, message: 'Lỗi server. Không thể đăng xuất.' });
+  }
+};
+
+const user = async (req, res) => {
+  try {
+    // Lấy Access Token từ header
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ status: 'ERROR', success: false, message: 'Không có token!' });
+    }
+
+    // Xác thực token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Tìm người dùng trong cơ sở dữ liệu
+    const user = await User.findById(decoded.id).select('-password'); // Không trả về mật khẩu
+    if (!user) {
+      return res.status(404).json({ status: 'ERROR', success: false, message: 'Người dùng không tồn tại!' });
+    }
+
+    res.status(200).json({ status: 'OK', success: true, user });
+  } catch (error) {
+    console.error('Lỗi trong quá trình lấy thông tin người dùng:', error);
+    res.status(500).json({ status: 'ERROR', success: false, message: 'Lỗi server. Không thể lấy thông tin người dùng.' });
+  }
+};
+
+module.exports = { login, register, forgotPassword, resetPassword, logout, user };

@@ -1,23 +1,51 @@
 const mongoose = require('mongoose');
 
 const bookSchema = new mongoose.Schema({
-    image_link: String,
-    title: String,
-    author: String,
-    slug: { type: String, unique: true },
-    description: String,
-    publisher: String,
-    published_date: Date,
-    isbn: { type: String, unique: true },
-    genre_ids: [{ type: Number }],
-    price: Number,
-    language: String,
-    pages: Number,
-  }, { timestamps: true });
+  image_link: String,
+  title: String,
+  author: String,
+  slug: { type: String, unique: true },
+  description: String,
+  publisher: String,
+  published_date: Date,
+  isbn: { type: String, unique: true },
+  genre_ids: [{ type: Number }],
+  price: Number,
+  language: String,
+  pages: Number,
+
+  // Đánh giá
+  rating: { type: Number, default: 0, min: 0, max: 5 },
+  total_reviews: { type: Number, default: 0 },
+  reviews: [{
+    user_id: String,
+    rating: { type: Number, min: 1, max: 5 },
+    comment: String,
+    date: { type: Date, default: Date.now }
+  }],
+
+  // Bán chạy
+  sales_count: { type: Number, default: 0 },
+  is_bestseller: { type: Boolean, default: false },
+  stock_status: { type: String, enum: ['in_stock', 'low_stock', 'out_of_stock'], default: 'in_stock' },
+  discount: { type: Number, default: 0, min: 0, max: 100 },
+
+  // Nhà cung cấp
+  supplier_id: String,
+  supplier_name: String,
+  supplier_rating: { type: Number, min: 0, max: 5, default: 0 },
+
+}, { timestamps: true });
 
 // Tự động tạo slug từ title trước khi lưu
 bookSchema.pre('save', function (next) {
-  if (this.isModified('title')) {
+  // Tự động tạo isbn nếu không được cung cấp
+  if (!this.isbn) {
+    this.isbn = Math.floor(1000000000000 + Math.random() * 9000000000000).toString(); // Tạo dãy số ngẫu nhiên 13 chữ số
+  }
+
+  // Chỉ tạo slug nếu có title và title đã thay đổi
+  if (this.title && this.isModified('title')) {
     const vietnameseMap = {
       à: 'a', á: 'a', ạ: 'a', ả: 'a', ã: 'a', â: 'a', ầ: 'a', ấ: 'a', ậ: 'a', ẩ: 'a', ẫ: 'a', ă: 'a', ằ: 'a', ắ: 'a', ặ: 'a', ẳ: 'a', ẵ: 'a',
       è: 'e', é: 'e', ẹ: 'e', ẻ: 'e', ẽ: 'e', ê: 'e', ề: 'e', ế: 'e', ệ: 'e', ể: 'e', ễ: 'e',
@@ -45,25 +73,19 @@ bookSchema.pre('save', function (next) {
       .replace(/\s+/g, '-') // Thay khoảng trắng bằng dấu gạch ngang
       .replace(/-+/g, '-'); // Loại bỏ dấu gạch ngang thừa
   }
-    // Tự động tạo isbn nếu không được cung cấp
-    if (!this.isbn) {
-      this.isbn = Math.floor(1000000000000 + Math.random() * 9000000000000).toString(); // Tạo dãy số ngẫu nhiên 13 chữ số
-    }
 
   next();
 });
 
-
-  const bookGenresSchema = new mongoose.Schema({
-    _id:Number,
-    name: String,
-    description: String,
-  }, { collection: 'genres' },
-  { timestamps: true });
+const bookGenresSchema = new mongoose.Schema({
+  _id: Number,
+  name: String,
+  description: String,
+}, { collection: 'genres' },
+{ timestamps: true });
 
 const Book = mongoose.model('Book', bookSchema);
 const BookGenres = mongoose.model('BookGenres', bookGenresSchema);
-
 
 // **Hàm lấy tất cả sách**
 const getAllBooks = async () => {
@@ -98,7 +120,6 @@ const addBook = async (bookData) => {
     throw error;
   }
 };
-
 
 // Xuất model và các hàm
 module.exports = { Book, BookGenres, getAllBooks, addBook };

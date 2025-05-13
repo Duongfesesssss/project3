@@ -41,6 +41,14 @@
             class="w-full justify-center !bg-blue-600 hover:!bg-blue-700 !border-none !text-white" 
             @click="doLogin" 
           />
+
+          <!-- Thêm nút đăng nhập khách -->
+          <Button 
+            label="Tiếp tục với tài khoản khách" 
+            icon="pi pi-user-plus" 
+            class="w-full mt-3 justify-center !bg-gray-500 hover:!bg-gray-600 !border-none !text-white" 
+            @click="loginAsGuest" 
+          />
         </div>
 
         <!-- Sign In with Google -->
@@ -73,7 +81,7 @@ definePageMeta({
   layout: false,
   auth: {
     unauthenticatedOnly: true,
-    navigateAuthenticatedTo: '/',
+    navigateAuthenticatedTo: '/'
   },
 });
 
@@ -82,8 +90,14 @@ const loading = ref(false);
 const toast = useToast();
 
 const loginSchema = yup.object({
-  email: yup.string().required('Vui lòng nhập địa chỉ email!').min(2, 'Tài khoản phải có ít nhất 2 ký tự!'),
-  password: yup.string().required('Vui lòng nhập mật khẩu!').min(6, 'Mật khẩu phải có ít nhất 6 ký tự!'),
+  email: yup.string()
+    .required('Vui lòng nhập địa chỉ email!')
+    .email('Email không đúng định dạng!')
+    .min(2, 'Tài khoản phải có ít nhất 2 ký tự!'),
+  password: yup.string()
+    .required('Vui lòng nhập mật khẩu!')
+    .min(6, 'Mật khẩu phải có ít nhất 6 ký tự!')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số'),
 });
 
 const { defineField: defineLoginField, handleSubmit: handleLoginSubmit, errors: loginErrors } = useForm({
@@ -138,4 +152,24 @@ const doLogin = handleLoginSubmit(async () => {
     }
   }
 });
+
+// Thêm hàm đăng nhập khách
+const loginAsGuest = async () => {
+  try {
+    toast.add({
+      severity: 'success',
+      summary: 'Đăng nhập',
+      detail: 'Đăng nhập với tài khoản khách thành công',
+      life: 2000,
+    });
+    navigateTo('/');
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Đăng nhập thất bại!',
+      life: 2000,
+    });
+  }
+};
 </script>
