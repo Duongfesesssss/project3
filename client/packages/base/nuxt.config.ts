@@ -65,16 +65,19 @@ export default defineNuxtConfig({
         getSession: { path: '/user', method: 'get' },
       },
       pages: {
-        login: '/',
+        login: '/login',
       },
       token: {
         signInResponseTokenPointer: '/data/access_token',
-        maxAgeInSeconds: 60 * 24 * 30, // 5 min
+        maxAgeInSeconds: 60 * 24 * 30, // 30 days
         sameSiteAttribute: 'lax',
       },
     },
     globalAppMiddleware: {
-      isEnabled: false,
+      isEnabled: true,
+      allow404WithoutAuth: true,
+      addDefaultCallbackUrl: true,
+      ignorePaths: ['/login', '/register', '/forgot-password'],
     },
   },
   googleFonts: {

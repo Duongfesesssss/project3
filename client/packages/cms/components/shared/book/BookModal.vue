@@ -5,7 +5,7 @@ import * as yup from 'yup';
 import { BookService } from '~/packages/base/services/book.service';
 import { BookModel } from '~/packages/base/models/dto/response/book/book.model';
 import type { BookGenresModel } from '~/packages/base/models/dto/response/book/book-genres.model';
-import { InputText } from 'primevue';
+import { InputText, MultiSelect, DatePicker, InputNumber, Textarea } from 'primevue';
 import { UploadService } from '~/packages/base/services/upload/upload.service';
 
 const thongTin = ref<BookModel>();
@@ -35,7 +35,6 @@ const internalVisible = computed({
 });
 
 
-
 onMounted(async () => {
   try {
     const response = await BookService.getTheLoaiSach();
@@ -47,7 +46,11 @@ onMounted(async () => {
 });
 
 const schema = yup.object({
-  
+  title: yup.string().required('Vui lòng nhập tên sách').max(256, 'Tối đa 256 ký tự'),
+  author: yup.string().required('Vui lòng nhập tác giả').max(256, 'Tối đa 256 ký tự'),
+  publisher: yup.string().required('Vui lòng nhập nhà xuất bản').max(256, 'Tối đa 256 ký tự'),
+  price: yup.number().required('Vui lòng nhập giá tiền').min(0, 'Giá tiền phải lớn hơn 0'),
+  genre_ids: yup.array().required('Vui lòng chọn thể loại sách').min(1, 'Chọn ít nhất 1 thể loại'),
 });
 
 const { defineField, handleSubmit, errors, resetForm } = useForm({
@@ -295,10 +298,10 @@ const formatSize = (bytes: number) => {
                   fluid
                   filter
                   show-clear
-                  :invalid="errors.lon != null"
+                  :invalid="errors.title != null"
                   placeholder="Nhập tên sách"
                 />
-                <small class="text-red-500">{{ errors.ten_tiengviet }}</small>
+                <small class="text-red-500">{{ errors.title }}</small>
               </div>
               <div class="min-w-40">
                 <label class="block font-bold mb-3">Thể loại sách</label>
@@ -312,8 +315,10 @@ const formatSize = (bytes: number) => {
                   for="ten_tienganh"
                   filter
                   show-clear
-                  placeholder="Nhập tên quốc tế"
+                  :invalid="errors.genre_ids != null"
+                  placeholder="Chọn thể loại sách"
                 />
+                <small class="text-red-500">{{ errors.genre_ids }}</small>
               </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -325,8 +330,10 @@ const formatSize = (bytes: number) => {
                   fluid
                   filter
                   show-clear
+                  :invalid="errors.author != null"
                   placeholder="Nhập tên tác giả"
                 />
+                <small class="text-red-500">{{ errors.author }}</small>
               </div>
               <div class="min-w-40">
                 <label class="block font-bold mb-3">Nhà xuất bản</label>
@@ -336,8 +343,10 @@ const formatSize = (bytes: number) => {
                   fluid
                   filter
                   show-clear
+                  :invalid="errors.publisher != null"
                   placeholder="Nhập tên nhà xuất bản"
                 />
+                <small class="text-red-500">{{ errors.publisher }}</small>
               </div>
             </div>
 
@@ -356,7 +365,7 @@ const formatSize = (bytes: number) => {
                     date-format="dd/mm/yy"
                     fluid
                     show-clear
-                    placeholder="Từ"
+                    placeholder="Chọn ngày xuất bản"
                     show-button-bar
                   />
                 </div>
@@ -369,8 +378,10 @@ const formatSize = (bytes: number) => {
                   fluid
                   filter
                   show-clear
+                  :invalid="errors.price != null"
                   placeholder="Nhập giá tiền"
                 />
+                <small class="text-red-500">{{ errors.price }}</small>
               </div>
               <div class="min-w-40">
                 <label class="block font-bold mb-3">Số lượng(cuốn)</label>
@@ -395,8 +406,10 @@ const formatSize = (bytes: number) => {
             v-model="description"
             rows="5"
             fluid
+            :invalid="errors.description != null"
             placeholder="Nhập mô tả sách"
           />
+          <small class="text-red-500">{{ errors.description }}</small>
         </div>
       </div>
             <div class="gap-4 grid grid-cols-1 start-0">

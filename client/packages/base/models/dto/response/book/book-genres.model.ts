@@ -3,6 +3,5 @@ class BookGenresModel {
     name?: string;
     description?: string;
   }
-  
-  export { BookGenresModel };
+    export { BookGenresModel };
   
