@@ -68,59 +68,56 @@ const hidePopover = () => {
 </script>
 
 <template>
-  <div class="flex flex-col min-h-screen">
+  <div class="region-wrap-main" style="background-color: #f5f5f5;">
     <!-- Hero section -->
     <section class="bg-blue-100 py-10 text-center mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold text-blue-700">Chào mừng đến với BookStore 📚</h1>
+      <h1 class="text-3xl md:text-4xl font-bold text-blue-700">Chào mừng đến với Bookkie 📚</h1>
       <p class="text-gray-700 mt-2 text-lg">Khám phá hàng ngàn đầu sách chất lượng với giá tốt nhất</p>
     </section>
 
-    <div class="flex-1 bg-white px-4">
+    <div class="flex px-4">
       <div class="max-w-7xl mx-auto">
-        <!-- Gợi ý thể loại -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-12">
-          <div v-for="cat in ['Văn học', 'Thiếu nhi', 'Kỹ năng', 'Ngoại ngữ']" :key="cat" class="text-center">
-            <img :src="`https://placehold.co/100x100?text=${cat}`" :alt="`Thể loại ${cat}`" class="mx-auto rounded-full mb-2 border" />
-            <p class="font-medium">{{ cat }}</p>
-          </div>
-        </div>
-
         <!-- Tiêu đề -->
-        <div class="mb-6">
+
+
+        <div class="bg-white rounded-lg p-4">
+          <div class="mb-6">
           <h2 class="text-2xl font-bold text-gray-800">Sách nổi bật</h2>
           <p class="text-gray-500">Các tựa sách được yêu thích nhất hiện nay</p>
         </div>
+         <div v-if="loading" class="text-center py-8 text-gray-400">Đang tải sách...</div>
 
-        <!-- Loading -->
-        <div v-if="loading" class="text-center py-8 text-gray-400">Đang tải sách...</div>
-
-        <!-- Carousel sách nổi bật -->
-        <Carousel v-else-if="books.length > 0" :value="books" :numVisible="4" :numScroll="2">
-          <template #item="slotProps">
-            <div class="border rounded shadow-sm hover:shadow-md transition-all m-2 p-4 bg-white cursor-pointer" @click="displayProduct($event, slotProps.data)">
-              <NuxtLink :to="`/book/${slotProps.data.slug}`">
-                <img class="w-full h-64 object-cover rounded mb-3" :src="slotProps.data.image" :alt="slotProps.data.title" />
-                <h3 class="font-semibold text-sm line-clamp-2">{{ slotProps.data.title }}</h3>
-                <p class="text-red-600 font-bold text-base mt-2">{{ slotProps.data.price }} đ</p>
-              </NuxtLink>
-              <div class="flex justify-between mt-3">
-                <Button icon="pi pi-heart" severity="secondary" outlined />
-                <Button icon="pi pi-shopping-cart" />
-              </div>
-            </div>
-          </template>
-        </Carousel>
-
-        <!-- Tiêu đề Sách bán chạy -->
-        <div class="mt-12 mb-6">
+<!-- Carousel sách nổi bật -->
+<Carousel v-else-if="books.length > 0" :value="books" :numVisible="4" :numScroll="2">
+  <template #item="slotProps">
+    <div class="border rounded shadow-sm hover:shadow-md transition-all m-2 p-4 cursor-pointer" @click="displayProduct($event, slotProps.data)">
+      <NuxtLink :to="`/book/${slotProps.data.slug}`">
+        <img class="w-full h-64 object-cover rounded mb-3" :src="slotProps.data.image" :alt="slotProps.data.title" />
+        <h3 class="font-semibold text-sm line-clamp-2">{{ slotProps.data.title }}</h3>
+        <p class="text-red-600 font-bold text-base mt-2">{{ slotProps.data.price }} đ</p>
+      </NuxtLink>
+      <div class="flex justify-between mt-3">
+        <Button icon="pi pi-heart" severity="secondary" outlined />
+        <Button icon="pi pi-shopping-cart" />
+      </div>
+    </div>
+  </template>
+</Carousel></div>
+          <!-- Loading -->
+          <div style="height: 40px;"></div>
+        <div class="bg-white rounded-lg p-4">
+        
+          <div class="mt-12 mb-6">
           <h2 class="text-2xl font-bold text-gray-800">Sách bán chạy</h2>
           <p class="text-gray-500">Những cuốn sách được mua nhiều nhất</p>
         </div>
+        
+
 
         <!-- Carousel sách bán chạy -->
         <Carousel v-if="books.length > 0" :value="books" :numVisible="4" :numScroll="2">
           <template #item="slotProps">
-            <div class="border rounded shadow-sm hover:shadow-md transition-all m-2 p-4 bg-white cursor-pointer" @click="displayProduct($event, slotProps.data)">
+            <div class="border rounded shadow-sm hover:shadow-md transition-all m-2 p-4 cursor-pointer" @click="displayProduct($event, slotProps.data)">
               <NuxtLink :to="`/book/${slotProps.data.slug}`">
                 <img class="w-full h-64 object-cover rounded mb-3" :src="slotProps.data.image" :alt="slotProps.data.title" />
                 <h3 class="font-semibold text-sm line-clamp-2">{{ slotProps.data.title }}</h3>
@@ -133,6 +130,9 @@ const hidePopover = () => {
             </div>
           </template>
         </Carousel>
+        </div>
+        <!-- Tiêu đề Sách bán chạy -->
+
 
         <!-- Popover chi tiết sách -->
         <Popover ref="op" v-if="selectedProduct">

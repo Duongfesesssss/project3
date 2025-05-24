@@ -198,7 +198,7 @@ const doLogout = async () => {
     </main>
 
     <!-- Footer -->
-    <footer class="mt-16 bg-gray-100 text-center text-sm text-gray-600 py-6">
+    <footer class=" bg-blue-100 text-center text-sm text-gray-600 py-6">
       <div>
         © 2025 Hệ thống bán sách online dựa trên nền tảng web.
       </div>
