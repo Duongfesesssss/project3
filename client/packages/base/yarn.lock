@@ -1263,10 +1263,29 @@
   dependencies:
     "@primeuix/utils" "^0.3.0"
 
+"@primeuix/styled@^0.6.1":
+  version "0.6.3"
+  resolved "https://registry.yarnpkg.com/@primeuix/styled/-/styled-0.6.3.tgz#00bc6e208fddec0454fa4fd962e7a52b9213c266"
+  integrity sha512-cW8XbJ1wWN9kC7lDhGpgTZI3FnUm68tw34BRm8C+z6T3X/Ayw+kfxlApxNEafipjWYiwNM9L+TUOHumbsESjqw==
+  dependencies:
+    "@primeuix/utils" "^0.5.3"
+
+"@primeuix/themes@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@primeuix/themes/-/themes-1.1.1.tgz#3d04b6d06738252f3133776b411bfa527cd97c29"
+  integrity sha512-fcHPLfw73cOApPovtA+D9wf3N7FBruU/6oTRt+AcTK754mHhnTza9kC2jiFQfq5HnWF0u0J/5Pb943fNsnxVVA==
+  dependencies:
+    "@primeuix/styled" "^0.6.1"
+
 "@primeuix/utils@^0.3.0":
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/@primeuix/utils/-/utils-0.3.0.tgz#7e49c8bf6f97af7740902d51cdefd497ea13fdc0"
   integrity sha512-d6ymWez1n+iqwzAVhyOTmrOHl5qnSX2oGlTy97qGuA15gLai+MQaxONHFNdDia8Q7o396v7KK9IvhAx9VET/+A==
+
+"@primeuix/utils@^0.5.3":
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/@primeuix/utils/-/utils-0.5.3.tgz#3a6f597f88e6e9ff8993e81a25c2dfcdd787fd71"
+  integrity sha512-7SGh7734wcF1/uK6RzO6Z6CBjGQ97GDHfpyl2F1G/c7R0z9hkT/V72ypDo82AWcCS7Ta07oIjDpOCTkSVZuEGQ==
 
 "@primevue/auto-import-resolver@4.2.1":
   version "4.2.1"
@@ -1314,12 +1333,13 @@
     primevue "4.2.1"
     unplugin-vue-components "0.27.0"
 
-"@primevue/themes@^4.0.4":
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/@primevue/themes/-/themes-4.2.1.tgz#c4f361202133e2f816ed49aa6b4ec3f97b6665eb"
-  integrity sha512-byp4YejyVdrOpRRbq5vBtaDBFHUq7Wc0aGWwII1fliYbwQ+WXn/hCAYhaXwRrwweHpTiobiWWsS+PRLWJ7fBRw==
+"@primevue/themes@^4.3.4":
+  version "4.3.4"
+  resolved "https://registry.yarnpkg.com/@primevue/themes/-/themes-4.3.4.tgz#3340a3f72381d025398ca8ad7857a1f784d1173a"
+  integrity sha512-8N2GEv9HFjKRnvhH6Dts4doy1NRbGSLc5FcQ3l+eUYRnY48mCs2H1TDpxDuqupWpBCWbj0tNsNsJGh8YyuRdYQ==
   dependencies:
-    "@primeuix/styled" "^0.3.0"
+    "@primeuix/styled" "^0.6.1"
+    "@primeuix/themes" "^1.1.1"
 
 "@redocly/ajv@^8.11.2":
   version "8.11.2"
