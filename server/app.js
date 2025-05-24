@@ -10,6 +10,8 @@ const authRoutes = require("./routes/auth");
 const bookRouter = require("./routes/book");
 const publisherRouter = require("./routes/publisherRoutes");
 const genreRouter = require("./routes/genre-book");
+const cartRouter = require('./routes/cartRoutes');
+
 const multer = require('multer');
 const path = require('path');
 // Sử dụng middleware để xử lý dữ liệu JSON
@@ -104,6 +106,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/book', bookRouter);
 app.use('/api/publisher', publisherRouter);
 app.use('/api/genre', genreRouter);
+app.use('/api/cart', cartRouter);
 
 const swaggerOptions = {
     swaggerDefinition: {
