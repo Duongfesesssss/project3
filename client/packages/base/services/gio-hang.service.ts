@@ -46,6 +46,7 @@ class _GioHangService extends BaseService {
       }
 
       const res = await response.json();
+      console.log('res',res);
       if (res && res.status === EnumStatus.OK) {
         return res.data;
       }

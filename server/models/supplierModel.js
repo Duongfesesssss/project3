@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const publisherSchema = new mongoose.Schema({
+const supplierSchema = new mongoose.Schema({
   // _id: { type: Number, required: true }, // Bỏ dòng này để MongoDB tự sinh ObjectId
   name: {
     type: String,
@@ -46,8 +46,8 @@ const publisherSchema = new mongoose.Schema({
 });
 
 // Tạo index cho tìm kiếm
-publisherSchema.index({ name: 'text', description: 'text' });
+supplierSchema.index({ name: 'text', description: 'text' });
 
-const Publisher = mongoose.model('Publisher', publisherSchema);
+const Supplier = mongoose.model('Supplier', supplierSchema);
 
-module.exports = Publisher;
+module.exports = Supplier; 

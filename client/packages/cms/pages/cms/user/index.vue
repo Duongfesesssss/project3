@@ -19,16 +19,13 @@ const dataList = ref();
 const nameUserChangePassword = ref();
 const loading = ref(true);
 const group_id = ref('');
-definePageMeta({
-  layout: 'cms-default',
-  middleware: 'auth',
-});
 
-const home = ref({
-  icon: 'pi pi-home',
-  route: '/cms',
-});
-
+definePageMeta({ layout: 'cms-default' });
+  
+  const home = ref({
+    icon: 'pi pi-home',
+    route: '/cms',
+  });
 const itemss = ref([
   { label: 'Quản lý' },
   { label: 'Hệ thống' },
@@ -39,12 +36,9 @@ const schema = yup.object({
   keyWords: yup
     .string()
     .max(256, 'Tối đa 256 ký tự!')
-    .matches(EnumRegex.FILTER_LINK_URL, EnumRegexMessage.FILTER_LINK_URL_MESSAGE)
-    .matches(
-      EnumRegex.FILTER_EXPRESSION_SQL,
-      EnumRegexMessage.FILTER_EXPRESSION_SQL_MESSAGE,
-    )
-    .matches(EnumRegex.FILTER_EXPRESSION, EnumRegexMessage.FILTER_EXPRESSION_MESSAGE),
+    .matches(/^[a-zA-Z0-9\s\-_]*$/, 'Chỉ được nhập chữ cái, số, dấu gạch ngang và khoảng trắng')
+    .matches(/^(?!.*[<>{}[\]\\]).*$/, 'Không được chứa ký tự đặc biệt')
+    .matches(/^(?!.*(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|EXEC|DECLARE)\b)).*$/i, 'Không được chứa từ khóa SQL'),
 });
 
 const { defineField, handleSubmit, errors } = useForm({
@@ -64,8 +58,11 @@ onMounted(async () => {
   loading.value = false;
 });
 function initFilters() {}
+
+
+// Sửa lại hàm items để kiểm tra quyền
 const items = (data: UserModel) => {
-  if (!data) return [];
+  if (!data || !canManageUsers.value) return [];
   return [
     {
       label: 'Cập nhật',
@@ -288,7 +285,7 @@ const timKiem = handleSubmit(async () => {
       </template>
       <template #end>
         <div class="flex items-center gap-2">
-          <div>
+          <div v-if="canManageUsers">
             <Button
               label="Thêm mới"
               icon="pi pi-plus"

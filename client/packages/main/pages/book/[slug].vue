@@ -1,150 +1,337 @@
 <script lang="ts" setup>
-  import { useRoute } from 'vue-router';
-  import { ref, onMounted } from 'vue';
-  import { BookService } from '~/packages/base/services/book.service';
-  import { GioHangService } from '~/packages/base/services/gio-hang.service';
-  import type { BookModel } from '~/packages/base/models/dto/response/book/book.model';
-  import { useToast } from 'primevue/usetoast';
+import { useRoute } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { BookService } from '~/packages/base/services/book.service';
+import { GioHangService } from '~/packages/base/services/gio-hang.service';
+import type { BookModel } from '~/packages/base/models/dto/response/book/book.model';
+import { useToast } from 'primevue/usetoast';
+import Toast from 'primevue/toast';
+import Button from 'primevue/button';
+import InputNumber from 'primevue/inputnumber';
 
-  definePageMeta({
-    layout: 'default',
-    auth: false,
-  });
+definePageMeta({
+  layout: 'default',
+  auth: false,
+});
 
-  const route = useRoute();
-  const slug = route.params.slug as string;
-  const book = ref<BookModel | null>(null);
-  const quantity = ref(1);
-  const toast = useToast();
-  const { data: user } = useAuth();
-  onMounted(async () => {
-    const data = await BookService.getBookBySlug(slug);
-    book.value = data || null;
-  });
+const route = useRoute();
+const slug = route.params.slug as string;
+const book = ref<BookModel | null>(null);
+const quantity = ref(1);
+const toast = useToast();
+const { data: user } = useAuth();
 
-  const handleAddToCart = async () => {
-    try {
-      if (!book.value?._id) {
-        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không tìm thấy thông tin sách', life: 3000 });
-        return;
-      }
+onMounted(async () => {
+  const data = await BookService.getBookBySlug(slug);
+  book.value = data || null;
+});
 
-      if (!user.value?.user?._id) {
-        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng đăng nhập để thêm vào giỏ hàng', life: 3000 });
-        return;
-      }
+const handleAddToCart = () => {
+  if (!book.value?._id) {
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không tìm thấy thông tin sách', life: 3000 });
+    return;
+  }
 
-      const result = await GioHangService.addToCart(
-        user.value.user._id,
-        book.value._id,
-        quantity.value
-      );
+  if (!user.value?.user?._id) {
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng đăng nhập để thêm vào giỏ hàng', life: 3000 });
+    return;
+  }
 
+  GioHangService.addToCart(
+    user.value.user._id,
+    book.value._id,
+    quantity.value
+  )
+    .then((result) => {
+      console.log(result);
       if (result) {
         toast.add({ severity: 'success', summary: 'Thành công', detail: 'Đã thêm vào giỏ hàng', life: 3000 });
       } else {
         toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể thêm vào giỏ hàng', life: 3000 });
       }
-    } catch (error) {
+    })
+    .catch((error) => {
       console.error('Lỗi khi thêm vào giỏ hàng:', error);
       toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Có lỗi xảy ra khi thêm vào giỏ hàng', life: 3000 });
-    }
-  };
+    });
+};
 </script>
 
 <template>
-  <div class="region-wrap-main" style="background-color: #f5f5f5;">
+  <div class="min-h-screen bg-gray-50">
     <Toast />
-    <div v-if="book" class="max-w-7xl mx-auto px-4 py-10">
-    <!-- Breadcrumb -->
-    <nav class="text-sm text-gray-500 mb-6">
-      <NuxtLink to="/" class="hover:underline text-blue-600">Trang chủ</NuxtLink>
-      <span class="mx-2">/</span>
-      <NuxtLink to="/categories" class="hover:underline text-blue-600">Danh mục</NuxtLink>
-      <span class="mx-2">/</span>
-      <span class="text-gray-700 font-semibold">{{ book.title }}</span>
-    </nav>
+    
+    <div v-if="book" class="max-w-7xl mx-auto px-4 py-6">
+      <!-- Breadcrumb -->
+      <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-6">
+        <NuxtLink to="/" class="hover:text-blue-600 transition-colors">SÁCH TIẾNG VIỆT</NuxtLink>
+        <i class="pi pi-angle-right text-xs"></i>
+        <NuxtLink to="/categories" class="hover:text-blue-600 transition-colors">KINH TẾ</NuxtLink>
+        <i class="pi pi-angle-right text-xs"></i>
+        <span class="text-gray-800 font-medium">{{ book.title }}</span>
+      </nav>
 
-    <!-- Card Layout: 2 columns with ratio 1:2 -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Left Column: Image -->
-        <div class="col-span-1 flex flex-col items-center md:items-start">
-          <img :src="book.image_link || '/placeholder.jpg'" :alt="book.title" class="w-64 h-auto rounded-lg shadow-md mb-4" />
-          <div class="grid grid-cols-4 gap-2">
-            <img v-for="n in 3" :key="n" :src="book.image_link || '/placeholder.jpg'" class="w-16 h-20 object-cover rounded border" />
-            <div class="w-16 h-20 flex items-center justify-center border rounded text-xs text-gray-600">+3</div>
+      <!-- Main Content -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Image Gallery -->
+        <div class="lg:col-span-5">
+          <div class="bg-white rounded-lg shadow-sm p-6">
+            <!-- Main Image -->
+            <div class="mb-4">
+              <img 
+                :src="book.image_link || '/placeholder.jpg'" 
+                :alt="book.title" 
+                class="w-full max-w-md mx-auto rounded-lg shadow-md"
+              />
+            </div>
+            
+            <!-- Thumbnail Gallery -->
+            <div class="flex justify-center space-x-2 mb-6">
+              <div v-for="n in 4" :key="n" class="relative">
+                <img 
+                  :src="book.image_link || '/placeholder.jpg'" 
+                  class="w-16 h-20 object-cover rounded border-2 border-gray-200 hover:border-blue-500 cursor-pointer transition-colors"
+                />
+                <div v-if="n === 4" class="absolute inset-0 bg-black bg-opacity-50 rounded flex items-center justify-center">
+                  <span class="text-white text-sm font-semibold">+5</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-3">
+              <Button 
+                @click="handleAddToCart"
+                icon="pi pi-shopping-cart" 
+                label="Thêm vào giỏ hàng" 
+                outlined 
+                class="w-full !border-red-500 !text-red-500 hover:!bg-red-50 !py-3"
+              />
+              <Button 
+                label="Mua ngay" 
+                class="w-full !bg-red-500 hover:!bg-red-600 !border-red-500 !py-3 !font-semibold"
+              />
+            </div>
+
+            <!-- Store Policies -->
+            <div class="mt-6 space-y-3 text-sm">
+              <div class="flex items-center text-gray-700">
+                <i class="pi pi-clock text-green-600 mr-2"></i>
+                <span class="font-medium">Thời gian giao hàng:</span>
+                <span class="ml-1">Giao nhanh và uy tín</span>
+              </div>
+              <div class="flex items-center text-gray-700">
+                <i class="pi pi-refresh text-blue-600 mr-2"></i>
+                <span class="font-medium">Chính sách đổi trả:</span>
+                <span class="ml-1">Đổi trả miễn phí toàn quốc</span>
+              </div>
+              <div class="flex items-center text-gray-700">
+                <i class="pi pi-users text-purple-600 mr-2"></i>
+                <span class="font-medium">Chính sách khách sỉ:</span>
+                <span class="ml-1">Ưu đãi khi mua số lượng lớn</span>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Right Column: Book Information -->
-        <div class="col-span-2 flex flex-col gap-4">
-          <div class="text-sm text-orange-600 font-semibold uppercase">Xu hướng 🔥</div>
-          <h1 class="text-2xl font-bold text-gray-800 leading-snug">{{ book.title }}</h1>
+        <div class="lg:col-span-7">
+          <div class="bg-white rounded-lg shadow-sm p-6">
+            
+            <!-- Book Title and Basic Info -->
+            <div class="mb-6">
+              <div class="flex items-center mb-2">
+                <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-sm font-medium mr-2">Bé</span>
+                <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">{{ book.title }}</h1>
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700 mt-4">
+                <div>
+                  <span class="font-medium">Nhà cung cấp:</span>
+                  <span class="text-blue-600 ml-1">{{ book.provider || 'Rio Book' }}</span>
+                </div>
+                <div>
+                  <span class="font-medium">Tác giả:</span>
+                  <span class="ml-1">{{ book.author }}</span>
+                </div>
+                <div>
+                  <span class="font-medium">Nhà xuất bản:</span>
+                  <span class="ml-1">{{ book.publisher }}</span>
+                </div>
+                <div>
+                  <span class="font-medium">Hình thức bìa:</span>
+                  <span class="ml-1">{{ book.cover_type || 'Bìa Mềm' }}</span>
+                </div>
+              </div>
 
-          <div class="text-sm text-gray-700 space-y-1">
-            <p><span class="font-semibold">Tác giả:</span> {{ book.author }}</p>
-            <p><span class="font-semibold">Nhà xuất bản:</span> {{ book.publisher }}</p>
-            <p><span class="font-semibold">Nhà cung cấp:</span> {{ book.provider || 'Đang cập nhật' }}</p>
-            <p><span class="font-semibold">Hình thức bìa:</span> {{ book.cover_type || 'Bìa mềm' }}</p>
-          </div>
+              <!-- Rating and Sales -->
+              <div class="flex items-center mt-4 space-x-4">
+                <div class="flex items-center">
+                  <div class="flex text-yellow-400 mr-1">
+                    <i class="pi pi-star-fill text-sm"></i>
+                    <i class="pi pi-star-fill text-sm"></i>
+                    <i class="pi pi-star-fill text-sm"></i>
+                    <i class="pi pi-star-fill text-sm"></i>
+                    <i class="pi pi-star-fill text-sm"></i>
+                  </div>
+                  <span class="text-sm text-gray-600">(0 đánh giá)</span>
+                </div>
+                <div class="text-sm text-gray-600">
+                  Đã bán <span class="font-semibold">174</span>
+                </div>
+              </div>
+            </div>
 
-          <div class="flex items-center gap-3 mt-2 text-sm text-gray-700">
-            <span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded font-medium">⭐ {{ book.rating || '4.5' }}/5</span>
-            <span class="text-gray-500">Đã bán: 3</span>
-            <span class="text-green-600">Còn hàng</span>
-          </div>
+            <!-- Flash Sale Section -->
+            <div class="bg-gradient-to-r from-red-500 to-pink-500 rounded-lg p-4 mb-6 text-white">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center">
+                  <span class="text-lg font-bold mr-3">FLASH SALE</span>
+                  <div class="flex space-x-1">
+                    <div class="bg-black bg-opacity-30 px-2 py-1 rounded text-sm font-bold">01</div>
+                    <div class="bg-black bg-opacity-30 px-2 py-1 rounded text-sm font-bold">55</div>
+                    <div class="bg-black bg-opacity-30 px-2 py-1 rounded text-sm font-bold">39</div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm opacity-90">Đã bán</div>
+                  <div class="font-bold">0</div>
+                </div>
+              </div>
+              
+              <!-- Progress Bar -->
+              <div class="bg-white bg-opacity-30 rounded-full h-2 mb-2">
+                <div class="bg-white h-2 rounded-full w-[12%]"></div>
+              </div>
+            </div>
 
-          <!-- Price and Discount -->
-          <div class="flex items-baseline gap-4">
-            <span class="text-red-600 text-2xl font-bold">{{ book.price }} đ</span>
-            <span class="line-through text-gray-500 text-sm">{{ book.price + 20000 }} đ</span>
-            <span class="bg-red-100 text-red-600 text-sm font-semibold px-2 py-1 rounded">-20%</span>
-          </div>
+            <!-- Price Section -->
+            <div class="mb-6">
+              <div class="flex items-baseline space-x-3 mb-2">
+                <span class="text-3xl font-bold text-red-600">{{ Number(book.price).toLocaleString() }}₫</span>
+                <span class="text-lg text-gray-500 line-through">{{ Number(book.price + 20000).toLocaleString() }}₫</span>
+                <span class="bg-red-100 text-red-600 px-2 py-1 rounded text-sm font-semibold">-24%</span>
+              </div>
+              <div class="text-sm text-blue-600 font-medium">4 nhà sách còn hàng</div>
+            </div>
 
-          <!-- Flash Sale Bar -->
-          <div class="bg-gray-100 w-full h-3 rounded-full overflow-hidden">
-            <div class="bg-red-500 h-full w-[12%]"></div>
-          </div>
-          <p class="text-xs text-gray-500 italic">Chỉ còn 8 sản phẩm - Nhanh tay!</p>
+            <!-- Shipping Information -->
+            <div class="border rounded-lg p-4 mb-6">
+              <h3 class="font-semibold text-gray-900 mb-3">Thông tin vận chuyển</h3>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Giao hàng đến</span>
+                  <span class="text-gray-900">Phường Bến Nghé, Quận 1, Hồ Chí Minh</span>
+                  <button class="text-blue-600 hover:underline">Thay đổi</button>
+                </div>
+                <div class="flex items-center">
+                  <i class="pi pi-truck text-green-600 mr-2"></i>
+                  <span class="font-medium text-gray-900">Giao hàng tiêu chuẩn</span>
+                </div>
+                <div class="text-gray-600 ml-6">
+                  Dự kiến giao <span class="font-medium">Thứ năm - 05/06</span>
+                </div>
+              </div>
+            </div>
 
-          <!-- Add to Cart and Wishlist -->
-          <div class="flex flex-col sm:flex-row sm:items-center gap-4 mt-4">
-            <input 
-              type="number" 
-              v-model="quantity"
-              min="1" 
-              class="w-20 border px-2 py-1 rounded text-sm" 
-            />
-            <button 
-              @click="handleAddToCart"
-              class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded text-sm font-semibold"
-            >
-              <i class="pi pi-shopping-cart mr-2"></i>Thêm vào giỏ hàng
-            </button>
-            <button class="border border-gray-300 text-gray-800 px-4 py-2 rounded text-sm hover:bg-gray-100">
-              <i class="pi pi-heart mr-1"></i>Yêu thích
-            </button>
+            <!-- Promotions -->
+            <div class="mb-6">
+              <h3 class="font-semibold text-gray-900 mb-3">Ưu đãi liên quan</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="flex items-center p-3 bg-yellow-50 rounded-lg">
+                  <div class="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center mr-3">
+                    <i class="pi pi-percentage text-white text-sm"></i>
+                  </div>
+                  <div class="text-sm">
+                    <div class="font-medium">Mã giảm 10k - to...</div>
+                  </div>
+                </div>
+                <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                  <div class="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center mr-3">
+                    <i class="pi pi-credit-card text-white text-sm"></i>
+                  </div>
+                  <div class="text-sm">
+                    <div class="font-medium">Home credit: giả...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quantity Selector -->
+            <div class="flex items-center space-x-4 mb-6">
+              <span class="font-medium text-gray-900">Số lượng:</span>
+              <div class="flex items-center border rounded">
+                <button 
+                  @click="quantity = Math.max(1, quantity - 1)"
+                  class="px-3 py-2 hover:bg-gray-100 transition-colors"
+                >
+                  <i class="pi pi-minus text-sm"></i>
+                </button>
+                <input 
+                  v-model="quantity"
+                  type="number" 
+                  min="1"
+                  class="w-16 text-center py-2 border-0 focus:outline-none"
+                />
+                <button 
+                  @click="quantity++"
+                  class="px-3 py-2 hover:bg-gray-100 transition-colors"
+                >
+                  <i class="pi pi-plus text-sm"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Product Details -->
+            <div class="border-t pt-6">
+              <h3 class="font-semibold text-gray-900 mb-4">Thông tin chi tiết</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div class="flex justify-between py-2 border-b border-gray-100">
+                  <span class="text-gray-600">Mã hàng</span>
+                  <span class="font-medium">{{ book._id?.slice(-10) || '8936170870391' }}</span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-gray-100">
+                  <span class="text-gray-600">Tên Nhà Cung Cấp</span>
+                  <span class="font-medium text-blue-600">{{ book.provider || 'Rio Book' }}</span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-gray-100">
+                  <span class="text-gray-600">Tác giả</span>
+                  <span class="font-medium">{{ book.author }}</span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-gray-100">
+                  <span class="text-gray-600">Nhà xuất bản</span>
+                  <span class="font-medium">{{ book.publisher }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Book Description -->
-      <div class="mt-12 border-t pt-8">
-        <h2 class="text-xl font-bold mb-4">Mô tả sản phẩm</h2>
-        <p class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
-          {{ book.description || 'Chưa có mô tả chi tiết cho cuốn sách này.' }}
-        </p>
+      <div class="mt-8 bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Mô tả sản phẩm</h2>
+        <div class="prose max-w-none text-gray-700 leading-relaxed">
+          <p class="whitespace-pre-line">
+            {{ book.description || 'Chưa có mô tả chi tiết cho cuốn sách này.' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div v-else class="flex items-center justify-center min-h-screen">
+      <div class="text-center">
+        <i class="pi pi-spin pi-spinner text-3xl text-blue-600 mb-4"></i>
+        <p class="text-gray-600 text-lg">Đang tải chi tiết sách...</p>
       </div>
     </div>
   </div>
-
-  <!-- Loading hoặc lỗi -->
-  <div v-else class="text-center text-gray-500 py-20">Đang tải chi tiết sách...</div>
-  </div>
-
 </template>
 
 <style scoped>
-/* Responsive và style nhỏ nếu muốn thêm */
-</style>  
+.prose p {
+  margin-bottom: 1rem;
+}
+</style>
