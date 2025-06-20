@@ -4,6 +4,7 @@ import {
   } from '../models/base-response.model';
 import type { BookGenresModel } from '../models/dto/response/book/book-genres.model';
   import type { BookModel } from '../models/dto/response/book/book.model';
+import type { NhaCungCapModel } from '../models/dto/response/nha-cung-cap/nha-cungcap.model';
   import { BaseService } from './base.service';
   
   class _BookService extends BaseService {
@@ -89,6 +90,34 @@ import type { BookGenresModel } from '../models/dto/response/book/book-genres.mo
     async getTheLoaiSach() {
         const res = await $api<RestData<BookGenresModel[]>>(
           `/api/book/genres`,
+          {
+            method: 'GET',
+          },
+        );
+    
+        if (res && res.status === EnumStatus.OK) {
+          return res;
+        }
+        return null;
+      }
+
+      async getNhaCungCap() {
+        const res = await $api<RestData<NhaCungCapModel[]>>(
+          `/api/book/supplier`,
+          {
+            method: 'GET',
+          },
+        );
+    
+        if (res && res.status === EnumStatus.OK) {
+          return res;
+        }
+        return null;
+      }
+
+      async getNhaXuatBan() {
+        const res = await $api<RestData<NhaCungCapModel[]>>(
+          `/api/book/publisher`,
           {
             method: 'GET',
           },

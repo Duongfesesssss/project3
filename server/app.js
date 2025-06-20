@@ -9,8 +9,11 @@ const port = process.env.PORT || 8888;
 const authRoutes = require("./routes/auth");
 const bookRouter = require("./routes/book");
 const publisherRouter = require("./routes/publisherRoutes");
+const supplierRouter = require('./routes/supplierRoutes');
 const genreRouter = require("./routes/genre-book");
 const cartRouter = require('./routes/cartRoutes');
+const orderRouter = require('./routes/orderRoutes');
+const voucherRouter = require('./routes/voucherRoutes');
 
 const multer = require('multer');
 const path = require('path');
@@ -105,8 +108,11 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/book', bookRouter);
 app.use('/api/publisher', publisherRouter);
+app.use('/api/supplier', supplierRouter);
 app.use('/api/genre', genreRouter);
 app.use('/api/cart', cartRouter);
+app.use('/api/order', orderRouter);
+app.use('/api/voucher', voucherRouter);
 
 const swaggerOptions = {
     swaggerDefinition: {

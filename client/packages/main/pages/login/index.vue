@@ -15,13 +15,13 @@
         <div class="space-y-6">
           <div>
             <label for="email1" class="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1">Email</label>
-            <InputText v-model="loginEmail" id="email1" type="email" placeholder="Nhập địa chỉ email" class="w-full" />
+            <InputText v-model="loginEmail" id="email1" type="email" placeholder="Nhập địa chỉ email" class="w-full" @keyup.enter="doLogin" />
             <span v-if="loginErrors.email" class="text-sm text-red-500 mt-1 block">{{ loginErrors.email }}</span>
           </div>
           
           <div>
             <label for="password1" class="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1">Mật khẩu</label>
-            <InputText v-model="loginPassword" id="password1" type="password" placeholder="Nhập mật khẩu" class="w-full" />
+            <InputText v-model="loginPassword" id="password1" type="password" placeholder="Nhập mật khẩu" class="w-full" @keyup.enter="doLogin" />
             <span v-if="loginErrors.password" class="text-sm text-red-500 mt-1 block">{{ loginErrors.password }}</span>
           </div>
 

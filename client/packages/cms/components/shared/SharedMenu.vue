@@ -26,6 +26,11 @@ const model = ref([
             to: '/cms/nha-cung-cap',
           },
           {
+            label: 'Quản lý nhà xuất bản',
+            icon: 'pi pi-fw pi-building-columns',
+            to: '/cms/nha-xuat-ban',
+          },
+          {
             label: 'Quản lý thể loại',
             icon: 'pi pi-fw pi-book',
             to: '/cms/the-loai',

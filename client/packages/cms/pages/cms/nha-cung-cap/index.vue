@@ -78,7 +78,6 @@
           </template>
         </Column>
   
-        <Column field="_id" header="ID" sortable />
         <Column field="name" header="Tên nhà cung cấp" sortable />
         <Column field="phone" header="Số điện thoại" sortable />
         <Column field="email" header="Email" sortable />

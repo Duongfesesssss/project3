@@ -1,11 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const { Book, BookGenres } = require('../models/bookModel');
+const Publisher = require('../models/publisherModel');
+const Supplier = require('../models/supplierModel')
 
 // Lấy tất cả sách
 router.get('/', async (req, res) => {
   try {
-    const bookList = await Book.find({});
+    const bookList = await Book.find({})
+      .populate('publisher')
+      .populate('supplier');
     res.status(200).json({
       status: 'OK',
       metadata: null,
@@ -21,6 +25,7 @@ router.get('/', async (req, res) => {
   }
 });
 
+// lấy tất cả thể loại sách
 router.get('/genres', async (req, res) => {
   try {
     const bookList = await BookGenres.find({});
@@ -39,6 +44,51 @@ router.get('/genres', async (req, res) => {
   }
 });
 
+// Lấy tất cả nhà cung cấp
+router.get('/suppliers', async (req, res) => {
+  if (!Supplier) {
+    return res.status(500).json({
+      status: 'ERROR',
+      metadata: null,
+      message: 'Model Supplier chưa được định nghĩa.'
+    });
+  }
+  try {
+    const suppliers = await Supplier.find({});
+    res.status(200).json({
+      status: 'OK',
+      metadata: null,
+      data: suppliers,
+    });
+  } catch (error) {
+    console.error('Lỗi lấy danh sách nhà cung cấp:', error);
+    res.status(500).json({
+      status: 'ERROR',
+      metadata: null,
+      message: 'Lỗi server. Không thể lấy danh sách nhà cung cấp.',
+    });
+  }
+});
+
+// Lấy tất cả nhà xuất bản
+router.get('/ ', async (req, res) => {
+  try {
+    const publishers = await Publisher.find({});
+    res.status(200).json({
+      status: 'OK',
+      metadata: null,
+      data: publishers,
+    });
+  } catch (error) {
+    console.error('Lỗi lấy danh sách nhà xuất bản:', error);
+    res.status(500).json({
+      status: 'ERROR',
+      metadata: null,
+      message: 'Lỗi server. Không thể lấy danh sách nhà xuất bản.',
+    });
+  }
+});
+
 // Phân trang cho sách
 router.post('/datatable', async (req, res) => {
   try {
@@ -51,12 +101,30 @@ router.post('/datatable', async (req, res) => {
       { $limit: Number(rows) },
       {
         $lookup: {
-          from: 'genres', // Tên collection của bảng genres
-          localField: 'genre_ids', // Trường array trong bảng books
-          foreignField: '_id', // Trường _id trong bảng genres
-          as: 'genres', // Tên key mới chứa thông tin thể loại
+          from: 'genres',
+          localField: 'genre_ids',
+          foreignField: '_id',
+          as: 'genres',
         },
       },
+      {
+        $lookup: {
+          from: 'publishers',
+          localField: 'publisher',
+          foreignField: '_id',
+          as: 'publisher',
+        },
+      },
+      { $unwind: { path: '$publisher', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'suppliers',
+          localField: 'supplier',
+          foreignField: '_id',
+          as: 'supplier',
+        },
+      },
+      { $unwind: { path: '$supplier', preserveNullAndEmptyArrays: true } },
       {
         $project: {
           title: 1,
@@ -64,6 +132,7 @@ router.post('/datatable', async (req, res) => {
           genres: 1,
           image_link: 1,
           publisher: 1,
+          supplier: 1,
           published_date: 1,
           isbn: 1,
           price: 1,
@@ -104,7 +173,8 @@ router.post('/', async (req, res) => {
       language,
       pages,
       description,
-       } = req.body;
+      supplier
+    } = req.body;
 
     const newBook = new Book({
       title,
@@ -119,6 +189,7 @@ router.post('/', async (req, res) => {
       pages,
       genre_ids,
       description,
+      supplier
     });
 
     const savedBook = await newBook.save();
@@ -263,5 +334,7 @@ router.get('/:slug', async (req, res) => {
     });
   }
 });
+
+
 
 module.exports = router;

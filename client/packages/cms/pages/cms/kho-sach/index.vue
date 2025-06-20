@@ -168,7 +168,22 @@
         header="Nhà xuất bản"
         :show-filter-match-modes="false"
         sortable
-      />
+      >
+      <template #body="slotProps">
+        {{ slotProps.data.publisher?.name ?? '' }}
+      </template>
+      </Column>
+
+      <Column
+        field="supplier"
+        header="Nhà cung cấp"
+        :show-filter-match-modes="false"
+        sortable
+      >
+      <template #body="slotProps">
+        {{ slotProps.data.supplier?.name ?? '' }}
+      </template>
+      </Column>
 
       <Column
         field="published_date"

@@ -10,7 +10,8 @@ const getCartByUserId = async (req, res) => {
     
     if (!mongoose.Types.ObjectId.isValid(user_id)) {
       return res.status(400).json({
-        status: 'error',
+        status: 'ERROR',
+        success: false,
         message: 'ID người dùng không hợp lệ'
       });
     }
@@ -27,7 +28,8 @@ const getCartByUserId = async (req, res) => {
     // Trả về giỏ hàng trống nếu không tìm thấy
     if (!cart) {
       return res.json({
-        status: 'success',
+        status: 'OK',
+        success: true,
         data: {
           items: [],
           total_amount: 0
@@ -36,13 +38,15 @@ const getCartByUserId = async (req, res) => {
     }
 
     res.json({
-      status: 'success',
+      status: 'OK',
+      success: true,
       data: cart
     });
   } catch (error) {
     console.error('Lỗi khi lấy giỏ hàng:', error);
     res.status(500).json({
-      status: 'error',
+      status: 'ERROR',
+      success: false,
       message: 'Lỗi server khi lấy giỏ hàng'
     });
   }
@@ -60,7 +64,8 @@ const addToCart = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(user_id) || !mongoose.Types.ObjectId.isValid(book_id)) {
       console.log('ID không hợp lệ:', { user_id, book_id });
       return res.status(400).json({
-        status: 'error',
+        status: 'ERROR',
+        success: false,
         message: 'ID không hợp lệ'
       });
     }
@@ -73,7 +78,8 @@ const addToCart = async (req, res) => {
     if (!book) {
       console.log('Không tìm thấy sách với ID:', book_id);
       return res.status(404).json({
-        status: 'error',
+        status: 'ERROR',
+        success: false,
         message: 'Không tìm thấy sách'
       });
     }
@@ -83,7 +89,8 @@ const addToCart = async (req, res) => {
     if (!book.price) {
       console.log('Sách không có giá:', book);
       return res.status(400).json({
-        status: 'error',
+        status: 'ERROR',
+        success: false,
         message: 'Sách không có giá'
       });
     }
@@ -135,13 +142,15 @@ const addToCart = async (req, res) => {
     }
 
     res.json({
-      status: 'success',
+      status: 'OK',
+      success: true,
       data: cart
     });
   } catch (error) {
     console.error('Chi tiết lỗi khi thêm vào giỏ hàng:', error);
     res.status(500).json({
-      status: 'error',
+      status: 'ERROR',
+      success: false,
       message: 'Lỗi server khi thêm vào giỏ hàng'
     });
   }
@@ -154,7 +163,8 @@ const updateCartItem = async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(user_id) || !mongoose.Types.ObjectId.isValid(book_id)) {
       return res.status(400).json({
-        status: 'error',
+        status: 'ERROR',
+        success: false,
         message: 'ID không hợp lệ'
       });
     }
@@ -162,7 +172,8 @@ const updateCartItem = async (req, res) => {
     const cart = await Cart.findOne({ user_id });
     if (!cart) {
       return res.status(404).json({
-        status: 'error',
+        status: 'ERROR',
+        success: false,
         message: 'Không tìm thấy giỏ hàng'
       });
     }
@@ -170,7 +181,8 @@ const updateCartItem = async (req, res) => {
     const item = cart.items.find(item => item.book_id.toString() === book_id);
     if (!item) {
       return res.status(404).json({
-        status: 'error',
+        status: 'ERROR',
+        success: false,
         message: 'Không tìm thấy sách trong giỏ hàng'
       });
     }
@@ -184,13 +196,15 @@ const updateCartItem = async (req, res) => {
     await cart.save();
 
     res.json({
-      status: 'success',
+      status: 'OK',
+      success: true,
       data: cart
     });
   } catch (error) {
     console.error('Lỗi khi cập nhật giỏ hàng:', error);
     res.status(500).json({
-      status: 'error',
+      status: 'ERROR',
+      success: false,
       message: 'Lỗi server khi cập nhật giỏ hàng'
     });
   }
@@ -203,7 +217,8 @@ const removeFromCart = async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(user_id) || !mongoose.Types.ObjectId.isValid(book_id)) {
       return res.status(400).json({
-        status: 'error',
+        status: 'ERROR',
+        success: false,
         message: 'ID không hợp lệ'
       });
     }
@@ -211,7 +226,8 @@ const removeFromCart = async (req, res) => {
     const cart = await Cart.findOne({ user_id });
     if (!cart) {
       return res.status(404).json({
-        status: 'error',
+        status: 'ERROR',
+        success: false,
         message: 'Không tìm thấy giỏ hàng'
       });
     }
@@ -225,13 +241,15 @@ const removeFromCart = async (req, res) => {
     await cart.save();
 
     res.json({
-      status: 'success',
+      status: 'OK',
+      success: true,
       data: cart
     });
   } catch (error) {
     console.error('Lỗi khi xóa khỏi giỏ hàng:', error);
     res.status(500).json({
-      status: 'error',
+      status: 'ERROR',
+      success: false,
       message: 'Lỗi server khi xóa khỏi giỏ hàng'
     });
   }
@@ -244,7 +262,8 @@ const clearCart = async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(user_id)) {
       return res.status(400).json({
-        status: 'error',
+        status: 'ERROR',
+        success: false,
         message: 'ID người dùng không hợp lệ'
       });
     }
@@ -252,7 +271,8 @@ const clearCart = async (req, res) => {
     const cart = await Cart.findOne({ user_id });
     if (!cart) {
       return res.status(404).json({
-        status: 'error',
+        status: 'ERROR',
+        success: false,
         message: 'Không tìm thấy giỏ hàng'
       });
     }
@@ -264,13 +284,15 @@ const clearCart = async (req, res) => {
     await cart.save();
 
     res.json({
-      status: 'success',
+      status: 'OK',
+      success: true,
       message: 'Đã xóa toàn bộ giỏ hàng'
     });
   } catch (error) {
     console.error('Lỗi khi xóa giỏ hàng:', error);
     res.status(500).json({
-      status: 'error',
+      status: 'ERROR',
+      success: false,
       message: 'Lỗi server khi xóa giỏ hàng'
     });
   }

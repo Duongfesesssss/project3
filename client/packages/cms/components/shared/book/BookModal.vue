@@ -5,8 +5,12 @@ import * as yup from 'yup';
 import { BookService } from '~/packages/base/services/book.service';
 import { BookModel } from '~/packages/base/models/dto/response/book/book.model';
 import type { BookGenresModel } from '~/packages/base/models/dto/response/book/book-genres.model';
-import { InputText, MultiSelect, DatePicker, InputNumber, Textarea } from 'primevue';
+import { InputText, MultiSelect, DatePicker, InputNumber, Textarea, Dropdown, Select } from 'primevue';
 import { UploadService } from '~/packages/base/services/upload/upload.service';
+import { NhaXuatBanService } from '~/packages/base/services/nha-xuatban.service';
+import { NhaCungCapService } from '~/packages/base/services/nha-cungcap.service';
+import type { NhaXuatBanModel } from '~/packages/base/models/dto/response/nha-xuat-ban/nha-xuatban.model';
+import type { NhaCungCapModel } from '~/packages/base/models/dto/response/nha-cung-cap/nha-cungcap.model';
 
 const thongTin = ref<BookModel>();
 const confirm = useConfirm();
@@ -16,6 +20,8 @@ const closeEscapeKeyModalMap = ref<boolean>(false);
 const visible_map = ref(false);
 const theLoaiSach = ref<BookGenresModel[]>([]);
 const imageLink = ref<string | null>(null); // URL ảnh sau khi tải lên
+const publishers = ref<NhaXuatBanModel[]>([]);
+const suppliers = ref<NhaCungCapModel[]>([]);
 
 const props = defineProps({
   isVisible: {
@@ -40,15 +46,20 @@ onMounted(async () => {
     const response = await BookService.getTheLoaiSach();
     console.log(response?.data);
     theLoaiSach.value = response.data;
+    const pubRes = await NhaXuatBanService.getAllNhaXuatBan();
+    if (pubRes?.data) publishers.value = pubRes.data;
+    const supRes = await NhaCungCapService.getAllNhaCungCap();
+    if (supRes?.data) suppliers.value = supRes.data;
   } catch (error) {
-    console.error('Lỗi khi tải danh sách thể loại:', error);
+    console.error('Lỗi khi tải dữ liệu:', error);
   }
 });
 
 const schema = yup.object({
   title: yup.string().required('Vui lòng nhập tên sách').max(256, 'Tối đa 256 ký tự'),
   author: yup.string().required('Vui lòng nhập tác giả').max(256, 'Tối đa 256 ký tự'),
-  publisher: yup.string().required('Vui lòng nhập nhà xuất bản').max(256, 'Tối đa 256 ký tự'),
+  publisher: yup.string().required('Vui lòng chọn nhà xuất bản'),
+  supplier: yup.string().required('Vui lòng chọn nhà cung cấp'),
   price: yup.number().required('Vui lòng nhập giá tiền').min(0, 'Giá tiền phải lớn hơn 0'),
   genre_ids: yup.array().required('Vui lòng chọn thể loại sách').min(1, 'Chọn ít nhất 1 thể loại'),
 });
@@ -68,6 +79,7 @@ const [price] = defineField('price');
 const [language] = defineField('language');
 const [pages] = defineField('pages');
 const [genre_ids] = defineField('genre_ids');
+const [supplier] = defineField('supplier');
 
 const onSubmit = handleSubmit(async () => {
   const BookDTO = {
@@ -83,7 +95,7 @@ const onSubmit = handleSubmit(async () => {
     genre_ids: genre_ids.value,
     image_link: imageLink.value,
     description: description.value,
-    
+    supplier: supplier.value,
   };
   console.log('Image Link:', imageLink.value);
   console.log('BookDTO:', BookDTO);
@@ -181,13 +193,13 @@ const onSubmit = handleSubmit(async () => {
 watch(
   () => props.book,
   (newBook) => {
-    console.log('newBook:', newBook);
     if (newBook) {
       _id.value = newBook._id;
       title.value = newBook.title;
       author.value = newBook.author;
       description.value = newBook.description;
-      publisher.value = newBook.publisher;
+      publisher.value = newBook.publisher?._id ?? newBook.publisher ?? '';
+      supplier.value = newBook.supplier?._id ?? newBook.supplier ?? '';
       published_date.value = newBook.published_date;
       isbn.value = newBook.isbn;
       price.value = newBook.price;
@@ -276,7 +288,7 @@ const formatSize = (bytes: number) => {
       v-model:visible="internalVisible"
       class="w-[320px] sm:w-[800px]"
       :header="`${
-        props.book?.id === null || props.book?.id === undefined
+        props.book?._id === null || props.book?._id === undefined
           ? 'Thêm mới '
           : 'Cập nhật '
       } thông tin sách`"
@@ -335,22 +347,6 @@ const formatSize = (bytes: number) => {
                 />
                 <small class="text-red-500">{{ errors.author }}</small>
               </div>
-              <div class="min-w-40">
-                <label class="block font-bold mb-3">Nhà xuất bản</label>
-                <InputText
-                  id="publisher"
-                  v-model="publisher"
-                  fluid
-                  filter
-                  show-clear
-                  :invalid="errors.publisher != null"
-                  placeholder="Nhập tên nhà xuất bản"
-                />
-                <small class="text-red-500">{{ errors.publisher }}</small>
-              </div>
-            </div>
-
-            <div class="gap-4 grid grid-cols-1 sm:grid-cols-3">
               <div class="min-w-40 flex space-x-4">
                 <div class="flex-1">
                   <label
@@ -370,6 +366,35 @@ const formatSize = (bytes: number) => {
                   />
                 </div>
               </div>
+              <div class="min-w-40">
+                <label class="block font-bold mb-3">Nhà xuất bản</label>
+                <Select
+                  v-model="publisher"
+                  :options="publishers"
+                  fluid
+                  option-label="name"
+                  option-value="_id"
+                  :invalid="errors.publisher != null"
+                  placeholder="Chọn nhà xuất bản"
+                />
+                <small class="text-red-500">{{ errors.publisher }}</small>
+              </div>
+              <div class="min-w-40">
+                <label class="block font-bold mb-3">Nhà cung cấp</label>
+                <Select
+                  v-model="supplier"
+                  :options="suppliers"
+                  fluid
+                  option-label="name"
+                  option-value="_id"
+                  :invalid="errors.supplier != null"
+                  placeholder="Chọn nhà cung cấp"
+                />
+                <small class="text-red-500">{{ errors.supplier }}</small>
+              </div>
+            </div>
+
+            <div class="gap-4 grid grid-cols-1 sm:grid-cols-2">
               <div class="min-w-40">
                 <label class="block font-bold mb-3">Giá tiền (nghìn đồng)</label>
                 <InputNumber

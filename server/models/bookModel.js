@@ -1,12 +1,13 @@
 const mongoose = require('mongoose');
+const { Schema, Types } = mongoose;
 
-const bookSchema = new mongoose.Schema({
+const bookSchema = new Schema({
   image_link: String,
   title: String,
   author: String,
   slug: { type: String, unique: true },
   description: String,
-  publisher: String,
+  publisher: { type: Types.ObjectId, ref: 'Publisher' },
   published_date: Date,
   isbn: { type: String, unique: true },
   genre_ids: [{ type: Number }],
@@ -31,9 +32,7 @@ const bookSchema = new mongoose.Schema({
   discount: { type: Number, default: 0, min: 0, max: 100 },
 
   // Nhà cung cấp
-  supplier_id: String,
-  supplier_name: String,
-  supplier_rating: { type: Number, min: 0, max: 5, default: 0 },
+  supplier: { type: Types.ObjectId, ref: 'Supplier' },
 
 }, { timestamps: true });
 
@@ -77,7 +76,7 @@ bookSchema.pre('save', function (next) {
   next();
 });
 
-const bookGenresSchema = new mongoose.Schema({
+const bookGenresSchema = new Schema({
   _id: Number,
   name: String,
   description: String,

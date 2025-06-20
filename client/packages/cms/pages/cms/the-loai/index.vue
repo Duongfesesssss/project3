@@ -124,11 +124,6 @@
         </Column>
   
         <Column
-          field="_id"
-          header="ID"
-          sortable
-        />
-        <Column
           field="name"
           header="Tên thể loại"
           sortable

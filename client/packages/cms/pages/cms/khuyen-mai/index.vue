@@ -64,11 +64,24 @@
       </Column>
 
       <Column field="code" header="Mã voucher" sortable />
-      <Column field="name" header="Tên voucher" sortable />
-      <Column field="discountPercent" header="Giảm (%)" sortable />
-      <Column field="quantity" header="Số lượng" sortable />
-      <Column field="startDate" header="Ngày bắt đầu" sortable />
-      <Column field="endDate" header="Ngày kết thúc" sortable />
+      <Column field="discount" header="Giảm (%)" sortable />
+      <Column field="usage_limit" header="Giới hạn sử dụng" sortable />
+      <Column field="used_count" header="Đã sử dụng" sortable />
+      <Column field="min_order_value" header="Giá trị đơn tối thiểu" sortable>
+        <template #body="slotProps">
+          {{ formatCurrency(slotProps.data.min_order_value) }}
+        </template>
+      </Column>
+      <Column field="valid_from" header="Ngày bắt đầu" sortable>
+        <template #body="slotProps">
+          {{ formatDate(slotProps.data.valid_from) }}
+        </template>
+      </Column>
+      <Column field="valid_until" header="Ngày kết thúc" sortable>
+        <template #body="slotProps">
+          {{ formatDate(slotProps.data.valid_until) }}
+        </template>
+      </Column>
 
       <Column :exportable="false" style="min-width: 9rem" body-style="text-align:center">
         <template #header><b>Thao tác</b></template>
@@ -97,9 +110,11 @@ import * as yup from 'yup';
 import { useForm } from 'vee-validate';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
-import { useRoute } from 'vue-router';
 import { VoucherService } from '~/packages/base/services/voucher.service';
 import { VoucherModel } from '~/packages/base/models/dto/response/voucher/voucher.model';
+import VoucherModal from '~/packages/cms/components/shared/voucher/VoucherModal.vue';
+import { formatCurrency, formatDate } from '~/packages/base/utils/format';
+
 definePageMeta({ layout: 'cms-default' });
 
 const toast = useToast();
@@ -139,12 +154,24 @@ const reloadDataTable = () => {
   onLoadTable();
 };
 
+interface PageEvent {
+  page: number;
+  first: number;
+}
+
+interface DataTableResponse {
+  data: VoucherModel[];
+  totalRecords: number;
+}
+
 const onLoadTable = () => {
   loading.value = true;
   VoucherService.getVoucherDataTable(Object.assign(filterProject.value, filters.value))
-    .then((res) => {
-      dataVoucher.value = res.data || [];
-      totalRecords.value = res.totalRecords ?? 0;
+    .then((res: DataTableResponse | null) => {
+      if (res) {
+        dataVoucher.value = res.data || [];
+        totalRecords.value = res.totalRecords ?? 0;
+      }
     })
     .catch(console.error)
     .finally(() => {
@@ -153,14 +180,14 @@ const onLoadTable = () => {
     });
 };
 
-const onPage = (event: any) => {
+const onPage = (event: PageEvent) => {
   currentPageNumber.value = event.page;
   filterProject.value.first = event.first;
   reloadDataTable();
 };
 
-const onSort = (event: any) => {
-  filterProject.value.sortField = event.sortField ?? '';
+const onSort = (event: DataTableSortEvent) => {
+  filterProject.value.sortField = typeof event.sortField === 'string' ? event.sortField : '';
   filterProject.value.sortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
   reloadDataTable();
 };
@@ -179,14 +206,13 @@ const clearFilter = () => {
 };
 
 const onModalOpen = () => {
-  console.log('open modal', isOpenModal.value);
-  isOpenModal.value = true;
   voucherData.value = new VoucherModel();
+  isOpenModal.value = true;
 };
 
 const onModalOpenEdit = (data: VoucherModel) => {
+  voucherData.value = { ...data };
   isOpenModal.value = true;
-  voucherData.value = data;
 };
 
 const confirmDeleteVoucher = (voucher: VoucherModel) => {
