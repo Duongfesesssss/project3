@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@primevue/nuxt-module": "^4.3.6",
     "@primevue/themes": "^4.3.6",
     "caniuse-lite": "^1.0.30001715",
     "nuxt": "^3.14.0",
