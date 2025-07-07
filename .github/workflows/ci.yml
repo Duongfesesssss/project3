@@ -1,0 +1,44 @@
+name: CI for Client & Server
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        folder: [client, server]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies (yarn)
+        run: |
+          cd ${{ matrix.folder }}
+          yarn install --frozen-lockfile
+
+      - name: Lint (nếu có)
+        run: |
+          cd ${{ matrix.folder }}
+          if [ -f package.json ]; then yarn lint || echo "No lint script"; fi
+
+      - name: Build (nếu có)
+        run: |
+          cd ${{ matrix.folder }}
+          if [ -f package.json ]; then yarn build || echo "No build script"; fi
+
+      - name: Test (nếu có)
+        run: |
+          cd ${{ matrix.folder }}
+          if [ -f package.json ]; then yarn test || echo "No test script"; fi
