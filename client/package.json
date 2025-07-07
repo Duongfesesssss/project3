@@ -13,6 +13,7 @@
     "@nuxt/eslint": "^1.5.2",
     "@primevue/nuxt-module": "^4.3.6",
     "@primevue/themes": "^4.3.6",
+    "@sidebase/nuxt-auth": "^1.0.0",
     "caniuse-lite": "^1.0.30001715",
     "nuxt": "^3.14.0",
     "primevue": "^4.2.1",
