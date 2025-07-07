@@ -1172,6 +1172,13 @@
   dependencies:
     "@primeuix/utils" "^0.5.3"
 
+"@primeuix/styled@^0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@primeuix/styled/-/styled-0.7.0.tgz#9297bac3cb7487bf76ecd5363e48dfd857ab785e"
+  integrity sha512-xUqMdQb75izeDkNWFK1QlU15aUl5LIU97Fq68IXOhrqqLsKEBnj5ftntFZrENQW70jAHwALdWP4EOGi/poc9Tg==
+  dependencies:
+    "@primeuix/utils" "^0.6.0"
+
 "@primeuix/styles@^1.0.0":
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/@primeuix/styles/-/styles-1.0.3.tgz#ccfacc32cea24ae5f8f1fe7c8e72468ab7164119"
@@ -1179,10 +1186,22 @@
   dependencies:
     "@primeuix/styled" "^0.5.1"
 
+"@primeuix/themes@^1.2.0":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@primeuix/themes/-/themes-1.2.1.tgz#2d078b62dd5ad907f68e11f407908ee7ca62d473"
+  integrity sha512-DVCFDncvag47tpag3TdufDTuvUbfKnkgzmlxAQkwuMS0IlPA3wChrf9VlL2wETg/ZpJm/tHobkJBnB9FmkiqnA==
+  dependencies:
+    "@primeuix/styled" "^0.7.0"
+
 "@primeuix/utils@^0.5.1", "@primeuix/utils@^0.5.3":
   version "0.5.3"
   resolved "https://registry.yarnpkg.com/@primeuix/utils/-/utils-0.5.3.tgz#3a6f597f88e6e9ff8993e81a25c2dfcdd787fd71"
   integrity sha512-7SGh7734wcF1/uK6RzO6Z6CBjGQ97GDHfpyl2F1G/c7R0z9hkT/V72ypDo82AWcCS7Ta07oIjDpOCTkSVZuEGQ==
+
+"@primeuix/utils@^0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@primeuix/utils/-/utils-0.6.0.tgz#878166e330e5d544a439ed0402526a3ae1454ed0"
+  integrity sha512-ULpB87ImNAiX36OMtyDeRceWB7N/mVlh6gGLqp/lx8UMKZlLIQH/UAFND86hYXHwNpXeNKcWfMGreb0Oc0hcZA==
 
 "@primevue/core@4.3.3":
   version "4.3.3"
@@ -1199,6 +1218,14 @@
   dependencies:
     "@primeuix/utils" "^0.5.1"
     "@primevue/core" "4.3.3"
+
+"@primevue/themes@^4.3.6":
+  version "4.3.6"
+  resolved "https://registry.yarnpkg.com/@primevue/themes/-/themes-4.3.6.tgz#c45fe124ca2401e6a2341c3d187e9d1e3b5f8997"
+  integrity sha512-2yxfBZCuXU10pPfS6lysJpP1RqAwZVD+9tQi0cTieshD7Rq9HTZfInuJzqIfBcxGns2rolARi3+B3RQ53NBz1A==
+  dependencies:
+    "@primeuix/styled" "^0.7.0"
+    "@primeuix/themes" "^1.2.0"
 
 "@rollup/plugin-alias@^5.1.1":
   version "5.1.1"
