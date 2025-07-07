@@ -39,18 +39,21 @@ export default defineNuxtConfig({
     fallback: 'light',   
     classSuffix: ''     
   },
-  primevue: {
-    options: {
-      theme: {
-        preset: Aura,
-      },
-      ripple: true,
-      locale: {
-        ...defaultOptions.locale,
-      },
+primevue: {
+  options: {
+    theme: {
+      preset: Aura,
     },
-    autoImport: true,
+    ripple: true,
+    locale: {
+      ...defaultOptions.locale,
+    },
   },
+  autoImport: true,
+  components: {
+    exclude: ['Form', 'FormField'] // Loại trừ Form và FormField
+  }
+},
   webpack: {
     extractCSS: true,
   },
