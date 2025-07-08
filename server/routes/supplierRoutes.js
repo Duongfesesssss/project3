@@ -8,13 +8,14 @@ const {
   deleteSupplier,
   updateSupplier
 } = require('../controllers/supplierController');
+const { authenticate, authorize } = require('../middleware/authMiddleware');
 
 // Routes cho admin
-router.get('/', getAllSuppliers);
-router.post('/datatable', getSupplierDatatable);
-router.get('/:id', getSupplierById);
-router.post('/', createSupplier);
-router.put('/', updateSupplier);
-router.delete('/', deleteSupplier);
+router.get('/', authenticate, authorize(['admin']), getAllSuppliers);
+router.post('/datatable', authenticate, authorize(['admin']), getSupplierDatatable);
+router.get('/:id', authenticate, authorize(['admin']), getSupplierById);
+router.post('/', authenticate, authorize(['admin']), createSupplier);
+router.put('/', authenticate, authorize(['admin']), updateSupplier);
+router.delete('/', authenticate, authorize(['admin']), deleteSupplier);
 
 module.exports = router; 

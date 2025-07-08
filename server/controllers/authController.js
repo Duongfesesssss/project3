@@ -1,9 +1,9 @@
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/userModel');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { AppError, asyncHandler } = require('../middleware/errorHandler');
+const { generateAccessToken, generateRefreshToken, blacklistToken } = require('../middleware/tokenManager');
 
 const login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
@@ -20,12 +20,17 @@ const login = asyncHandler(async (req, res, next) => {
     return next(new AppError('Sai mật khẩu', 401));
   }
 
-  // Tạo token
-  const access_token = jwt.sign(
-    { id: user._id, user_name: user.user_name, email: user.email },
-    process.env.JWT_SECRET,
-    { expiresIn: '1d' }
-  );
+  // Tạo tokens
+  const access_token = generateAccessToken(user);
+  const refresh_token = generateRefreshToken(user);
+
+  // Set refresh token as httpOnly cookie
+  res.cookie('refresh_token', refresh_token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  });
 
   res.status(200).json({
     status: 'OK',
@@ -33,6 +38,7 @@ const login = asyncHandler(async (req, res, next) => {
     message: 'Đăng nhập thành công',
     data: {
       access_token,
+      refresh_token,
       user: {
         id: user._id,
         user_name: user.user_name,
@@ -170,7 +176,19 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 });
 
 const logout = asyncHandler(async (req, res, next) => {
-  // Nếu sử dụng Refresh Token trong cookie, xóa cookie
+  // Get tokens from request
+  const accessToken = req.headers.authorization?.split(' ')[1];
+  const refreshToken = req.cookies.refresh_token || req.body.refresh_token;
+
+  // Blacklist tokens if they exist
+  if (accessToken) {
+    blacklistToken(accessToken);
+  }
+  if (refreshToken) {
+    blacklistToken(refreshToken);
+  }
+
+  // Clear refresh token cookie
   res.clearCookie('refresh_token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

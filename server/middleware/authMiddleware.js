@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
+const { isTokenBlacklisted } = require('./tokenManager');
 require('dotenv').config();
 
 // Middleware for authentication
@@ -12,6 +13,15 @@ const authenticate = async (req, res, next) => {
         status: 'ERROR',
         success: false,
         message: 'Không tìm thấy token xác thực'
+      });
+    }
+
+    // Check if token is blacklisted
+    if (isTokenBlacklisted(token)) {
+      return res.status(401).json({
+        status: 'ERROR',
+        success: false,
+        message: 'Token đã bị vô hiệu hóa'
       });
     }
 

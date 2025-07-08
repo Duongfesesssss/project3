@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { Book, BookGenres } = require('../models/bookModel');
 const Publisher = require('../models/publisherModel');
-const Supplier = require('../models/supplierModel')
+const Supplier = require('../models/supplierModel');
+const { authenticate, authorize } = require('../middleware/authMiddleware');
+const { validate, schemas } = require('../middleware/validation');
 
 // Lấy tất cả sách
 router.get('/', async (req, res) => {
@@ -90,7 +92,7 @@ router.get('/ ', async (req, res) => {
 });
 
 // Phân trang cho sách
-router.post('/datatable', async (req, res) => {
+router.post('/datatable', authenticate, authorize(['admin']), async (req, res) => {
   try {
     const { page = 0, rows = 10 } = req.body;
     const first = req.body.first || 0;
@@ -164,7 +166,7 @@ router.post('/datatable', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authenticate, authorize(['admin']), validate(schemas.book), async (req, res) => {
   try {
     const { title, author, genre_ids, image_link, publisher,
       published_date,
@@ -219,7 +221,7 @@ router.post('/', async (req, res) => {
 });
 
 // Xóa sách theo ID
-router.delete('/', async (req, res) => {
+router.delete('/', authenticate, authorize(['admin']), async (req, res) => {
   try {
     const { _id } = req.body;
 
@@ -257,7 +259,7 @@ router.delete('/', async (req, res) => {
 });
 
 // Cập nhật thông tin sách
-router.put('/', async (req, res) => {
+router.put('/', authenticate, authorize(['admin']), validate(schemas.book), async (req, res) => {
   try {
     const { _id, image_link, ...updatedData } = req.body; // Nhận image_link từ request body
 

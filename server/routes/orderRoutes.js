@@ -9,16 +9,18 @@ const {
   updateOrder,
   deleteOrder
 } = require('../controllers/orderController');
+const { authenticate, authorize } = require('../middleware/authMiddleware');
+const { validate, schemas } = require('../middleware/validation');
 
 // Routes cho admin
-router.get('/datatable', getOrderDatatable);
-router.post('/create', createOrder);
-router.put('/update/:order_id', updateOrder);
-router.delete('/delete/:order_id', deleteOrder);
+router.get('/datatable', authenticate, authorize(['admin']), getOrderDatatable);
+router.put('/update/:order_id', authenticate, authorize(['admin']), updateOrder);
+router.delete('/delete/:order_id', authenticate, authorize(['admin']), deleteOrder);
 
 // Routes cho user
-router.get('/user/:user_id', getUserOrders);
-router.get('/:order_id', getOrderDetail);
-router.patch('/:order_id/status', updateOrderStatus);
+router.post('/create', authenticate, validate(schemas.order), createOrder);
+router.get('/user/:user_id', authenticate, getUserOrders);
+router.get('/:order_id', authenticate, getOrderDetail);
+router.patch('/:order_id/status', authenticate, authorize(['admin']), updateOrderStatus);
 
 module.exports = router; 

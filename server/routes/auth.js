@@ -4,6 +4,7 @@ const { register, login, forgotPassword, resetPassword, logout, user } = require
 const { validate, schemas } = require('../middleware/validation');
 const { authLimiter, passwordResetLimiter } = require('../middleware/rateLimiter');
 const { authenticate } = require('../middleware/authMiddleware');
+const { refreshToken, revokeToken } = require('../middleware/tokenManager');
 
 // Đăng ký
 router.post('/register', authLimiter, validate(schemas.register), register);
@@ -16,6 +17,12 @@ router.post('/forgot-password', passwordResetLimiter, validate(schemas.forgotPas
 
 // Đặt lại mật khẩu
 router.post('/reset-password', passwordResetLimiter, validate(schemas.resetPassword), resetPassword);
+
+// Làm mới token
+router.post('/refresh-token', refreshToken);
+
+// Thu hồi token
+router.post('/revoke-token', revokeToken);
 
 // Đăng xuất
 router.post('/logout', authenticate, logout);

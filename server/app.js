@@ -2,6 +2,7 @@ const express = require('express');
 const { connectToDB } = require('./db');
 const cors = require('cors');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
 
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
@@ -18,6 +19,7 @@ const genreRouter = require("./routes/genre-book");
 const cartRouter = require('./routes/cartRoutes');
 const orderRouter = require('./routes/orderRoutes');
 const voucherRouter = require('./routes/voucherRoutes');
+const { authenticate, authorize } = require('./middleware/authMiddleware');
 
 const multer = require('multer');
 const path = require('path');
@@ -41,6 +43,7 @@ app.use('/api/', apiLimiter);
 // Middleware untuk xử lý dữ liệu JSON
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
 
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -96,8 +99,8 @@ const upload = multer({
   }
 });
 
-// API tải ảnh lên
-app.post('/api/upload/images', upload.single('file'), (req, res) => {
+// API tải ảnh lên (admin only)
+app.post('/api/upload/images', authenticate, authorize(['admin']), upload.single('file'), (req, res) => {
   console.log('Yêu cầu tải ảnh:', req.file); // Log thông tin file
   try {
     if (!req.file) {
@@ -117,8 +120,8 @@ app.post('/api/upload/images', upload.single('file'), (req, res) => {
   }
 });
 
-// API tải video
-app.post('/api/upload/videos', upload.single('file'), (req, res) => {
+// API tải video (admin only)
+app.post('/api/upload/videos', authenticate, authorize(['admin']), upload.single('file'), (req, res) => {
   console.log('Yêu cầu tải ảnh:', req.file); // Log thông tin file
 
   try {

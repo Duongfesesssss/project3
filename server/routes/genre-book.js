@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { BookGenres } = require('../models/bookModel');
+const { authenticate, authorize } = require('../middleware/authMiddleware');
 
-// Lấy tất cả thể loại
+// Lấy tất cả thể loại (public)
 router.get('/', async (req, res) => {
   try {
     const genres = await BookGenres.find({});
@@ -58,8 +59,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Phân trang cho thể loại
-router.post('/datatable', async (req, res) => {
+// Phân trang cho thể loại (admin only)
+router.post('/datatable', authenticate, authorize(['admin']), async (req, res) => {
   try {
     const { page = 0, rows = 10 } = req.body;
     const first = req.body.first || 0;
@@ -89,8 +90,8 @@ router.post('/datatable', async (req, res) => {
   }
 });
 
-// Thêm thể loại mới
-router.post('/', async (req, res) => {
+// Thêm thể loại mới (admin only)
+router.post('/', authenticate, authorize(['admin']), async (req, res) => {
   try {
     const { name, description } = req.body;
     
@@ -122,8 +123,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Xóa thể loại theo ID
-router.delete('/', async (req, res) => {
+// Xóa thể loại theo ID (admin only)
+router.delete('/', authenticate, authorize(['admin']), async (req, res) => {
   try {
     const { _id } = req.body;
     const id = Number(_id);
@@ -161,8 +162,8 @@ router.delete('/', async (req, res) => {
   }
 });
 
-// Cập nhật thông tin thể loại
-router.put('/', async (req, res) => {
+// Cập nhật thông tin thể loại (admin only)
+router.put('/', authenticate, authorize(['admin']), async (req, res) => {
   try {
     const { _id, ...updatedData } = req.body;
     const id = Number(_id);
