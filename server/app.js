@@ -1,9 +1,13 @@
 const express = require('express');
 const { connectToDB } = require('./db');
 const cors = require('cors');
+const helmet = require('helmet');
 
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const { globalErrorHandler } = require('./middleware/errorHandler');
+const { apiLimiter } = require('./middleware/rateLimiter');
+
 const app = express();
 const port = process.env.PORT || 8888;
 const authRoutes = require("./routes/auth");
@@ -17,13 +21,33 @@ const voucherRouter = require('./routes/voucherRoutes');
 
 const multer = require('multer');
 const path = require('path');
-// Sử dụng middleware để xử lý dữ liệu JSON
-app.use(express.json());
+
+// Security middleware
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+}));
+
+// Rate limiting
+app.use('/api/', apiLimiter);
+
+// Middleware untuk xử lý dữ liệu JSON
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
-  }));
+}));
+
 // Kết nối đến DB
 connectToDB();
 
@@ -43,11 +67,34 @@ const storage = multer.diskStorage({
       }
     },
     filename: (req, file, cb) => {
-      cb(null, `${Date.now()}-${file.originalname}`);
+      // Sanitize filename
+      const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+      cb(null, `${Date.now()}-${sanitizedName}`);
     },
-  });
+});
+
+// File filter for security
+const fileFilter = (req, file, cb) => {
+  // Allowed image types
+  const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  // Allowed video types  
+  const allowedVideoTypes = ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/webm'];
   
-  const upload = multer({ storage });
+  if (allowedImageTypes.includes(file.mimetype) || allowedVideoTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('File type not allowed'), false);
+  }
+};
+
+const upload = multer({ 
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+    files: 1 // Only 1 file per upload
+  }
+});
 
 // API tải ảnh lên
 app.post('/api/upload/images', upload.single('file'), (req, res) => {
@@ -133,6 +180,10 @@ const swaggerOptions = {
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+// Global error handler - must be last
+app.use(globalErrorHandler);
+
 // Khởi động server
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);

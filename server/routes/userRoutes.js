@@ -1,6 +1,6 @@
 const express = require('express');
 const { register, login } = require('../controllers/authController');
-const { authMiddleware, authorize } = require('../middlewares/authMiddleware');
+const { authenticate, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -11,12 +11,22 @@ router.post('/register', register);
 router.post('/login', login);
 
 // Route yêu cầu xác thực cho người dùng
-router.get('/profile', authMiddleware, (req, res) => {
-    res.send(`Welcome, user ${req.user.email}`);
+router.get('/profile', authenticate, (req, res) => {
+    res.json({
+        status: 'OK',
+        success: true,
+        message: `Welcome, user ${req.user.email}`,
+        user: req.user
+    });
 });
 
-router.get('/admin', authMiddleware, authorize(['admin']), (req, res) => {
-    res.send('Welcome Admin!');
+// Route admin only
+router.get('/admin', authenticate, authorize(['admin']), (req, res) => {
+    res.json({
+        status: 'OK',
+        success: true,
+        message: 'Welcome Admin!'
+    });
 });
 
 module.exports = router;

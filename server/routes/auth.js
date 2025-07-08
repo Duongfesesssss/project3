@@ -1,22 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const { register, login, forgotPassword, resetPassword, logout, user } = require('../controllers/authController');
+const { validate, schemas } = require('../middleware/validation');
+const { authLimiter, passwordResetLimiter } = require('../middleware/rateLimiter');
+const { authenticate } = require('../middleware/authMiddleware');
+
 // Đăng ký
-router.post('/register', register);
+router.post('/register', authLimiter, validate(schemas.register), register);
 
 // Đăng nhập
-router.post('/login', login);
+router.post('/login', authLimiter, validate(schemas.login), login);
 
 // Quên mật khẩu
-router.post('/forgot-password' , forgotPassword);
+router.post('/forgot-password', passwordResetLimiter, validate(schemas.forgotPassword), forgotPassword);
 
 // Đặt lại mật khẩu
-router.post('/reset-password', resetPassword);
+router.post('/reset-password', passwordResetLimiter, validate(schemas.resetPassword), resetPassword);
 
 // Đăng xuất
-router.get('/logout', logout);
+router.post('/logout', authenticate, logout);
 
 // Lấy thông tin người dùng
-router.get('/user', user);
+router.get('/user', authenticate, user);
 
 module.exports = router;
