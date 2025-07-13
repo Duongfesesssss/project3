@@ -92,6 +92,7 @@ const onSubmit = handleSubmit(async () => {
     price: price.value,
     language: language.value,
     pages: pages.value,
+    stock_quantity: 0, // Mặc định = 0 khi tạo mới
     genre_ids: genre_ids.value,
     image_link: imageLink.value,
     description: description.value,
@@ -205,7 +206,7 @@ watch(
       price.value = newBook.price;
       language.value = newBook.language;
       pages.value = newBook.pages;
-      genre_ids.value = newBook.genre_ids;
+      genre_ids.value = newBook.genre_ids || [];
       imageLink.value = newBook.image_link || null;
       console.log('Image Link after assignment:', imageLink.value);
     }
@@ -394,9 +395,9 @@ const formatSize = (bytes: number) => {
               </div>
             </div>
 
-            <div class="gap-4 grid grid-cols-1 sm:grid-cols-2">
+            <div class="gap-4 grid grid-cols-1 sm:grid-cols-3">
               <div class="min-w-40">
-                <label class="block font-bold mb-3">Giá tiền (nghìn đồng)</label>
+                <label class="block font-bold mb-3 required">Giá tiền (nghìn đồng)</label>
                 <InputNumber
                   id="price"
                   v-model="price"
@@ -409,14 +410,14 @@ const formatSize = (bytes: number) => {
                 <small class="text-red-500">{{ errors.price }}</small>
               </div>
               <div class="min-w-40">
-                <label class="block font-bold mb-3">Số lượng(cuốn)</label>
+                <label class="block font-bold mb-3">Số trang</label>
                 <InputNumber
                   id="pages"
                   v-model="pages"
                   fluid
                   filter
                   show-clear
-                  placeholder="Nhập số lượng cuốn trong kho"
+                  placeholder="Nhập số trang của sách"
                 />
               </div>
             </div>

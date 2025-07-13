@@ -49,8 +49,53 @@
       </template>
     </ToolBar>
 
+    <!-- Stock Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-green-600 text-sm font-medium">Còn hàng</p>
+            <p class="text-2xl font-bold text-green-700">{{ stockStats.in_stock_count || 0 }}</p>
+          </div>
+          <i class="pi pi-check-circle text-green-500 text-2xl" />
+        </div>
+      </div>
+      
+      <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-orange-600 text-sm font-medium">Sắp hết</p>
+            <p class="text-2xl font-bold text-orange-700">{{ stockStats.low_stock_count || 0 }}</p>
+          </div>
+          <i class="pi pi-exclamation-triangle text-orange-500 text-2xl" />
+        </div>
+      </div>
+      
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-red-600 text-sm font-medium">Hết hàng</p>
+            <p class="text-2xl font-bold text-red-700">{{ stockStats.out_of_stock_count || 0 }}</p>
+          </div>
+          <i class="pi pi-times-circle text-red-500 text-2xl" />
+        </div>
+      </div>
+      
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-blue-600 text-sm font-medium">Tổng giá trị kho</p>
+            <p class="text-2xl font-bold text-blue-700">
+              {{ formatCurrency(stockStats.total_stock_value || 0) }}
+            </p>
+          </div>
+          <i class="pi pi-dollar text-blue-500 text-2xl" />
+        </div>
+      </div>
+    </div>
+
     <DataTable
-      v-model:expandedRows="expandedRows"
+      v-model:expanded-rows="expandedRows"
       v-model:rows="filterProject.rows"
       sort-field="ho_ten"
       :sort-order="-1"
@@ -139,7 +184,7 @@
       :src="slotProps.data.image_link"
       alt="Ảnh sách"
       class="h-20 w-20 object-cover rounded"
-    />
+    >
     <span v-else>Không có ảnh</span>
   </template>
 </Column>
@@ -211,7 +256,42 @@
         sortable
         >
         <template #header>
+          <span class="m-auto"><b>Số trang</b></span>
+        </template>
+        </Column>
+      
+      <Column
+        field="stock_quantity"
+        :show-filter-match-modes="false"
+        sortable
+        >
+        <template #header>
           <span class="m-auto"><b>Số lượng (cuốn)</b></span>
+        </template>
+        <template #body="slotProps">
+          <div class="flex items-center gap-2">
+            <span :class="getStockClass(slotProps.data.stock_status)">
+              {{ slotProps.data.stock_quantity || 0 }}
+            </span>
+            <Tag 
+              :value="getStockStatusText(slotProps.data.stock_status)" 
+              :severity="getStockSeverity(slotProps.data.stock_status)"
+              class="text-xs"
+            />
+          </div>
+        </template>
+        </Column>
+
+      <Column
+        field="sold_quantity"
+        :show-filter-match-modes="false"
+        sortable
+        >
+        <template #header>
+          <span class="m-auto"><b>Đã bán</b></span>
+        </template>
+        <template #body="slotProps">
+          {{ slotProps.data.sold_quantity || 0 }}
         </template>
         </Column>
       <Column
@@ -225,14 +305,32 @@
           <span class="m-auto"><b>Thao tác</b></span>
         </template>
         <template #body="slotProps">
-          <div class="flex justify-center items-center space-x-4">
+          <div class="flex justify-center items-center space-x-2">
+            <Button
+              v-tooltip="'Nhập hàng'"
+              icon="pi pi-plus"
+              outlined
+              rounded
+              severity="success"
+              size="small"
+              @click="onStockAdd(slotProps.data)"
+            />
+            <Button
+              v-tooltip="'Bán hàng'"
+              icon="pi pi-minus"
+              outlined
+              rounded
+              severity="info"
+              size="small"
+              @click="onStockReduce(slotProps.data)"
+            />
             <Button
               v-tooltip="'Chỉnh sửa sách'"
               icon="pi pi-pencil"
               outlined
               rounded
               severity="warn"
-              class="mr-2"
+              size="small"
               @click="onModalOpenEdit(slotProps.data)"
             />
             <Button
@@ -241,7 +339,7 @@
               outlined
               rounded
               severity="danger"
-              class="mr-2"
+              size="small"
               @click="confirmDeleteProject(slotProps.data)"
             />
           </div>
@@ -255,6 +353,14 @@
         @reload-data-table="reloadDataTable()"
         @hide-modal="isOpenModal = false"
       />
+      
+      <StockTransactionModal
+        :is-visible="isStockModalOpen"
+        :book="selectedBookForStock"
+        :transaction-type="stockTransactionType"
+        @hide-modal="onStockModalClose"
+        @reload-data="onStockTransactionComplete"
+      />
     </ClientOnly>
   </div>
 </template>
@@ -263,12 +369,12 @@
 import * as yup from 'yup';
 import { useForm } from 'vee-validate';
 import { useToast } from 'primevue/usetoast';
-import { useDialog } from 'primevue/usedialog';
 import { useConfirm } from 'primevue/useconfirm';
 import type { PageEvent, SortEvent } from '~/packages/base/models/event';
 import { BookService } from '~/packages/base/services/book.service';
 import { BookModel } from '~/packages/base/models/dto/response/book/book.model';
 import BookModal from '~/packages/cms/components/shared/book/BookModal.vue';
+import StockTransactionModal from '~/packages/cms/components/shared/stock/StockTransactionModal.vue';
 definePageMeta({
   layout: 'cms-default',
 });
@@ -289,13 +395,24 @@ const getRowSTT = (index: number): number => {
 
 
 const toast = useToast();
-const dialog = useDialog();
 const confirm = useConfirm();
 const dataBook = ref<BookModel[]>([]);
+const stockStats = ref({
+  total_books: 0,
+  in_stock_count: 0,
+  low_stock_count: 0,
+  out_of_stock_count: 0,
+  total_stock_value: 0
+});
 const items = ref([{ label: 'Quản lý' }, { label: 'Quản lý sách' }]);
 const currentPageNumber = ref(0);
 const isOpenModal = ref<boolean>(false);
 const bookData = ref<BookModel>(new BookModel());
+
+// Stock transaction modal states
+const isStockModalOpen = ref<boolean>(false);
+const selectedBookForStock = ref<BookModel | null>(null);
+const stockTransactionType = ref<'stock_in' | 'stock_out'>('stock_in');
 
 
 const totalRecords = ref(0);
@@ -363,6 +480,7 @@ const reloadDataTable = () => {
   loading.value = true;
   expandedRows.value = [];
   onLoadTable();
+  loadStockStats(); // Load stock stats cùng lúc
 };
 
 
@@ -385,6 +503,7 @@ const onSort = (event: SortEvent) => {
 
 onMounted(() => {
   onLoadTable();
+  loadStockStats(); // Load stock stats khi khởi tạo
 });
 
 const timKiem = handleSubmit(async () => {
@@ -435,6 +554,101 @@ const confirmDeleteProject = (props: BookModel) => {
   );
 };
 
+// Stock management methods
+const getStockClass = (status: string) => {
+  switch (status) {
+    case 'out_of_stock':
+      return 'text-red-600 font-bold';
+    case 'low_stock':
+      return 'text-orange-600 font-semibold';
+    case 'in_stock':
+      return 'text-green-600';
+    default:
+      return 'text-gray-600';
+  }
+};
+
+const getStockStatusText = (status: string) => {
+  switch (status) {
+    case 'out_of_stock':
+      return 'Hết hàng';
+    case 'low_stock':
+      return 'Sắp hết';
+    case 'in_stock':
+      return 'Còn hàng';
+    default:
+      return 'Không rõ';
+  }
+};
+
+const getStockSeverity = (status: string) => {
+  switch (status) {
+    case 'out_of_stock':
+      return 'danger';
+    case 'low_stock':
+      return 'warning';
+    case 'in_stock':
+      return 'success';
+    default:
+      return 'info';
+  }
+};
+
+// Nhập hàng
+const onStockAdd = (book: BookModel) => {
+  selectedBookForStock.value = book;
+  stockTransactionType.value = 'stock_in';
+  isStockModalOpen.value = true;
+};
+
+// Bán hàng
+const onStockReduce = (book: BookModel) => {
+  if (!book.stock_quantity || book.stock_quantity <= 0) {
+    toast.add({
+      severity: 'error',
+      summary: 'Sách đã hết hàng!',
+      detail: 'Không thể xuất hàng khi sách đã hết.',
+      life: 3000,
+    });
+    return;
+  }
+  
+  selectedBookForStock.value = book;
+  stockTransactionType.value = 'stock_out';
+  isStockModalOpen.value = true;
+};
+
+// Handle close stock modal
+const onStockModalClose = () => {
+  isStockModalOpen.value = false;
+  selectedBookForStock.value = null;
+};
+
+// Handle reload data after stock transaction
+const onStockTransactionComplete = () => {
+  reloadDataTable();
+  loadStockStats();
+};
+
+// Format currency
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(value);
+};
+
+// Load stock statistics
+const loadStockStats = async () => {
+  try {
+    const response = await BookService.getStockStats();
+    if (response?.status === 'OK') {
+      stockStats.value = response.data;
+    }
+  } catch (error) {
+    console.error('Error loading stock stats:', error);
+  }
+};
 </script>
 
 <style lang="scss" scoped></style>

@@ -185,9 +185,71 @@ import type { NhaCungCapModel } from '../models/dto/response/nha-cung-cap/nha-cu
   
       return null;
     }
+
+    async updateStock(bookId: string, quantity: number, action: 'add' | 'reduce') {
+      const response = await $api<RestData<any>>(
+        `/api/book/${bookId}/stock`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ quantity, action }),
+        },
+      );
+  
+      if (response) {
+        return response;
+      }
+  
+      return null;
+    }
+  
+    async getStockStats() {
+      const response = await $api<RestData<any>>(
+        `/api/book/stock/stats`,
+        {
+          method: 'GET',
+        },
+      );
+  
+      if (response) {
+        return response;
+      }
+  
+      return null;
+    }
+    async getOutOfStockBooks() {
+      const response = await $api<RestData<BookModel[]>>(
+        `/api/book/stock/out-of-stock`,
+        {
+          method: 'GET',
+        },
+      );
+
+      if (response) {
+        return response;
+      }
+
+      return null;
+    }
+
+    async getLowStockBooks() {
+      const response = await $api<RestData<BookModel[]>>(
+        `/api/book/stock/low-stock`,
+        {
+          method: 'GET',
+        },
+      );
+  
+      if (response) {
+        return response;
+      }
+  
+      return null;
+    }
   }
   
   const BookService = new _BookService();
   export { BookService };
-  
-  
+

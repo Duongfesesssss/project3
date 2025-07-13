@@ -1,48 +1,37 @@
 const express = require('express');
 const router = express.Router();
 const { Book, BookGenres } = require('../models/bookModel');
+const Supplier = require('../models/supplierModel');
 const Publisher = require('../models/publisherModel');
-const Supplier = require('../models/supplierModel')
+const { 
+  getAllBooks, 
+  getAllGenres,
+  createBook,
+  updateStock,
+  getOutOfStockBooks,
+  getLowStockBooks,
+  getStockStats
+} = require('../controllers/bookController');
 
-// Lấy tất cả sách
-router.get('/', async (req, res) => {
-  try {
-    const bookList = await Book.find({})
-      .populate('publisher')
-      .populate('supplier');
-    res.status(200).json({
-      status: 'OK',
-      metadata: null,
-      data: bookList,
-    });
-  } catch (error) {
-    console.error('Lỗi lấy danh sách sách:', error);
-    res.status(500).json({
-      status: 'ERROR',
-      metadata: null,
-      message: 'Lỗi server. Không thể lấy danh sách sách.',
-    });
-  }
-});
+// ========== STOCK MANAGEMENT ROUTES ==========
+// Thống kê kho hàng
+router.get('/stock/stats', getStockStats);
+
+// Sách hết hàng
+router.get('/stock/out-of-stock', getOutOfStockBooks);
+
+// Sách sắp hết hàng
+router.get('/stock/low-stock', getLowStockBooks);
+
+// Cập nhật stock (nhập/bán hàng)
+router.patch('/:bookId/stock', updateStock);
+
+// ========== EXISTING ROUTES ==========
+// Lấy tất cả sách (updated với stock info)
+router.get('/all', getAllBooks);
 
 // lấy tất cả thể loại sách
-router.get('/genres', async (req, res) => {
-  try {
-    const bookList = await BookGenres.find({});
-    res.status(200).json({
-      status: 'OK',
-      metadata: null,
-      data: bookList,
-    });
-  } catch (error) {
-    console.error('Lỗi lấy danh sách sách:', error);
-    res.status(500).json({
-      status: 'ERROR',
-      metadata: null,
-      message: 'Lỗi server. Không thể lấy danh sách thể loại sách.',
-    });
-  }
-});
+router.get('/genres', getAllGenres);
 
 // Lấy tất cả nhà cung cấp
 router.get('/suppliers', async (req, res) => {
@@ -70,8 +59,11 @@ router.get('/suppliers', async (req, res) => {
   }
 });
 
+// Lấy tất cả sách (endpoint gốc)
+router.get('/', getAllBooks);
+
 // Lấy tất cả nhà xuất bản
-router.get('/ ', async (req, res) => {
+router.get('/publishers', async (req, res) => {
   try {
     const publishers = await Publisher.find({});
     res.status(200).json({
@@ -138,6 +130,9 @@ router.post('/datatable', async (req, res) => {
           price: 1,
           language: 1,
           pages: 1,
+          stock_quantity: 1,
+          sold_quantity: 1,
+          stock_status: 1,
           genre_ids: 1,
           description: 1,
         },
@@ -310,15 +305,46 @@ router.get('/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
 
-    const book = await Book.findOne({ slug });
+    // Sử dụng aggregation giống như datatable
+    const bookResult = await Book.aggregate([
+      { $match: { slug: slug } },
+      {
+        $lookup: {
+          from: 'genres',
+          localField: 'genre_ids',
+          foreignField: '_id',
+          as: 'genres',
+        },
+      },
+      {
+        $lookup: {
+          from: 'publishers',
+          localField: 'publisher',
+          foreignField: '_id',
+          as: 'publisher',
+        },
+      },
+      { $unwind: { path: '$publisher', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'suppliers',
+          localField: 'supplier',
+          foreignField: '_id',
+          as: 'supplier',
+        },
+      },
+      { $unwind: { path: '$supplier', preserveNullAndEmptyArrays: true } },
+    ]);
 
-    if (!book) {
+    if (!bookResult || bookResult.length === 0) {
       return res.status(404).json({
         status: 'ERROR',
         metadata: null,
         message: 'Không tìm thấy sách với slug đã cung cấp.',
       });
     }
+
+    const book = bookResult[0];
 
     res.status(200).json({
       status: 'OK',

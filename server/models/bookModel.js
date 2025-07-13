@@ -13,7 +13,11 @@ const bookSchema = new Schema({
   genre_ids: [{ type: Number }],
   price: Number,
   language: String,
-  pages: Number,
+  pages: Number, // Số trang của sách
+  
+  // Quản lý kho
+  stock_quantity: { type: Number, default: 0, min: 0 }, // Số lượng cuốn sách trong kho
+  sold_quantity: { type: Number, default: 0, min: 0 }, // Số lượng đã bán
 
   // Đánh giá
   rating: { type: Number, default: 0, min: 0, max: 5 },
@@ -28,7 +32,15 @@ const bookSchema = new Schema({
   // Bán chạy
   sales_count: { type: Number, default: 0 },
   is_bestseller: { type: Boolean, default: false },
-  stock_status: { type: String, enum: ['in_stock', 'low_stock', 'out_of_stock'], default: 'in_stock' },
+  stock_status: { 
+    type: String, 
+    enum: ['in_stock', 'low_stock', 'out_of_stock'], 
+    default: function() {
+      if (this.stock_quantity === 0) return 'out_of_stock';
+      if (this.stock_quantity <= 5) return 'low_stock';
+      return 'in_stock';
+    }
+  },
   discount: { type: Number, default: 0, min: 0, max: 100 },
 
   // Nhà cung cấp
@@ -38,6 +50,17 @@ const bookSchema = new Schema({
 
 // Tự động tạo slug từ title trước khi lưu
 bookSchema.pre('save', function (next) {
+  // Tự động cập nhật stock_status dựa trên stock_quantity
+  if (this.isModified('stock_quantity')) {
+    if (this.stock_quantity === 0) {
+      this.stock_status = 'out_of_stock';
+    } else if (this.stock_quantity <= 5) {
+      this.stock_status = 'low_stock';
+    } else {
+      this.stock_status = 'in_stock';
+    }
+  }
+
   // Tự động tạo isbn nếu không được cung cấp
   if (!this.isbn) {
     this.isbn = Math.floor(1000000000000 + Math.random() * 9000000000000).toString(); // Tạo dãy số ngẫu nhiên 13 chữ số
@@ -86,39 +109,48 @@ const bookGenresSchema = new Schema({
 const Book = mongoose.model('Book', bookSchema);
 const BookGenres = mongoose.model('BookGenres', bookGenresSchema);
 
-// **Hàm lấy tất cả sách**
-const getAllBooks = async () => {
-  try {
-    const books = await Book.find();
+// **Methods để quản lý stock**
+bookSchema.methods.addStock = function(quantity) {
+  this.stock_quantity += quantity;
+  // Đánh dấu field đã thay đổi để trigger pre-save middleware
+  this.markModified('stock_quantity');
+  return this.save();
+};
 
-    // Lấy thông tin thể loại từ bảng genres
-    const genres = await BookGenres.find();
-
-    // Gắn thông tin thể loại vào từng sách
-    const booksWithGenres = books.map((book) => {
-      const bookGenres = genres.filter((genre) => book.genre_ids.includes(genre._id));
-      return {
-        ...book.toObject(),
-        genres: bookGenres, // Gắn thông tin thể loại vào sách
-      };
-    });
-
-    return booksWithGenres;
-  } catch (error) {
-    throw error;
+bookSchema.methods.reduceStock = function(quantity) {
+  if (this.stock_quantity >= quantity) {
+    this.stock_quantity -= quantity;
+    this.sold_quantity += quantity;
+    this.sales_count += quantity;
+    // Đánh dấu field đã thay đổi để trigger pre-save middleware
+    this.markModified('stock_quantity');
+    return this.save();
+  } else {
+    throw new Error(`Không đủ hàng trong kho. Chỉ còn ${this.stock_quantity} cuốn`);
   }
 };
 
-// **Hàm thêm sách mới**
-const addBook = async (bookData) => {
-  try {
-    const book = new Book(bookData);
-    await book.save();
-    return book;
-  } catch (error) {
-    throw error;
-  }
+bookSchema.methods.checkAvailability = function(requestedQuantity) {
+  return this.stock_quantity >= requestedQuantity;
 };
 
-// Xuất model và các hàm
-module.exports = { Book, BookGenres, getAllBooks, addBook };
+// **Virtual fields**
+bookSchema.virtual('total_stock_value').get(function() {
+  return this.stock_quantity * this.price;
+});
+
+bookSchema.virtual('stock_info').get(function() {
+  return {
+    available: this.stock_quantity,
+    sold: this.sold_quantity,
+    status: this.stock_status,
+    value: this.total_stock_value
+  };
+});
+
+// Đảm bảo virtuals được include khi convert sang JSON
+bookSchema.set('toJSON', { virtuals: true });
+bookSchema.set('toObject', { virtuals: true });
+
+// Xuất chỉ model như pattern chuẩn
+module.exports = { Book, BookGenres };

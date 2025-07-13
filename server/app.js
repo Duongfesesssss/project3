@@ -14,6 +14,10 @@ const genreRouter = require("./routes/genre-book");
 const cartRouter = require('./routes/cartRoutes');
 const orderRouter = require('./routes/orderRoutes');
 const voucherRouter = require('./routes/voucherRoutes');
+const stockTransactionRouter = require('./routes/stockTransactionRoutes');
+
+// Import models để đảm bảo chúng được register
+require('./models/stockTransactionModel');
 
 const multer = require('multer');
 const path = require('path');
@@ -113,6 +117,7 @@ app.use('/api/genre', genreRouter);
 app.use('/api/cart', cartRouter);
 app.use('/api/order', orderRouter);
 app.use('/api/voucher', voucherRouter);
+app.use('/api/stock-transactions', stockTransactionRouter);
 
 const swaggerOptions = {
     swaggerDefinition: {

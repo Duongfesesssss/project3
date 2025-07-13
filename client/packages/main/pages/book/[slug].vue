@@ -149,7 +149,7 @@ const handleAddToCart = () => {
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700 mt-4">
                 <div>
                   <span class="font-medium">Nhà cung cấp:</span>
-                  <span class="text-blue-600 ml-1">{{ book.provider || 'Rio Book' }}</span>
+                  <span class="text-blue-600 ml-1">{{ book.supplier?.name || book.supplier || 'Rio Book' }}</span>
                 </div>
                 <div>
                   <span class="font-medium">Tác giả:</span>
@@ -157,7 +157,7 @@ const handleAddToCart = () => {
                 </div>
                 <div>
                   <span class="font-medium">Nhà xuất bản:</span>
-                  <span class="ml-1">{{ book.publisher }}</span>
+                  <span class="ml-1">{{ book.publisher?.name || book.publisher || 'Chưa cập nhật' }}</span>
                 </div>
                 <div>
                   <span class="font-medium">Hình thức bìa:</span>
@@ -301,7 +301,7 @@ const handleAddToCart = () => {
                 </div>
                 <div class="flex justify-between py-2 border-b border-gray-100">
                   <span class="text-gray-600">Nhà xuất bản</span>
-                  <span class="font-medium">{{ book.publisher }}</span>
+                  <span class="font-medium">{{ book.publisher?.name || 'không có' }}</span>
                 </div>
               </div>
             </div>
