@@ -54,7 +54,7 @@
       v-model:rows="filterProject.rows"
       sort-field="ho_ten"
       :sort-order="-1"
-      :rows-per-page-options="[1, 10, 20, 50]"
+      :rows-per-page-options="[1,5 , 10, 20, 50]"
       column-resize-mode="expand"
       removable-sort
       show-gridlines
@@ -313,7 +313,7 @@ const { defineField, handleSubmit, errors } = useForm({
 const [keyWords] = defineField('keyWords');
 
 const filterProject = ref({
-  rows: 10,
+  rows: 5,
   first: 0,
   page: 0,
   sortField: '',
