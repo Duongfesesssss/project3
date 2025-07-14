@@ -1,8 +1,11 @@
 <script setup lang="ts">
+// Import modal components từ main
+import ThongTinCaNhan from '~/packages/main/components/shared/modals/ThongTinCaNhan.vue';
+import ThayDoiMatKhau from '~/packages/main/components/shared/modals/ThayDoiMatKhau.vue';
+
 const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
 
 const toast = useToast();
-const isOpenModal = ref(false);
 const isOpenInfoModal = ref(false);
 const isOpenChangePasswordModal = ref(false);
 
@@ -166,6 +169,16 @@ const dangXuat = () => {
         </div>
       </template>
     </ConfirmDialog>
+
+    <!-- Modal components từ main -->
+    <ThongTinCaNhan 
+      :is-visible="isOpenInfoModal" 
+      @hide-modal="isOpenInfoModal = false" 
+    />
+    <ThayDoiMatKhau 
+      :is-visible="isOpenChangePasswordModal" 
+      @hide-modal="isOpenChangePasswordModal = false" 
+    />
     <DynamicDialog />
   </div>
 </template>

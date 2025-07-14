@@ -243,6 +243,7 @@ const toggleUserStatus = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const { userId } = req.params;
+    console.log('Delete user request:', { userId, currentUser: req.user });
 
     const user = await User.findById(userId);
     if (!user) {
@@ -253,12 +254,14 @@ const deleteUser = async (req, res) => {
       });
     }
 
-    // Không cho phép xóa admin hoặc staff
-    if (user.role === 'admin' || user.role === 'staff') {
+    console.log('User to delete:', { role: user.role, is_self: user._id.toString() === req.user.id });
+
+    // Không cho phép xóa admin (chỉ cho phép xóa staff và customer)
+    if (user.role === 'admin') {
       return res.status(400).json({
         status: 'ERROR',
         success: false,
-        message: 'Không thể xóa tài khoản admin hoặc staff'
+        message: 'Không thể xóa tài khoản admin'
       });
     }
 

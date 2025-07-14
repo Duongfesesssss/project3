@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/packages/base/stores/auth.store';
+import ThongTinCaNhan from '~/components/shared/modals/ThongTinCaNhan.vue';
+import ThayDoiMatKhau from '~/components/shared/modals/ThayDoiMatKhau.vue';
 
 useHead({
   htmlAttrs: {
@@ -17,8 +19,23 @@ const toast = useToast();
 const { isMenuSpActive, toggleMenuSp, isMobileSp, doCheckSp } = useMainLayout();
 const isShowDropdown = ref(false);
 const isShowCategoryMenu = ref(false);
-const user = ref(null);
+const user = ref<any>(null);
 const router = useRouter();
+
+// Modal states
+const showProfileModal = ref(false);
+const showChangePasswordModal = ref(false);
+
+// Functions to handle modal opening
+const openProfileModal = () => {
+  showProfileModal.value = true;
+  isShowDropdown.value = false; // Đóng dropdown
+};
+
+const openChangePasswordModal = () => {
+  showChangePasswordModal.value = true;
+  isShowDropdown.value = false; // Đóng dropdown
+};
 
 // Computed property để kiểm tra quyền admin/staff
 const canAccessAdmin = computed(() => {
@@ -103,13 +120,18 @@ const doLogout = async () => {
     toast.add({
       severity: 'success',
       summary: 'Đăng xuất',
-      detail: 'Đăng xuất thành công',
-      life: 2000,
-      closable: true,
+      detail: 'Đăng xuất thành công!',
+      life: 3000,
     });
-    navigateTo('/');
+    router.push('/');
   } catch (error) {
-    console.error('Lỗi khi đăng xuất:', error);
+    console.error('Lỗi đăng xuất:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể đăng xuất!',
+      life: 3000,
+    });
   }
 };
 
@@ -284,9 +306,12 @@ const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store
                     v-show="isShowDropdown"
                     class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50"
                   >
-                    <NuxtLink to="/profile" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <button @click="openProfileModal" class="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-100">
                       <i class="pi pi-user mr-2"></i> Thông tin tài khoản
-                    </NuxtLink>
+                    </button>
+                    <button @click="openChangePasswordModal" class="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <i class="pi pi-lock mr-2"></i> Đổi mật khẩu
+                    </button>
                     <NuxtLink to="/orders" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
                       <i class="pi pi-shopping-bag mr-2"></i> Đơn hàng của tôi
                     </NuxtLink>
@@ -472,6 +497,16 @@ const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store
     </footer>
     
     <Toast />
+    
+    <!-- Modals -->
+    <ThongTinCaNhan 
+      :is-visible="showProfileModal" 
+      @hide-modal="showProfileModal = false" 
+    />
+    <ThayDoiMatKhau 
+      :is-visible="showChangePasswordModal" 
+      @hide-modal="showChangePasswordModal = false" 
+    />
   </div>
 </template>
 

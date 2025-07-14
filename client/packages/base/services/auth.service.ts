@@ -7,6 +7,8 @@ import type {
   UserAuthResetAndChangePasswordDTO,
 } from '../models/dto/request/auth/user-auth.model';
 import { BaseService } from './base.service';
+import { $api } from '~/packages/base/composables/useApi';
+import { EnumStatus } from '../utils/enums';
 
 class _AuthService extends BaseService {
   async getUserAuth() {
@@ -129,7 +131,52 @@ class _AuthService extends BaseService {
   //     console.error('Đăng nhập thất bại:', res);
   //     return { status: 'error', message: res?.data?.value};
   //   }
+
+  /**
+   * Lấy thông tin profile người dùng hiện tại
+   */
+  async getProfile() {
+    try {
+      const response = await $api('/api/auth/profile') as any;
+      return response;
+    } catch (error) {
+      console.error('Lỗi getProfile:', error);
+      throw error;
+    }
   }
+
+  /**
+   * Cập nhật thông tin profile
+   */
+  async updateProfile(data: { user_name: string; full_name: string; phone: string; address: string }) {
+    try {
+      const response = await $api('/api/auth/update-profile', {
+        method: 'PUT',
+        body: data
+      }) as any;
+      return response;
+    } catch (error) {
+      console.error('Lỗi updateProfile:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Đổi mật khẩu
+   */
+  async changePassword(data: { current_password: string; new_password: string; confirm_password: string }) {
+    try {
+      const response = await $api('/api/auth/change-password', {
+        method: 'PUT',
+        body: data
+      }) as any;
+      return response;
+    } catch (error) {
+      console.error('Lỗi changePassword:', error);
+      throw error;
+    }
+  }
+}
 
 
 const AuthService = new _AuthService();

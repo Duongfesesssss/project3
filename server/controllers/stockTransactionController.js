@@ -288,7 +288,8 @@ const getAllRecentTransactions = async (req, res) => {
         });
 
         res.status(200).json({
-            success: true,
+            status: 'OK',
+            message: 'Lấy lịch sử giao dịch thành công',
             data: formattedTransactions,
             totalRecords: totalTransactions,
             page: parseInt(page),
@@ -298,7 +299,7 @@ const getAllRecentTransactions = async (req, res) => {
     } catch (error) {
         console.error('Lỗi lấy tất cả giao dịch:', error);
         res.status(500).json({
-            success: false,
+            status: 'ERROR',
             message: 'Lỗi server khi lấy lịch sử giao dịch'
         });
     }

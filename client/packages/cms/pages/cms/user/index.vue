@@ -1,290 +1,3 @@
-<script setup lang="ts">
-import * as yup from 'yup';
-import { useForm } from 'vee-validate';
-import 'primeicons/primeicons.css';
-import { UserManagementService } from '~/packages/base/services/userManagement.service';
-import type { UserModel, UserListResponse } from '~/packages/base/services/userManagement.service';
-
-const isOpenModal = ref<boolean>(false);
-const isOpenUpdate = ref<boolean>(false);
-const isOpenChangePassword = ref<boolean>(false);
-const toast = useToast();
-const confirm = useConfirm();
-const dataUpdate = ref<UserModel>();
-const dataList = ref<UserModel[]>([]);
-const nameUserChangePassword = ref();
-const loading = ref(true);
-const currentPage = ref(1);
-const totalRecords = ref(0);
-const pageSize = ref(20);
-const selectedRole = ref('');
-const selectedStatus = ref('');
-
-definePageMeta({ layout: 'cms-default' });
-  
-  const home = ref({
-    icon: 'pi pi-home',
-    route: '/cms',
-  });
-const itemss = ref([
-  { label: 'Quản lý' },
-  { label: 'Hệ thống' },
-  { label: 'Quản lý người dùng' },
-]);
-
-const schema = yup.object({
-  keyWords: yup
-    .string()
-    .max(256, 'Tối đa 256 ký tự!')
-    .matches(/^[a-zA-Z0-9\s\-_]*$/, 'Chỉ được nhập chữ cái, số, dấu gạch ngang và khoảng trắng')
-    .matches(/^(?!.*[<>{}[\]\\]).*$/, 'Không được chứa ký tự đặc biệt')
-    .matches(/^(?!.*(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|EXEC|DECLARE)\b)).*$/i, 'Không được chứa từ khóa SQL'),
-});
-
-const { defineField, handleSubmit, errors } = useForm({
-  validationSchema: schema,
-});
-const [keyWords] = defineField('keyWords');
-
-const contextMenu = ref();
-const dataMenu = ref();
-const toggleContextMenu = (event: MouseEvent, data: UserModel) => {
-  dataMenu.value = data; // Cập nhật dữ liệu đúng cách
-  contextMenu.value.toggle(event);
-};
-// Kiểm tra quyền admin
-const canManageUsers = computed(() => {
-  // TODO: Kiểm tra role từ auth store
-  return true; // Tạm thời cho phép tất cả
-});
-
-onMounted(async () => {
-  loading.value = true;
-  await loadUserData();
-  loading.value = false;
-});
-
-// Load dữ liệu người dùng từ API mới
-const loadUserData = async () => {
-  try {
-    loading.value = true;
-    const response = await UserManagementService.getAllUsers({
-      page: currentPage.value,
-      limit: pageSize.value,
-      role: selectedRole.value || undefined,
-      is_active: selectedStatus.value ? selectedStatus.value === 'true' : undefined,
-      search: keyWords.value || undefined,
-    });
-    
-    if (response.success) {
-      dataList.value = response.data.users;
-      totalRecords.value = response.data.pagination.total_records;
-    } else {
-      toast.add({
-        severity: 'error',
-        summary: 'Lỗi',
-        detail: 'Không thể tải danh sách người dùng',
-        life: 3000,
-      });
-    }
-  } catch (error) {
-    console.error('Lỗi load user data:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: 'Có lỗi xảy ra khi tải dữ liệu',
-      life: 3000,
-    });
-  } finally {
-    loading.value = false;
-  }
-};
-
-
-// Sửa lại hàm items để kiểm tra quyền
-const items = (data: UserModel) => {
-  if (!data || !canManageUsers.value) return [];
-  return [
-    {
-      label: 'Cập nhật',
-      icon: 'pi pi-user-edit',
-      command: () => openModalUpdate(data),
-    },
-    {
-      label: 'Đổi mật khẩu',
-      icon: 'pi pi-lock',
-      command: () => openModalChangePassword(data),
-    },
-    {
-      label: data.is_active ? 'Khóa' : 'Mở khóa',
-      icon: data.is_active ? 'pi pi-lock' : 'pi pi-unlock',
-      command: () => openModalClock(data.user_name ?? '', !data.is_active),
-    },
-    {
-      label: 'Xóa',
-      icon: 'pi pi-trash',
-      command: () => openModalRemove(data),
-    },
-  ];
-};
-
-const getRowSTT = (index: number): number => {
-  return index + 1;
-};
-
-const Status = {
-  Approved: 'Đã phê duyệt',
-  NotApproved: 'Chưa phê duyệt',
-};
-
-const State = {
-  Active: 'Đang hoạt động',
-  Locked: 'Đang khóa',
-};
-
-const reloadData = () => {
-  loadUserData();
-};
-
-const reloadDatatable = () => {
-  currentPage.value = 1;
-  keyWords.value = '';
-  selectedRole.value = '';
-  selectedStatus.value = '';
-  loadUserData();
-};
-
-const openModalCreate = () => {
-  isOpenModal.value = true;
-};
-const emitCreateModel = () => {
-  reloadData();
-};
-
-const emitUpdateModel = () => {
-  reloadData();
-};
-
-const openModalUpdate = (data: UserModel) => {
-  if (data.user_name) {
-    UserService.getUserByUsername(data.user_name).then((res) => {
-      dataUpdate.value = res;
-      isOpenUpdate.value = true;
-    });
-  }
-};
-
-const openModalChangePassword = (data: UserModel) => {
-  isOpenChangePassword.value = true;
-  nameUserChangePassword.value = data;
-};
-const openModalClock = (user_name: string, isLocked: boolean): void => {
-  const message = !isLocked ? 'khóa' : 'mở khóa';
-  ConfirmDialog.showConfirmDialog(
-    confirm,
-    `Bạn muốn ${message} người dùng này?`,
-    'Xác nhận',
-    'pi pi-question-circle',
-    () => {
-      UserService.lockUser(user_name, !isLocked)
-        .then((res) => {
-          if (res?.status === EnumStatus.OK) {
-            reloadData();
-            toast.add({
-              severity: 'success',
-              summary: 'Thành công',
-              detail: `Đã ${message} thông tin người dùng`,
-              life: 3000,
-            });
-          }
-        })
-        .catch(() => {
-          toast.add({
-            severity: 'error',
-            summary: 'Lỗi',
-            detail: 'Khóa thông tin người dùng',
-            life: 3000,
-          });
-        });
-    },
-    () => {},
-    '',
-    ' p-button-danger',
-  );
-};
-const openModalRemove = (data: UserModel) => {
-  ConfirmDialog.showConfirmDialog(
-    confirm,
-    'Bạn muốn xóa thông tin người dùng này?',
-    'Xác nhận',
-    'pi pi-question-circle',
-    () => {
-      if (data.user_name !== undefined) {
-        UserService.deleteUser(data.user_name)
-          .then((res) => {
-            if (res?.status === EnumStatus.OK) {
-              reloadData();
-              toast.add({
-                severity: 'success',
-                summary: 'Thành công',
-                detail: 'Xóa thông tin người dùng',
-                life: 3000,
-              });
-            }
-            else {
-              toast.add({
-                severity: 'error',
-                summary: 'Lỗi',
-                detail:
-                  'Xóa thông tin người dùng không thành công, hệ thống đang trục trặc, vui lòng thử lại sau!',
-                life: 4000,
-              });
-            }
-          })
-          .catch(() => {
-            toast.add({
-              severity: 'error',
-              summary: 'Lỗi',
-              detail:
-                'Xóa thông tin người dùng không thành công, hệ thống đang trục trặc, vui lòng thử lại sau!',
-              life: 4000,
-            });
-          });
-      }
-      else {
-        toast.add({
-          severity: 'error',
-          summary: 'Lỗi',
-          detail: 'Tên người dùng không tồn tại!',
-          life: 4000,
-        });
-      }
-    },
-    () => {},
-    '',
-    ' p-button-danger',
-  );
-};
-
-const timKiem = handleSubmit(async () => {
-  reloadData();
-});
-
-// Options cho dropdown
-const roleOptions = [
-  { label: 'Tất cả vai trò', value: '' },
-  { label: 'Khách hàng', value: 'customer' },
-  { label: 'Nhân viên', value: 'staff' },
-  { label: 'Quản lý', value: 'admin' },
-];
-
-const statusOptions = [
-  { label: 'Tất cả trạng thái', value: '' },
-  { label: 'Đang hoạt động', value: 'true' },
-  { label: 'Đã khóa', value: 'false' },
-];
-</script>
-
 <template>
   <div class="p-card">
     <ToolBar class="mb-6">
@@ -292,7 +5,7 @@ const statusOptions = [
         <div class="flex flex-column justify-center">
           <Breadcrumb
             :home="home"
-            :model="itemss"
+            :model="items"
           >
             <template #item="{ item, props }">
               <router-link
@@ -324,188 +37,615 @@ const statusOptions = [
       </template>
       <template #end>
         <div class="flex items-center gap-2">
-          <div v-if="canManageUsers">
-            <Button
-              label="Thêm mới"
-              icon="pi pi-plus"
-              class="mr-2"
-              @click="openModalCreate()"
-            />
-          </div>
+          <Button
+            v-if="activeTab === 'staff'"
+            icon="pi pi-plus"
+            label="Thêm nhân viên"
+            class="p-button-primary"
+            severity="primary"
+            @click="openCreateStaffModal"
+          />
         </div>
       </template>
     </ToolBar>
 
-    <DataTable
-      :value="dataList"
-      paginator
-      :rows-per-page-options="[5, 10, 20, 50]"
-      paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-      current-page-report-template="hiển thị từ {first} đến {last} trong {totalRecords} người dùng"
-      :rows="10"
-      data-key="id"
-      :row-hover="true"
-      filter-display="menu"
-      show-gridlines
-      :loading="loading"
-      :global-filter-fields="[
-        'id',
-        'user_name',
-        'user_info.full_name',
-        'email',
-        'role_id',
-      ]"
-    >
-      <template #header>
-        <div class="grid grid-cols-1 xl:grid-cols-5 md:grid-cols-3 gap-4 mb-1">
-          <div class="col-span-1">
-            <Select
-              v-model="group_id"
-              :options="userGroup"
-              option-label="name"
-              option-value="id"
-              placeholder="Chọn nhóm"
-              class="w-full"
-              :show-clear="!!group_id"
-            />
-          </div>
-          <div class="col-span-1">
-            <IconField>
-              <InputIcon>
-                <i class="pi pi-search" />
-              </InputIcon>
-              <InputText
-                v-model="keyWords"
-                type="text"
-                placeholder="Nhập từ khóa"
-                class="w-full"
-                @keyup.enter="timKiem"
-              />
-            </IconField>
-            <span class="text-red-500">{{ errors.keyWords }}</span>
-          </div>
+    <!-- Tab View -->
+    <TabView v-model:activeIndex="activeTabIndex" @tab-change="onTabChange">
+      <!-- Tab Khách hàng -->
+      <TabPanel header="Khách hàng">
+        <!-- Customer DataTable -->
+        <DataTable
+          v-model:loading="loadingCustomers"
+          :value="customerList"
+          class="p-datatable-sm"
+          :paginator="true"
+          :rows="20"
+          :total-records="totalCustomers"
+          :lazy="true"
+          sort-mode="multiple"
+          removable-sort
+          show-gridlines
+          responsive-layout="scroll"
+          @page="onCustomerPage"
+          @sort="onCustomerSort"
+        >
+          <Column header="STT" style="min-width: 80px" body-style="text-align:center">
+            <template #body="{ index }">
+              <span class="text-900 font-medium">{{ (currentCustomerPage * 20) + index + 1 }}</span>
+            </template>
+          </Column>
 
-          <div class="col-span-1">
-            <Button
-              type="button"
-              icon="pi pi-filter"
-              label="Tìm kiếm"
-              class="w-full"
-              @click="timKiem"
-            />
-          </div>
-          <div class="col-span-1">
-            <Button
-              type="button"
-              icon="pi pi-filter-slash"
-              label="Bỏ lọc"
-              outlined
-              severity="danger"
-              class="w-full"
-              @click="reloadDatatable()"
-            />
-          </div>
-        </div>
-      </template>
-      <template #empty>
-        Không có người dùng.
-      </template>
-      <template #loading>
-        Đang tải dữ liệu. Vui lòng chờ trong giây lát.
-      </template>
-      <Column style="width: 50px">
-        <template #header>
-          <span class="m-auto"><b>STT</b></span>
-        </template>
-        <template #body="slotPros">
-          {{ getRowSTT(slotPros.index) }}
-        </template>
-      </Column>
-      <Column
-        field="user_name"
-        header="Tên đăng nhập"
-        style="min-width: 12rem"
-      />
-      <Column
-        field="user_info.full_name"
-        header="Họ và tên"
-        style="min-width: 12rem"
-      />
-      <Column
-        field="email"
-        header="Email"
-        style="min-width: 12rem"
-      />
-      <!-- <Column
-        field="unit"
-        header="Đơn vị"
-        style="min-width: 8rem"
-      /> -->
-      <Column
-        header="Tình trạng phê duyệt"
-        style="min-width: 10rem"
-      >
-        <template #body="slotProps">
-          <Badge
-            v-if="slotProps.data.approved"
-            :value="Status.Approved"
-            severity="success"
-            class="text-lg font-medium"
-          />
-          <Badge
-            v-else
-            :value="Status.NotApproved"
-            severity="danger"
-            class="text-lg font-medium"
-          />
-        </template>
-      </Column>
-      <Column
-        header="Trạng thái"
-        style="min-width: 12rem"
-      >
-        <template #body="slotProps">
-          <Badge
-            v-if="slotProps.data.lockout_enabled"
-            :value="State.Locked"
-            severity="danger"
-            class="text-lg font-medium"
-          />
-          <Badge
-            v-else
-            :value="State.Active"
-            severity="success"
-            class="text-lg font-medium"
-          />
-        </template>
-      </Column>
-      <Column>
-        <template #header>
-          <th>Thao tác</th>
-        </template>
-        <template #body="slotProps">
-          <div class="flex justify-center items-center h-full">
-            <Button
-              icon="pi pi-ellipsis-h"
-              title="Thao tác"
-              class="p-button-text p-0 hover:bg-transparent focus:ring-0"
-              @click="toggleContextMenu($event, slotProps.data)"
-            />
-            <ContextMenu
-              ref="contextMenu"
-              :model="items(dataMenu)"
-            />
-          </div>
-        </template>
-      </Column>
-    </DataTable>
-    
-    <!-- Create User Modal -->
+          <Column field="user_name" header="Tên đăng nhập" sortable style="min-width: 180px">
+            <template #body="{ data }">
+              <span class="text-900 font-medium">{{ data.user_name }}</span>
+            </template>
+          </Column>
+
+          <Column field="full_name" header="Họ và tên" sortable style="min-width: 200px">
+            <template #body="{ data }">
+              <span class="text-900">{{ data.full_name || 'Chưa cập nhật' }}</span>
+            </template>
+          </Column>
+
+          <Column field="email" header="Email" sortable style="min-width: 250px">
+            <template #body="{ data }">
+              <span class="text-900">{{ data.email || 'Chưa cập nhật' }}</span>
+            </template>
+          </Column>
+
+          <Column field="phone" header="Số điện thoại" style="min-width: 150px">
+            <template #body="{ data }">
+              <span class="text-900">{{ data.phone || 'Chưa cập nhật' }}</span>
+            </template>
+          </Column>
+
+          <Column field="is_active" header="Trạng thái" sortable style="min-width: 120px">
+            <template #body="{ data }">
+              <Tag 
+                :value="data.is_active ? 'Hoạt động' : 'Đã khóa'"
+                :severity="data.is_active ? 'success' : 'danger'"
+                class="font-medium"
+              />
+            </template>
+          </Column>
+
+          <Column field="created_at" header="Ngày tạo" sortable style="min-width: 150px">
+            <template #body="{ data }">
+              <span class="text-900 font-medium">
+                {{ formatDateTime(data.created_at) }}
+              </span>
+            </template>
+          </Column>
+
+          <Column header="Thao tác" :exportable="false" style="min-width: 120px" body-style="text-align:center">
+            <template #header>
+              <span class="m-auto"><b>Thao tác</b></span>
+            </template>
+            <template #body="{ data }">
+              <div class="flex justify-center items-center space-x-2">
+                <Button
+                  v-tooltip="data.is_active ? 'Khóa tài khoản' : 'Mở khóa tài khoản'"
+                  :icon="data.is_active ? 'pi pi-lock' : 'pi pi-unlock'"
+                  :severity="data.is_active ? 'warning' : 'success'"
+                  outlined
+                  rounded
+                  :disabled="isCurrentUser(data)"
+                  @click="toggleCustomerStatus(data)"
+                />
+                <Button
+                  v-tooltip="'Xóa tài khoản'"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  outlined
+                  rounded
+                  :disabled="isCurrentUser(data)"
+                  @click="deleteCustomer(data)"
+                />
+              </div>
+            </template>
+          </Column>
+
+          <template #empty>
+            <div class="text-center py-6">
+              <i class="pi pi-users text-gray-400 text-4xl mb-3" />
+              <p class="text-gray-600 text-lg">Không có dữ liệu khách hàng</p>
+            </div>
+          </template>
+
+          <template #loading>
+            <div class="text-center py-6">
+              <ProgressSpinner style="width: 50px; height: 50px" stroke-width="4" />
+              <p class="text-gray-600 mt-3">Đang tải dữ liệu...</p>
+            </div>
+          </template>
+        </DataTable>
+      </TabPanel>
+
+      <!-- Tab Nhân viên -->
+      <TabPanel header="Nhân viên">
+        <!-- Staff DataTable -->
+        <DataTable
+          v-model:loading="loadingStaff"
+          :value="staffList"
+          class="p-datatable-sm"
+          :paginator="true"
+          :rows="20"
+          :total-records="totalStaff"
+          :lazy="true"
+          sort-mode="multiple"
+          removable-sort
+          show-gridlines
+          responsive-layout="scroll"
+          @page="onStaffPage"
+          @sort="onStaffSort"
+        >
+          <Column header="STT" style="min-width: 80px" body-style="text-align:center">
+            <template #body="{ index }">
+              <span class="text-900 font-medium">{{ (currentStaffPage * 20) + index + 1 }}</span>
+            </template>
+          </Column>
+
+          <Column field="user_name" header="Tên đăng nhập" sortable style="min-width: 180px">
+            <template #body="{ data }">
+              <span class="text-900 font-medium">{{ data.user_name }}</span>
+            </template>
+          </Column>
+
+          <Column field="full_name" header="Họ và tên" sortable style="min-width: 200px">
+            <template #body="{ data }">
+              <span class="text-900">{{ data.full_name || 'Chưa cập nhật' }}</span>
+            </template>
+          </Column>
+
+          <Column field="email" header="Email" sortable style="min-width: 250px">
+            <template #body="{ data }">
+              <span class="text-900">{{ data.email || 'Chưa cập nhật' }}</span>
+            </template>
+          </Column>
+
+          <Column field="role" header="Vai trò" sortable style="min-width: 120px">
+            <template #body="{ data }">
+              <Tag 
+                :value="data.role === 'admin' ? 'Quản lý' : 'Nhân viên'"
+                :severity="data.role === 'admin' ? 'info' : 'secondary'"
+                class="font-medium"
+              />
+            </template>
+          </Column>
+
+          <Column field="is_active" header="Trạng thái" sortable style="min-width: 120px">
+            <template #body="{ data }">
+              <Tag 
+                :value="data.is_active ? 'Hoạt động' : 'Đã khóa'"
+                :severity="data.is_active ? 'success' : 'danger'"
+                class="font-medium"
+              />
+            </template>
+          </Column>
+
+          <Column field="created_at" header="Ngày tạo" sortable style="min-width: 150px">
+            <template #body="{ data }">
+              <span class="text-900 font-medium">
+                {{ formatDateTime(data.created_at) }}
+              </span>
+            </template>
+          </Column>
+
+          <Column header="Thao tác" :exportable="false" style="min-width: 150px" body-style="text-align:center">
+            <template #header>
+              <span class="m-auto"><b>Thao tác</b></span>
+            </template>
+            <template #body="{ data }">
+              <div class="flex justify-center items-center space-x-2">
+                <Button
+                  v-tooltip="'Chỉnh sửa nhân viên'"
+                  icon="pi pi-pencil"
+                  severity="warn"
+                  outlined
+                  rounded
+                  :disabled="data.role === 'admin' && !isCurrentUser(data)"
+                  @click="editStaff(data)"
+                />
+                <Button
+                  v-tooltip="data.is_active ? 'Khóa tài khoản' : 'Mở khóa tài khoản'"
+                  :icon="data.is_active ? 'pi pi-lock' : 'pi pi-unlock'"
+                  :severity="data.is_active ? 'warning' : 'success'"
+                  outlined
+                  rounded
+                  :disabled="isCurrentUser(data)"
+                  @click="toggleStaffStatus(data)"
+                />
+                <Button
+                  v-tooltip="'Xóa tài khoản'"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  outlined
+                  rounded
+                  :disabled="data.role === 'admin' || isCurrentUser(data)"
+                  @click="deleteStaff(data)"
+                />
+              </div>
+            </template>
+          </Column>
+
+          <template #empty>
+            <div class="text-center py-6">
+              <i class="pi pi-id-card text-gray-400 text-4xl mb-3" />
+              <p class="text-gray-600 text-lg">Không có dữ liệu nhân viên</p>
+            </div>
+          </template>
+
+          <template #loading>
+            <div class="text-center py-6">
+              <ProgressSpinner style="width: 50px; height: 50px" stroke-width="4" />
+              <p class="text-gray-600 mt-3">Đang tải dữ liệu...</p>
+            </div>
+          </template>
+        </DataTable>
+      </TabPanel>
+    </TabView>
+
+    <!-- Modal tạo nhân viên -->
     <UserModalCreate
-      v-model:visible="isOpenModal"
-      @created="emitCreateModel"
+      v-model:visible="showCreateModal"
+      @created="onStaffCreated"
     />
-    
-    <!-- Other modals (update, change password) would go here -->
+
+    <!-- Modal sửa nhân viên -->
+    <UserModalEdit
+      v-model:visible="showEditModal"
+      :user="selectedUser"
+      @updated="onStaffUpdated"
+    />
+
+    <!-- Toast & Confirm Dialog -->
+    <Toast />
+    <ConfirmDialog />
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
+import { UserManagementService } from '~/packages/base/services/userManagement.service';
+import type { UserModel } from '~/packages/base/services/userManagement.service';
+import UserModalCreate from '~/packages/cms/components/shared/user/UserModalCreate.vue';
+import UserModalEdit from '~/packages/cms/components/shared/user/UserModalEdit.vue';
+import { useAuthStore } from '~/packages/base/stores/auth.store';
+
+definePageMeta({ layout: 'cms-default' });
+
+const toast = useToast();
+const confirm = useConfirm();
+const authStore = useAuthStore();
+
+// Breadcrumb navigation
+const home = ref({ icon: 'pi pi-home', route: '/cms' });
+const items = ref([
+ { label: 'Hệ thống' }, { label: 'Quản lý người dùng', icon: 'pi pi-users' }
+]);
+
+// Tab management
+const activeTabIndex = ref(0);
+const activeTab = computed(() => activeTabIndex.value === 0 ? 'customers' : 'staff');
+
+// Customer data
+const customerList = ref<UserModel[]>([]);
+const customerSearch = ref('');
+const loadingCustomers = ref(false);
+const totalCustomers = ref(0);
+const currentCustomerPage = ref(0);
+
+// Staff data  
+const staffList = ref<UserModel[]>([]);
+const staffSearch = ref('');
+const loadingStaff = ref(false);
+const totalStaff = ref(0);
+const currentStaffPage = ref(0);
+
+// Common
+const showCreateModal = ref(false);
+const showEditModal = ref(false);
+const selectedUser = ref<UserModel | null>(null);
+
+// Kiểm tra xem có phải user hiện tại không
+const isCurrentUser = (user: UserModel) => {
+  return user._id === authStore.user?.id;
+};
+
+// Load customers
+const loadCustomers = async (page = 0) => {
+  try {
+    loadingCustomers.value = true;
+    currentCustomerPage.value = page;
+
+    const response = await UserManagementService.getAllUsers({
+      page: page + 1, // Backend expects 1-based pagination
+      limit: 20,
+      role: 'customer',
+      search: customerSearch.value || undefined,
+    });
+    
+    if (response.success) {
+      customerList.value = response.data.users;
+      totalCustomers.value = response.data.pagination.total_records;
+    }
+  } catch (error) {
+    console.error('Lỗi load customers:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tải danh sách khách hàng',
+      life: 3000,
+    });
+  } finally {
+    loadingCustomers.value = false;
+  }
+};
+
+// Load staff
+const loadStaff = async (page = 0) => {
+  try {
+    loadingStaff.value = true;
+    currentStaffPage.value = page;
+
+    const response = await UserManagementService.getAllUsers({
+      page: page + 1, // Backend expects 1-based pagination
+      limit: 20,
+      role: 'staff,admin', // Lấy cả staff và admin
+      search: staffSearch.value || undefined,
+    });
+    
+    if (response.success) {
+      staffList.value = response.data.users;
+      totalStaff.value = response.data.pagination.total_records;
+    }
+  } catch (error) {
+    console.error('Lỗi load staff:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tải danh sách nhân viên',
+      life: 3000,
+    });
+  } finally {
+    loadingStaff.value = false;
+  }
+};
+
+// Event handlers
+const onCustomerPage = (event: { page: number }) => {
+  loadCustomers(event.page);
+};
+
+const onStaffPage = (event: { page: number }) => {
+  loadStaff(event.page);
+};
+
+const onCustomerSort = (event: unknown) => {
+  // Implement sorting if needed
+  console.log('Customer sort event:', event);
+};
+
+const onStaffSort = (event: unknown) => {
+  // Implement sorting if needed
+  console.log('Staff sort event:', event);
+};
+
+const onTabChange = () => {
+  // Reload data when switching tabs if needed
+  if (activeTabIndex.value === 0 && customerList.value.length === 0) {
+    loadCustomers();
+  } else if (activeTabIndex.value === 1 && staffList.value.length === 0) {
+    loadStaff();
+  }
+};
+
+// Utility functions
+const formatDateTime = (dateString: string) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+};
+
+// Toggle user status
+const toggleCustomerStatus = (user: UserModel) => {
+  const action = user.is_active ? 'khóa' : 'mở khóa';
+  confirm.require({
+    message: `Bạn có chắc chắn muốn ${action} tài khoản "${user.user_name}"?`,
+    header: 'Xác nhận',
+    icon: 'pi pi-question-circle',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        const response = await UserManagementService.toggleUserStatus(user._id!) as any;
+        if (response.status === 'OK') {
+          toast.add({
+            severity: 'success',
+            summary: 'Thành công',
+            detail: `Đã ${action} tài khoản thành công`,
+            life: 3000,
+          });
+          loadCustomers();
+        }
+      } catch (error) {
+        toast.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: `Không thể ${action} tài khoản`,
+          life: 3000,
+        });
+      }
+    }
+  });
+};
+
+const toggleStaffStatus = (user: UserModel) => {
+  const action = user.is_active ? 'khóa' : 'mở khóa';
+  confirm.require({
+    message: `Bạn có chắc chắn muốn ${action} tài khoản "${user.user_name}"?`,
+    header: 'Xác nhận',
+    icon: 'pi pi-question-circle',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        const response = await UserManagementService.toggleUserStatus(user._id!) as any;
+        if (response.status === 'OK') {
+          toast.add({
+            severity: 'success',
+            summary: 'Thành công',
+            detail: `Đã ${action} tài khoản thành công`,
+            life: 3000,
+          });
+          loadStaff();
+        }
+      } catch (error) {
+        toast.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: `Không thể ${action} tài khoản`,
+          life: 3000,
+        });
+      }
+    }
+  });
+};
+
+// Delete functions
+const deleteCustomer = (user: UserModel) => {
+  confirm.require({
+    message: `Bạn có chắc chắn muốn xóa tài khoản khách hàng "${user.user_name}"?`,
+    header: 'Xác nhận xóa',
+    icon: 'pi pi-exclamation-triangle',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        const response = await UserManagementService.deleteUser(user._id!) as any;
+        if (response.status === 'OK') {
+          toast.add({
+            severity: 'success',
+            summary: 'Thành công',
+            detail: 'Đã xóa tài khoản khách hàng',
+            life: 3000,
+          });
+          loadCustomers();
+        }
+      } catch (error) {
+        toast.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể xóa tài khoản',
+          life: 3000,
+        });
+      }
+    }
+  });
+};
+
+const deleteStaff = (user: UserModel) => {
+  confirm.require({
+    message: `Bạn có chắc chắn muốn xóa tài khoản nhân viên "${user.user_name}"?`,
+    header: 'Xác nhận xóa',
+    icon: 'pi pi-exclamation-triangle',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        const response = await UserManagementService.deleteUser(user._id!) as any;
+        if (response.status === 'OK') {
+          toast.add({
+            severity: 'success',
+            summary: 'Thành công',
+            detail: 'Đã xóa tài khoản nhân viên',
+            life: 3000,
+          });
+          loadStaff();
+        }
+      } catch (error) {
+        toast.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể xóa tài khoản',
+          life: 3000,
+        });
+      }
+    }
+  });
+};
+
+// Modal handlers
+const openCreateStaffModal = () => {
+  showCreateModal.value = true;
+};
+
+const editStaff = (user: UserModel) => {
+  selectedUser.value = user;
+  showEditModal.value = true;
+};
+
+const onStaffCreated = () => {
+  loadStaff();
+};
+
+const onStaffUpdated = () => {
+  loadStaff();
+};
+
+onMounted(() => {
+  loadCustomers();
+  loadStaff();
+});
+</script>
+
+<style scoped>
+:deep(.p-datatable .p-datatable-tbody > tr > td) {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+:deep(.p-datatable .p-datatable-thead > tr > th) {
+  background: #f8fafc;
+  border-bottom: 2px solid #e5e7eb;
+  font-weight: 600;
+  color: #374151;
+  padding: 1rem 0.75rem;
+}
+
+:deep(.p-tag) {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+:deep(.p-button) {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+/* Tab styling */
+.user-management-tabs :deep(.p-tabview-nav) {
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.user-management-tabs :deep(.p-tabview-nav li a) {
+  border: none;
+  border-radius: 0;
+  padding: 1rem 1.5rem;
+  font-weight: 500;
+}
+
+.user-management-tabs :deep(.p-tabview-nav li.p-highlight a) {
+  border-bottom: 2px solid #3b82f6;
+  color: #3b82f6;
+}
+
+.user-management-tabs :deep(.p-tabview-panels) {
+  padding: 1.5rem;
+  background: white;
+}
+</style>
+

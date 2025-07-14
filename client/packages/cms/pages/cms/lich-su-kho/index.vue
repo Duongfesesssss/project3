@@ -192,7 +192,7 @@ if (!authStore.isAdmin) {
 // Breadcrumb navigation
 const home = ref({ icon: 'pi pi-home', route: '/cms' });
 const items = ref([
-  { label: 'Lịch sử kho', icon: 'pi pi-clock' }
+  { label: 'Hệ thống' }, { label: 'Lịch sử kho', icon: 'pi pi-clock' }
 ]);
 
 // Interfaces
@@ -245,13 +245,13 @@ const loadTransactions = async (page = 0) => {
     }
 
     const response = await $api(`/api/stock-transactions/all?${params.toString()}`) as {
-      success: boolean;
+      status: string;
       data: StockTransaction[];
       totalRecords?: number;
       message?: string;
     };
 
-    if (response.success) {
+    if (response.status === 'OK') {
       transactions.value = response.data;
       totalRecords.value = response.totalRecords || 0;
     } else {
