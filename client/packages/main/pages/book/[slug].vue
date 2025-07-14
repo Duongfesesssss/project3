@@ -142,13 +142,12 @@ const handleAddToCart = () => {
             <!-- Book Title and Basic Info -->
             <div class="mb-6">
               <div class="flex items-center mb-2">
-                <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-sm font-medium mr-2">Bé</span>
-                <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">{{ book.title }}</h1>
-              </div>
-              
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700 mt-4">
-                <div>
-                  <span class="font-medium">Nhà cung cấp:</span>
+              <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">{{ book.title }}</h1>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700 mt-4">
+              <div>
+                <span class="font-medium">Nhà cung cấp:</span>
                   <span class="text-blue-600 ml-1">{{ book.supplier?.name || book.supplier || 'Rio Book' }}</span>
                 </div>
                 <div>
@@ -293,7 +292,7 @@ const handleAddToCart = () => {
                 </div>
                 <div class="flex justify-between py-2 border-b border-gray-100">
                   <span class="text-gray-600">Tên Nhà Cung Cấp</span>
-                  <span class="font-medium text-blue-600">{{ book.provider || 'Rio Book' }}</span>
+                  <span class="font-medium text-blue-600">{{ book.supplier?.name || 'Rio Book' }}</span>
                 </div>
                 <div class="flex justify-between py-2 border-b border-gray-100">
                   <span class="text-gray-600">Tác giả</span>

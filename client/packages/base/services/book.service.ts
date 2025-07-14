@@ -8,6 +8,7 @@ import type { NhaCungCapModel } from '../models/dto/response/nha-cung-cap/nha-cu
   import { BaseService } from './base.service';
   import { $publicApi } from '../composables/usePublicApi';
   import { $api } from '../composables/useApi';
+  import { EnumStatus } from '../utils/enums';
   
   class _BookService extends BaseService {
     async BookDataTable(filterProject: any) {
@@ -56,6 +57,22 @@ import type { NhaCungCapModel } from '../models/dto/response/nha-cung-cap/nha-cu
       }
     
       console.error('Không tìm thấy sách với ID:', id);
+      return null;
+    }
+
+    async getBookBySlug(slug: string) {
+      const res = await $publicApi<RestData<BookModel>>(
+        `/api/book/${slug}`,
+        {
+          method: 'GET',
+        },
+      );
+    
+      if (res && res.status === EnumStatus.OK) {
+        return res.data; // Trả về dữ liệu từ `res.data`
+      }
+    
+      console.error('Không tìm thấy sách với slug:', slug);
       return null;
     }
     
