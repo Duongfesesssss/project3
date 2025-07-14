@@ -6,7 +6,6 @@ const Book = mongoose.model('Book', require('../models/bookModel').bookSchema);
 const getCartByUserId = async (req, res) => {
   try {
     const { user_id } = req.params;
-    console.log('Đang tìm giỏ hàng của user:', user_id);
     
     if (!mongoose.Types.ObjectId.isValid(user_id)) {
       return res.status(400).json({
@@ -22,8 +21,6 @@ const getCartByUserId = async (req, res) => {
         select: 'title image_link price author publisher description'
       })
       .lean();
-
-    console.log('Giỏ hàng tìm được:', cart);
 
     // Trả về giỏ hàng trống nếu không tìm thấy
     if (!cart) {
@@ -56,13 +53,8 @@ const getCartByUserId = async (req, res) => {
 const addToCart = async (req, res) => {
   try {
     const { user_id, book_id, quantity } = req.body;
-    console.log('Request body từ client:', req.body);
-    console.log('Kiểu dữ liệu user_id:', typeof user_id, user_id);
-    console.log('Kiểu dữ liệu book_id:', typeof book_id, book_id);
-    console.log('Kiểu dữ liệu quantity:', typeof quantity, quantity);
 
     if (!mongoose.Types.ObjectId.isValid(user_id) || !mongoose.Types.ObjectId.isValid(book_id)) {
-      console.log('ID không hợp lệ:', { user_id, book_id });
       return res.status(400).json({
         status: 'ERROR',
         success: false,
@@ -71,12 +63,9 @@ const addToCart = async (req, res) => {
     }
 
     // Kiểm tra sách tồn tại
-    console.log('Đang tìm sách với ID:', book_id);
     const book = await Book.findById(book_id);
-    console.log('Kết quả tìm sách:', book);
     
     if (!book) {
-      console.log('Không tìm thấy sách với ID:', book_id);
       return res.status(404).json({
         status: 'ERROR',
         success: false,
@@ -85,9 +74,7 @@ const addToCart = async (req, res) => {
     }
 
     // Kiểm tra giá sách
-    console.log('Giá sách:', book.price);
     if (!book.price) {
-      console.log('Sách không có giá:', book);
       return res.status(400).json({
         status: 'ERROR',
         success: false,

@@ -12,28 +12,16 @@ const {
   getLowStockBooks,
   getStockStats
 } = require('../controllers/bookController');
+const { authenticateToken, staffAndAdmin, adminOnly } = require('../middlewares/roleMiddleware');
 
-// ========== STOCK MANAGEMENT ROUTES ==========
-// Thống kê kho hàng
-router.get('/stock/stats', getStockStats);
-
-// Sách hết hàng
-router.get('/stock/out-of-stock', getOutOfStockBooks);
-
-// Sách sắp hết hàng
-router.get('/stock/low-stock', getLowStockBooks);
-
-// Cập nhật stock (nhập/bán hàng)
-router.patch('/:bookId/stock', updateStock);
-
-// ========== EXISTING ROUTES ==========
-// Lấy tất cả sách (updated với stock info)
+// ========== PUBLIC ROUTES (không cần đăng nhập) ==========
+// Lấy tất cả sách cho khách hàng
 router.get('/all', getAllBooks);
 
-// lấy tất cả thể loại sách
+// Lấy tất cả thể loại sách - PUBLIC cho trang tìm kiếm
 router.get('/genres', getAllGenres);
 
-// Lấy tất cả nhà cung cấp
+// Lấy tất cả nhà cung cấp - PUBLIC cho trang tìm kiếm
 router.get('/suppliers', async (req, res) => {
   if (!Supplier) {
     return res.status(500).json({
@@ -59,10 +47,7 @@ router.get('/suppliers', async (req, res) => {
   }
 });
 
-// Lấy tất cả sách (endpoint gốc)
-router.get('/', getAllBooks);
-
-// Lấy tất cả nhà xuất bản
+// Lấy tất cả nhà xuất bản - PUBLIC cho trang tìm kiếm
 router.get('/publishers', async (req, res) => {
   try {
     const publishers = await Publisher.find({});
@@ -81,8 +66,76 @@ router.get('/publishers', async (req, res) => {
   }
 });
 
-// Phân trang cho sách
-router.post('/datatable', async (req, res) => {
+// Lấy thông tin sách theo slug - PUBLIC
+router.get('/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    // Sử dụng aggregation giống như datatable
+    const bookResult = await Book.aggregate([
+      { $match: { slug: slug } },
+      {
+        $lookup: {
+          from: 'genres',
+          localField: 'genre_ids',
+          foreignField: '_id',
+          as: 'genres',
+        },
+      },
+      {
+        $lookup: {
+          from: 'publishers',
+          localField: 'publisher',
+          foreignField: '_id',
+          as: 'publisher',
+        },
+      },
+      { $unwind: { path: '$publisher', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'suppliers',
+          localField: 'supplier',
+          foreignField: '_id',
+          as: 'supplier',
+        },
+      },
+      { $unwind: { path: '$supplier', preserveNullAndEmptyArrays: true } },
+    ]);
+
+    if (!bookResult || bookResult.length === 0) {
+      return res.status(404).json({
+        status: 'ERROR',
+        metadata: null,
+        message: 'Không tìm thấy sách với slug đã cung cấp.',
+      });
+    }
+
+    const book = bookResult[0];
+
+    res.status(200).json({
+      status: 'OK',
+      metadata: null,
+      data: book,
+    });
+  } catch (error) {
+    console.error('Lỗi lấy thông tin sách theo slug:', error);
+    res.status(500).json({
+      status: 'ERROR',
+      metadata: null,
+      message: 'Lỗi server. Không thể lấy thông tin sách.',
+    });
+  }
+});
+
+// ========== PROTECTED ROUTES (cần đăng nhập) ==========
+router.use(authenticateToken); // Từ đây trở xuống cần đăng nhập
+
+// ========== STAFF VÀ ADMIN: Quản lý nội dung sách ==========
+router.get('/', staffAndAdmin, getAllBooks);
+router.post('/create', staffAndAdmin, createBook);
+
+// Phân trang cho sách - CMS
+router.post('/datatable', staffAndAdmin, async (req, res) => {
   try {
     const { page = 0, rows = 10 } = req.body;
     const first = req.body.first || 0;
@@ -159,7 +212,13 @@ router.post('/datatable', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+// ========== STAFF VÀ ADMIN: Thống kê và quản lý kho ==========
+router.get('/stock/stats', staffAndAdmin, getStockStats);
+router.get('/stock/out-of-stock', staffAndAdmin, getOutOfStockBooks);
+router.get('/stock/low-stock', staffAndAdmin, getLowStockBooks);
+
+// ========== STAFF VÀ ADMIN: CRUD Operations ==========
+router.post('/', staffAndAdmin, async (req, res) => {
   try {
     const { title, author, genre_ids, image_link, publisher,
       published_date,
@@ -213,46 +272,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Xóa sách theo ID
-router.delete('/', async (req, res) => {
-  try {
-    const { _id } = req.body;
-
-    if (!_id) {
-      return res.status(400).json({
-        status: 'ERROR',
-        metadata: null,
-        message: 'Vui lòng cung cấp _id của sách cần xóa.',
-      });
-    }
-
-    const deletedBook = await Book.findByIdAndDelete(_id);
-
-    if (!deletedBook) {
-      return res.status(404).json({
-        status: 'ERROR',
-        metadata: null,
-        message: 'Không tìm thấy sách với _id đã cung cấp.',
-      });
-    }
-
-    res.status(200).json({
-      status: 'OK',
-      metadata: null,
-      message: 'Xóa sách thành công.',
-    });
-  } catch (error) {
-    console.error('Lỗi xóa sách:', error);
-    res.status(500).json({
-      status: 'ERROR',
-      metadata: null,
-      message: 'Lỗi server. Không thể xóa sách.',
-    });
-  }
-});
-
 // Cập nhật thông tin sách
-router.put('/', async (req, res) => {
+router.put('/', staffAndAdmin, async (req, res) => {
   try {
     const { _id, image_link, ...updatedData } = req.body; // Nhận image_link từ request body
 
@@ -300,67 +321,46 @@ router.put('/', async (req, res) => {
   }
 });
 
-// Lấy thông tin sách theo slug
-router.get('/:slug', async (req, res) => {
+// Xóa sách theo ID
+router.delete('/', staffAndAdmin, async (req, res) => {
   try {
-    const { slug } = req.params;
+    const { _id } = req.body;
 
-    // Sử dụng aggregation giống như datatable
-    const bookResult = await Book.aggregate([
-      { $match: { slug: slug } },
-      {
-        $lookup: {
-          from: 'genres',
-          localField: 'genre_ids',
-          foreignField: '_id',
-          as: 'genres',
-        },
-      },
-      {
-        $lookup: {
-          from: 'publishers',
-          localField: 'publisher',
-          foreignField: '_id',
-          as: 'publisher',
-        },
-      },
-      { $unwind: { path: '$publisher', preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: 'suppliers',
-          localField: 'supplier',
-          foreignField: '_id',
-          as: 'supplier',
-        },
-      },
-      { $unwind: { path: '$supplier', preserveNullAndEmptyArrays: true } },
-    ]);
-
-    if (!bookResult || bookResult.length === 0) {
-      return res.status(404).json({
+    if (!_id) {
+      return res.status(400).json({
         status: 'ERROR',
         metadata: null,
-        message: 'Không tìm thấy sách với slug đã cung cấp.',
+        message: 'Vui lòng cung cấp _id của sách cần xóa.',
       });
     }
 
-    const book = bookResult[0];
+    const deletedBook = await Book.findByIdAndDelete(_id);
+
+    if (!deletedBook) {
+      return res.status(404).json({
+        status: 'ERROR',
+        metadata: null,
+        message: 'Không tìm thấy sách với _id đã cung cấp.',
+      });
+    }
 
     res.status(200).json({
       status: 'OK',
       metadata: null,
-      data: book,
+      message: 'Xóa sách thành công.',
     });
   } catch (error) {
-    console.error('Lỗi lấy thông tin sách theo slug:', error);
+    console.error('Lỗi xóa sách:', error);
     res.status(500).json({
       status: 'ERROR',
       metadata: null,
-      message: 'Lỗi server. Không thể lấy thông tin sách.',
+      message: 'Lỗi server. Không thể xóa sách.',
     });
   }
 });
 
-
+// ========== ADMIN ONLY ROUTES ==========
+// ❌ STAFF KHÔNG ĐƯỢC: Cập nhật stock (chỉ admin)
+router.patch('/:bookId/stock', adminOnly, updateStock);
 
 module.exports = router;

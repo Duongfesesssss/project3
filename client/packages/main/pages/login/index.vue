@@ -76,6 +76,7 @@ import * as yup from 'yup';
 import { useToast } from 'primevue/usetoast';
 import { useAuth } from '#imports';
 import { AuthService } from '~/packages/base/services/auth.service';
+import { useAuthStore } from '~/packages/base/stores/auth.store';
 
 definePageMeta({
   layout: false,
@@ -88,6 +89,7 @@ definePageMeta({
 const checked1 = ref(false);
 const loading = ref(false);
 const toast = useToast();
+const authStore = useAuthStore();
 
 const loginSchema = yup.object({
   email: yup.string()
@@ -125,13 +127,19 @@ const loginWithGoogle = async () => {
 // Email/Password login
 const doLogin = handleLoginSubmit(async () => {
   try {
-    await signIn(
+    const result = await signIn(
       {
         email: loginEmail.value,
         password: loginPassword.value,
       },
       { callbackUrl: '/', external: true }
     );
+    
+    // Cập nhật auth store với thông tin user sau khi đăng nhập thành công
+    if (result && result.user) {
+      authStore.setAuth(result.user, result.access_token || '');
+    }
+    
     toast.add({
       severity: 'success',
       summary: 'Đăng nhập',

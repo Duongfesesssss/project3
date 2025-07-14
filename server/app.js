@@ -15,6 +15,8 @@ const cartRouter = require('./routes/cartRoutes');
 const orderRouter = require('./routes/orderRoutes');
 const voucherRouter = require('./routes/voucherRoutes');
 const stockTransactionRouter = require('./routes/stockTransactionRoutes');
+const userManagementRouter = require('./routes/userManagementRoutes');
+const dashboardRouter = require('./routes/dashboardRoutes');
 
 // Import models để đảm bảo chúng được register
 require('./models/stockTransactionModel');
@@ -55,7 +57,6 @@ const storage = multer.diskStorage({
 
 // API tải ảnh lên
 app.post('/api/upload/images', upload.single('file'), (req, res) => {
-  console.log('Yêu cầu tải ảnh:', req.file); // Log thông tin file
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Không có file ảnh nào được tải lên' });
@@ -76,7 +77,6 @@ app.post('/api/upload/images', upload.single('file'), (req, res) => {
 
 // API tải video
 app.post('/api/upload/videos', upload.single('file'), (req, res) => {
-  console.log('Yêu cầu tải ảnh:', req.file); // Log thông tin file
 
   try {
     if (!req.file) {
@@ -118,6 +118,8 @@ app.use('/api/cart', cartRouter);
 app.use('/api/order', orderRouter);
 app.use('/api/voucher', voucherRouter);
 app.use('/api/stock-transactions', stockTransactionRouter);
+app.use('/api/admin/users', userManagementRouter);
+app.use('/api/dashboard', dashboardRouter);
 
 const swaggerOptions = {
     swaggerDefinition: {

@@ -9,16 +9,22 @@ const {
   updateOrder,
   deleteOrder
 } = require('../controllers/orderController');
+const { authenticateToken, staffAndAdmin, adminOnly } = require('../middlewares/roleMiddleware');
 
-// Routes cho admin
-router.get('/datatable', getOrderDatatable);
-router.post('/create', createOrder);
-router.put('/update/:order_id', updateOrder);
-router.delete('/delete/:order_id', deleteOrder);
+// ========== PUBLIC/CUSTOMER ROUTES ==========
+router.post('/create', createOrder); // Khách hàng tạo đơn hàng
 
-// Routes cho user
-router.get('/user/:user_id', getUserOrders);
-router.get('/:order_id', getOrderDetail);
-router.patch('/:order_id/status', updateOrderStatus);
+// ========== AUTHENTICATED ROUTES ==========
+router.use(authenticateToken);
+
+// ✅ STAFF VÀ ADMIN: Quản lý đơn hàng
+router.get('/datatable', staffAndAdmin, getOrderDatatable);
+router.get('/user/:user_id', staffAndAdmin, getUserOrders);
+router.get('/:order_id', staffAndAdmin, getOrderDetail);
+router.patch('/:order_id/status', staffAndAdmin, updateOrderStatus);
+
+// ✅ STAFF VÀ ADMIN: Cập nhật và xóa đơn hàng
+router.put('/update/:order_id', staffAndAdmin, updateOrder);
+router.delete('/delete/:order_id', staffAndAdmin, deleteOrder);
 
 module.exports = router; 

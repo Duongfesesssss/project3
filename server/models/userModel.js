@@ -7,7 +7,12 @@ const userSchema = new mongoose.Schema({
     full_name: { type: String, default: '' },
     phone: { type: String, default: '' },
     address: { type: String, default: '' },
-    role: { type: String, default: 'customer' },
+    role: { 
+        type: String, 
+        enum: ['customer', 'staff', 'admin'], 
+        default: 'customer' 
+    },
+    is_active: { type: Boolean, default: true },
     avatar: { type: String, default: '' },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },

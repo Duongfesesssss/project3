@@ -33,6 +33,7 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
     '@nuxtjs/google-fonts',
     '@nuxtjs/color-mode',
+    '@pinia/nuxt',
   ],
   colorMode: {
     preference: 'light',

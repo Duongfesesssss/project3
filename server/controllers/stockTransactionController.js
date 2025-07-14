@@ -45,7 +45,7 @@ const stockIn = async (req, res) => {
             quantity: parseInt(quantity),
             reason: reason.trim(),
             note: note.trim(),
-            created_by: 'Admin', // Tạm thời hardcode
+            created_by: req.user ? req.user.email : 'System', // Lưu email thay vì ObjectId
             before_quantity: previousStock,
             after_quantity: newStock
         });
@@ -131,7 +131,7 @@ const stockOut = async (req, res) => {
             quantity: quantityToRemove,
             reason: reason.trim(),
             note: note.trim(),
-            created_by: 'Admin', // Tạm thời hardcode
+            created_by: req.user ? req.user.email : 'System', // Lưu email thay vì ObjectId
             before_quantity: previousStock,
             after_quantity: newStock
         });
@@ -210,7 +210,7 @@ const getBookTransactionHistory = async (req, res) => {
 // Controller - Lấy tất cả giao dịch gần đây
 const getAllRecentTransactions = async (req, res) => {
     try {
-        const { page = 1, limit = 50, type } = req.query;
+        const { page = 0, limit = 20, type } = req.query;
 
         // Filter theo type nếu có
         const filter = {};
@@ -223,29 +223,82 @@ const getAllRecentTransactions = async (req, res) => {
             .populate('book_id', 'title author image_link')
             .sort({ createdAt: -1 })
             .limit(limit * 1)
-            .skip((page - 1) * limit)
+            .skip(page * limit)
             .lean();
 
         const totalTransactions = await StockTransaction.countDocuments(filter);
 
-        res.status(200).json({
-            status: 'OK',
-            message: 'Lấy lịch sử giao dịch thành công',
-            data: {
-                transactions,
-                pagination: {
-                    current_page: parseInt(page),
-                    total_pages: Math.ceil(totalTransactions / limit),
-                    total_records: totalTransactions,
-                    limit: parseInt(limit)
+        // Lấy danh sách các email để tìm user
+        const User = require('../models/userModel');
+        
+        const emails = transactions
+            .map(t => t.created_by)
+            .filter(email => email && email !== 'System' && typeof email === 'string' && email.includes('@'));
+        
+        const users = await User.find({ email: { $in: emails } }).lean();
+        const userMap = {};
+        users.forEach(user => {
+            userMap[user.email] = user;
+        });
+
+        // Format lại data để match với frontend
+        const formattedTransactions = transactions.map(transaction => {
+            let performedBy = { user_name: 'System', role: 'system' };
+            
+            if (transaction.created_by) {
+                if (transaction.created_by === 'System') {
+                    performedBy = { user_name: 'System', role: 'system' };
+                } else {
+                    // Tìm user theo email
+                    const user = userMap[transaction.created_by];
+                    if (user) {
+                        performedBy = {
+                            _id: user._id,
+                            user_name: user.user_name,
+                            role: user.role,
+                            email: user.email
+                        };
+                    } else {
+                        // Nếu không tìm thấy user, hiển thị email
+                        performedBy = {
+                            user_name: transaction.created_by,
+                            role: 'unknown',
+                            email: transaction.created_by
+                        };
+                    }
                 }
             }
+
+            return {
+                _id: transaction._id,
+                type: transaction.type,
+                book: {
+                    _id: transaction.book_id?._id,
+                    title: transaction.book_id?.title,
+                    author: transaction.book_id?.author,
+                    image_link: transaction.book_id?.image_link
+                },
+                quantity: transaction.quantity,
+                reason: transaction.reason,
+                note: transaction.note,
+                performedBy,
+                stockAfter: transaction.after_quantity,
+                createdAt: transaction.createdAt
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            data: formattedTransactions,
+            totalRecords: totalTransactions,
+            page: parseInt(page),
+            limit: parseInt(limit)
         });
 
     } catch (error) {
         console.error('Lỗi lấy tất cả giao dịch:', error);
         res.status(500).json({
-            status: 'ERROR',
+            success: false,
             message: 'Lỗi server khi lấy lịch sử giao dịch'
         });
     }

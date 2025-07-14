@@ -1,6 +1,6 @@
 const express = require('express');
 const { register, login } = require('../controllers/authController');
-const { authMiddleware, authorize } = require('../middlewares/authMiddleware');
+const { authenticateToken, adminOnly } = require('../middlewares/roleMiddleware');
 
 const router = express.Router();
 
@@ -11,11 +11,11 @@ router.post('/register', register);
 router.post('/login', login);
 
 // Route yêu cầu xác thực cho người dùng
-router.get('/profile', authMiddleware, (req, res) => {
+router.get('/profile', authenticateToken, (req, res) => {
     res.send(`Welcome, user ${req.user.email}`);
 });
 
-router.get('/admin', authMiddleware, authorize(['admin']), (req, res) => {
+router.get('/admin', authenticateToken, adminOnly, (req, res) => {
     res.send('Welcome Admin!');
 });
 

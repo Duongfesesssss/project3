@@ -6,9 +6,11 @@ import type { BookGenresModel } from '../models/dto/response/book/book-genres.mo
   import type { BookModel } from '../models/dto/response/book/book.model';
 import type { NhaCungCapModel } from '../models/dto/response/nha-cung-cap/nha-cungcap.model';
   import { BaseService } from './base.service';
+  import { $publicApi } from '../composables/usePublicApi';
+  import { $api } from '../composables/useApi';
   
   class _BookService extends BaseService {
-    async BookDataTable(filterProject) {
+    async BookDataTable(filterProject: any) {
       try {
         // Gửi các tham số phân trang và sắp xếp qua body
         const res = await $api<RestPagedDataTable<BookModel[]>>('/api/book/datatable', {
@@ -24,28 +26,14 @@ import type { NhaCungCapModel } from '../models/dto/response/nha-cung-cap/nha-cu
         console.error('Không nhận được phản hồi từ server:', res);
         return null;
       } catch (error) {
-        console.error('Lỗi khi gọi API HoKhauDataTable:', error);
+        console.error('Lỗi khi gọi API BookDataTable:', error);
         throw error;
       }
     }
-  
-    async getHoKhauID(id?: string) {
-      const res = await $api<RestPagedDataTable<BookModel[]>>(
-        `/api/book/${id}`,
-        {
-          method: 'GET',
-        },
-      );
-  
-      if (res && res.status === EnumStatus.OK) {
-        return res;
-      }
-      return null;
-    }
 
     async getAllBook() {
-      const res = await $api<RestPagedDataTable<BookModel[]>>(
-        `/api/book`,
+      const res = await $publicApi<RestPagedDataTable<BookModel[]>>(
+        `/api/book/all`,
         {
           method: 'GET',
         },
@@ -56,7 +44,7 @@ import type { NhaCungCapModel } from '../models/dto/response/nha-cung-cap/nha-cu
       return null;
     }
     async getBookById(id: string) {
-      const res = await $api<RestPagedDataTable<BookModel>>(
+      const res = await $publicApi<RestPagedDataTable<BookModel>>(
         `/api/book/${id}`,
         {
           method: 'GET',
@@ -70,25 +58,9 @@ import type { NhaCungCapModel } from '../models/dto/response/nha-cung-cap/nha-cu
       console.error('Không tìm thấy sách với ID:', id);
       return null;
     }
-
-    async getBookBySlug(slug: string) {
-      const res = await $api<RestPagedDataTable<BookModel>>(
-        `/api/book/${slug}`,
-        {
-          method: 'GET',
-        },
-      );
-    
-      if (res && res.status === EnumStatus.OK) {
-        return res.data;
-      }
-    
-      console.error('Không tìm thấy sách với slug:', slug);
-      return null;
-    }
     
     async getTheLoaiSach() {
-        const res = await $api<RestData<BookGenresModel[]>>(
+        const res = await $publicApi<RestData<BookGenresModel[]>>(
           `/api/book/genres`,
           {
             method: 'GET',
@@ -102,7 +74,7 @@ import type { NhaCungCapModel } from '../models/dto/response/nha-cung-cap/nha-cu
       }
 
       async getNhaCungCap() {
-        const res = await $api<RestData<NhaCungCapModel[]>>(
+        const res = await $publicApi<RestData<NhaCungCapModel[]>>(
           `/api/book/supplier`,
           {
             method: 'GET',
@@ -116,7 +88,7 @@ import type { NhaCungCapModel } from '../models/dto/response/nha-cung-cap/nha-cu
       }
 
       async getNhaXuatBan() {
-        const res = await $api<RestData<NhaCungCapModel[]>>(
+        const res = await $publicApi<RestData<NhaCungCapModel[]>>(
           `/api/book/publisher`,
           {
             method: 'GET',

@@ -22,20 +22,80 @@ Dự án là một ứng dụng web fullstack gồm:
 - **Error handling**: Luôn có try-catch và thông báo lỗi rõ ràng
 - **Security**: Validate tất cả input từ client, sử dụng environment variables cho sensitive data
 
-# 🧩 Frontend (Nuxt.js)
+🧩 Frontend – Nuxt.js (Nuxt 3)
+✅ Quy chuẩn phát triển
+Sử dụng cấu trúc thư mục chuẩn của Nuxt 3.
 
-- Tạo các component Vue theo cấu trúc Nuxt 3.
-- Luôn sử dụng `<script setup>` khi có thể.
-- Ưu tiên sử dụng `defineProps`, `defineEmits`, `useAsyncData`, `useFetch`.
-- Style theo chuẩn TailwindCSS nếu có.
-- Tách phần logic ra khỏi template nếu quá dài.
+Luôn dùng <script setup> để viết component.
 
-# 🔧 Backend (Express.js)
+Ưu tiên sử dụng các API:
 
-- Tạo các route theo chuẩn RESTful.
-- Luôn validate dữ liệu đầu vào bằng Joi hoặc thư viện tương đương.
-- Tuân thủ phân tầng Controller – Service – Model.
-- Luôn xử lý lỗi rõ ràng bằng middleware (`errorHandler`).
+defineProps, defineEmits
+
+useAsyncData, useFetch
+
+Sử dụng TailwindCSS để style toàn bộ giao diện.
+
+Logic phức tạp nên được tách ra composables/ hoặc utils/.
+
+🧱 Cấu trúc giao diện
+🔹 1. Main site
+Dành cho tất cả người dùng (kể cả chưa đăng nhập) và nhân viên, quản lý.
+
+Bao gồm các trang công khai: trang chủ, thông tin dịch vụ, đăng nhập,...
+
+🔸 2. CMS (Trang quản lý)
+Chỉ dành cho người dùng đã đăng nhập (nhân viên hoặc quản lý).
+
+Gồm các chức năng nội bộ như: quản lý nội dung, xử lý đơn hàng, quản lý voucher...
+
+➤ Phân quyền trong CMS:
+Chức năng Nhân viên Quản lý (admin)
+Quản lý nội dung (sản phẩm, đơn hàng, v.v.) ✅ ✅
+Xem lịch sử nhập xuất kho ❌ ✅
+Quản lý nhân viên (tạo/sửa/xoá) ❌ ✅
+Quản lý người dùng (khoá/mở khoá tài khoản) ❌ ✅
+
+👥 Hệ thống người dùng
+Có duy nhất 1 tài khoản quản lý (admin), được tạo sẵn từ đầu.
+
+Quản lý có quyền:
+
+Tạo tài khoản cho nhân viên.
+
+Cấp quyền, khoá/mở tài khoản.
+
+Nhân viên:
+
+Không thể đăng ký.
+
+Được quản lý tạo tài khoản.
+
+Có thể truy cập CMS (trừ phần "quản trị hệ thống").
+
+🔧 Backend – Express.js
+✅ Cấu trúc phát triển
+API tuân thủ chuẩn RESTful.
+
+Tổ chức code theo mô hình Controller – Service – Model.
+
+Validate mọi input bằng Joi (hoặc thư viện tương đương).
+
+Dùng middleware errorHandler để xử lý lỗi thống nhất.
+
+🔐 Phân quyền & bảo mật
+Hệ thống phân quyền:
+Mỗi user có trường role trong database: "admin" hoặc "staff".
+
+Dùng middleware auth để xác thực token người dùng.
+
+Dùng middleware authorize(role) để kiểm tra quyền hạn:
+
+ts
+Sao chép
+Chỉnh sửa
+authorize('admin') // chỉ admin mới qua
+authorize(['admin', 'staff']) // cả hai loại đều qua
 
 # 🗄️ MongoDB
 

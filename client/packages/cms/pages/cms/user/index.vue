@@ -2,12 +2,8 @@
 import * as yup from 'yup';
 import { useForm } from 'vee-validate';
 import 'primeicons/primeicons.css';
-import { UserService } from '~/packages/base/services/user.service';
-import type {
-  UserByGroup,
-  UserModel,
-} from '~/packages/base/models/dto/response/user/user.model';
-import { UserGroupService } from '~/packages/base/services/user-group.service';
+import { UserManagementService } from '~/packages/base/services/userManagement.service';
+import type { UserModel, UserListResponse } from '~/packages/base/services/userManagement.service';
 
 const isOpenModal = ref<boolean>(false);
 const isOpenUpdate = ref<boolean>(false);
@@ -15,10 +11,14 @@ const isOpenChangePassword = ref<boolean>(false);
 const toast = useToast();
 const confirm = useConfirm();
 const dataUpdate = ref<UserModel>();
-const dataList = ref();
+const dataList = ref<UserModel[]>([]);
 const nameUserChangePassword = ref();
 const loading = ref(true);
-const group_id = ref('');
+const currentPage = ref(1);
+const totalRecords = ref(0);
+const pageSize = ref(20);
+const selectedRole = ref('');
+const selectedStatus = ref('');
 
 definePageMeta({ layout: 'cms-default' });
   
@@ -52,12 +52,53 @@ const toggleContextMenu = (event: MouseEvent, data: UserModel) => {
   dataMenu.value = data; // Cập nhật dữ liệu đúng cách
   contextMenu.value.toggle(event);
 };
+// Kiểm tra quyền admin
+const canManageUsers = computed(() => {
+  // TODO: Kiểm tra role từ auth store
+  return true; // Tạm thời cho phép tất cả
+});
+
 onMounted(async () => {
   loading.value = true;
-  initFilters();
+  await loadUserData();
   loading.value = false;
 });
-function initFilters() {}
+
+// Load dữ liệu người dùng từ API mới
+const loadUserData = async () => {
+  try {
+    loading.value = true;
+    const response = await UserManagementService.getAllUsers({
+      page: currentPage.value,
+      limit: pageSize.value,
+      role: selectedRole.value || undefined,
+      is_active: selectedStatus.value ? selectedStatus.value === 'true' : undefined,
+      search: keyWords.value || undefined,
+    });
+    
+    if (response.success) {
+      dataList.value = response.data.users;
+      totalRecords.value = response.data.pagination.total_records;
+    } else {
+      toast.add({
+        severity: 'error',
+        summary: 'Lỗi',
+        detail: 'Không thể tải danh sách người dùng',
+        life: 3000,
+      });
+    }
+  } catch (error) {
+    console.error('Lỗi load user data:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Có lỗi xảy ra khi tải dữ liệu',
+      life: 3000,
+    });
+  } finally {
+    loading.value = false;
+  }
+};
 
 
 // Sửa lại hàm items để kiểm tra quyền
@@ -72,12 +113,12 @@ const items = (data: UserModel) => {
     {
       label: 'Đổi mật khẩu',
       icon: 'pi pi-lock',
-      command: () => openModalChangePassword(data.user_name ?? ''),
+      command: () => openModalChangePassword(data),
     },
     {
-      label: data.lockout_enabled ? 'Mở khóa' : 'Khóa',
-      icon: data.lockout_enabled ? 'pi pi-lock' : 'pi pi-unlock',
-      command: () => openModalClock(data.user_name ?? '', data.lockout_enabled ?? false),
+      label: data.is_active ? 'Khóa' : 'Mở khóa',
+      icon: data.is_active ? 'pi pi-lock' : 'pi pi-unlock',
+      command: () => openModalClock(data.user_name ?? '', !data.is_active),
     },
     {
       label: 'Xóa',
@@ -91,10 +132,6 @@ const getRowSTT = (index: number): number => {
   return index + 1;
 };
 
-const userGroupData = await useAsyncData<UserByGroup[]>(() => UserGroupService.list());
-const userGroup = userGroupData.data || [];
-// console.log('nhóm người dùng', userGroup.value);
-
 const Status = {
   Approved: 'Đã phê duyệt',
   NotApproved: 'Chưa phê duyệt',
@@ -105,28 +142,16 @@ const State = {
   Locked: 'Đang khóa',
 };
 
-const onLoadData = () => {
-  UserService.getUserList(keyWords.value, group_id.value).then((res) => {
-    dataList.value = res;
-    loading.value = false;
-  });
-};
-
-onLoadData();
-
 const reloadData = () => {
-  loading.value = true;
-  onLoadData();
+  loadUserData();
 };
 
 const reloadDatatable = () => {
-  loading.value = true;
+  currentPage.value = 1;
   keyWords.value = '';
-  group_id.value = null;
-  UserService.getUserList(keyWords.value, group_id.value).then((res) => {
-    dataList.value = res;
-    loading.value = false;
-  });
+  selectedRole.value = '';
+  selectedStatus.value = '';
+  loadUserData();
 };
 
 const openModalCreate = () => {
@@ -244,6 +269,20 @@ const openModalRemove = (data: UserModel) => {
 const timKiem = handleSubmit(async () => {
   reloadData();
 });
+
+// Options cho dropdown
+const roleOptions = [
+  { label: 'Tất cả vai trò', value: '' },
+  { label: 'Khách hàng', value: 'customer' },
+  { label: 'Nhân viên', value: 'staff' },
+  { label: 'Quản lý', value: 'admin' },
+];
+
+const statusOptions = [
+  { label: 'Tất cả trạng thái', value: '' },
+  { label: 'Đang hoạt động', value: 'true' },
+  { label: 'Đã khóa', value: 'false' },
+];
 </script>
 
 <template>
@@ -460,24 +499,13 @@ const timKiem = handleSubmit(async () => {
         </template>
       </Column>
     </DataTable>
-    <UserDialogCreateUser
-      :is-visible="isOpenModal"
-      :user-group="userGroup"
-      :data-list="dataList"
-      @create-model="emitCreateModel()"
-      @hide-modal="isOpenModal = false"
+    
+    <!-- Create User Modal -->
+    <UserModalCreate
+      v-model:visible="isOpenModal"
+      @created="emitCreateModel"
     />
-    <UserDialogUpdateUser
-      :is-visible="isOpenUpdate"
-      :user-name-update="dataUpdate"
-      :user-group="userGroup"
-      @update-model="emitUpdateModel()"
-      @hide-modal="isOpenUpdate = false"
-    />
-    <UserDialogChangePassword
-      :is-visible="isOpenChangePassword"
-      :data-change-password="nameUserChangePassword"
-      @hide-modal="isOpenChangePassword = false"
-    />
+    
+    <!-- Other modals (update, change password) would go here -->
   </div>
 </template>

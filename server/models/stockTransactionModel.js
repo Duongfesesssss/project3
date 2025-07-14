@@ -27,7 +27,8 @@ const stockTransactionSchema = new mongoose.Schema({
     default: ''
   },
   created_by: {
-    type: String, // Username hoặc ID user
+    type: mongoose.Schema.Types.Mixed, // Có thể là String hoặc ObjectId
+    ref: 'User',
     required: true
   },
   before_quantity: {

@@ -1,4 +1,19 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/packages/base/stores/auth.store';
+
+// Kiểm tra quyền truy cập CMS
+const authStore = useAuthStore();
+
+// Redirect nếu không có quyền
+onMounted(() => {
+  if (!authStore.isAuthenticated || !authStore.isStaffOrAdmin) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Bạn không có quyền truy cập trang quản trị'
+    });
+  }
+});
+
 useHead({
   htmlAttrs: {
     class: 'sakai-theme',

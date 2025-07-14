@@ -6,19 +6,24 @@ const {
     getBookTransactionHistory,
     getAllRecentTransactions
 } = require('../controllers/stockTransactionController');
+const { authenticateToken, adminOnly, staffAndAdmin } = require('../middlewares/roleMiddleware');
 
 // ========== STOCK TRANSACTION ROUTES ==========
+// ✅ STAFF VÀ ADMIN ĐỀU ĐƯỢC TRUY CẬP
 
-// Nhập hàng
-router.post('/:bookId/stock-in', stockIn);
+// Tất cả routes yêu cầu authentication
+router.use(authenticateToken);
 
-// Xuất hàng 
-router.post('/:bookId/stock-out', stockOut);
+// Nhập hàng (Staff & Admin)
+router.post('/:bookId/stock-in', staffAndAdmin, stockIn);
 
-// Lấy lịch sử giao dịch của một cuốn sách
-router.get('/:bookId/history', getBookTransactionHistory);
+// Xuất hàng (Staff & Admin)
+router.post('/:bookId/stock-out', staffAndAdmin, stockOut);
 
-// Lấy tất cả giao dịch gần đây (cho admin)
-router.get('/all', getAllRecentTransactions);
+// Lấy lịch sử giao dịch của một cuốn sách (Staff & Admin)
+router.get('/:bookId/history', staffAndAdmin, getBookTransactionHistory);
+
+// Lấy tất cả giao dịch gần đây (Admin only - cho trang lịch sử kho)
+router.get('/all', adminOnly, getAllRecentTransactions);
 
 module.exports = router;

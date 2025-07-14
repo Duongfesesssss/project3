@@ -22,7 +22,7 @@ const login = async (req, res) => {
 
     // Tạo token
     const access_token = jwt.sign(
-      { id: user._id, user_name: user.user_name, email: user.email },
+      { id: user._id, user_name: user.user_name, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
@@ -37,6 +37,8 @@ const login = async (req, res) => {
           id: user._id,
           user_name: user.user_name,
           email: user.email,
+          role: user.role,
+          is_active: user.is_active,
         },
       },
     });

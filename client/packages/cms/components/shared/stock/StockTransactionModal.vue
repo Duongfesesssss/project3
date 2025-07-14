@@ -3,6 +3,7 @@ import { useForm } from 'vee-validate';
 import * as yup from 'yup';
 import { InputNumber, Textarea, Select } from 'primevue';
 import type { BookModel } from '~/packages/base/models/dto/response/book/book.model';
+import { $api } from '~/packages/base/composables/useApi';
 
 const props = defineProps({
   isVisible: {
@@ -113,7 +114,7 @@ const onSubmit = handleSubmit(async (values) => {
           ? `/api/stock-transactions/${props.book?._id}/stock-in`
           : `/api/stock-transactions/${props.book?._id}/stock-out`;
           
-        const response = await $fetch(endpoint, {
+        const response = await $api(endpoint, {
           method: 'POST',
           body: {
             quantity: transactionData.quantity,

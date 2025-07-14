@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/packages/base/stores/auth.store';
+
 useHead({
   htmlAttrs: {
     class: 'main-theme',
@@ -10,6 +12,7 @@ useHead({
 
 const { data } = useAuth();
 const { signOut } = useAuth();
+const authStore = useAuthStore();
 const toast = useToast();
 const { isMenuSpActive, toggleMenuSp, isMobileSp, doCheckSp } = useMainLayout();
 const isShowDropdown = ref(false);
@@ -17,9 +20,27 @@ const isShowCategoryMenu = ref(false);
 const user = ref(null);
 const router = useRouter();
 
+// Computed property để kiểm tra quyền admin/staff
+const canAccessAdmin = computed(() => {
+  // Sử dụng data từ @sidebase/nuxt-auth trực tiếp
+  const currentUser = (data.value as any)?.user || user.value;
+  return currentUser?.role === 'admin' || currentUser?.role === 'staff';
+});
+
 // Cập nhật user data khi data thay đổi
-watch(data, (newData) => {
+watch(data, (newData: any) => {
+  console.log('Auth data changed:', newData); // Debug log
   user.value = newData?.user;
+  // Cập nhật auth store nếu có user mới
+  if (newData?.user && newData?.access_token) {
+    authStore.setAuth(newData.user, newData.access_token);
+  } else if (newData?.user) {
+    // Nếu không có access_token từ session, tạo một token tạm thời
+    authStore.setAuth(newData.user, 'session-token');
+  } else {
+    // Nếu không có user, clear auth store
+    authStore.clearAuth();
+  }
 }, { immediate: true });
 
 onMounted(() => {
@@ -75,8 +96,9 @@ const doLogout = async () => {
       callbackUrl: '/',
       external: false,
     });
-    // Reset user data
+    // Reset user data và auth store
     user.value = null;
+    authStore.clearAuth();
     isShowDropdown.value = false;
     toast.add({
       severity: 'success',
@@ -271,7 +293,12 @@ const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store
                     <NuxtLink to="/wishlist" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
                       <i class="pi pi-heart mr-2"></i> Sách yêu thích
                     </NuxtLink>
-                    <NuxtLink to="/cms" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <!-- Chỉ hiển thị cho admin/staff -->
+                    <NuxtLink 
+                      v-if="canAccessAdmin" 
+                      to="/cms" 
+                      class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 border-t border-gray-200"
+                    >
                       <i class="pi pi-cog mr-2"></i> Quản lý hệ thống
                     </NuxtLink>
                     <div class="border-t my-1"></div>
