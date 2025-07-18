@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 // Tạo đơn hàng mới
 const createOrder = async (req, res) => {
   try {
-    const { user_id, shipping_address, voucher_id } = req.body;
+    const { user_id } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(user_id)) {
       return res.status(400).json({

@@ -3,9 +3,10 @@ import {
     type RestPagedDataTable,
   } from '../models/base-response.model';
 import type { VoucherModel } from '../models/dto/response/voucher/voucher.model';
-  import { BaseService } from './base.service';
-  
-  class _VoucherService extends BaseService {
+import { BaseService } from './base.service';
+import { EnumStatus } from '../utils/enums';
+
+class _VoucherService extends BaseService {
     async getVoucherDataTable(filterProject: any) {
       try {
         const res = await $api<RestPagedDataTable<VoucherModel[]>>(
@@ -29,18 +30,32 @@ import type { VoucherModel } from '../models/dto/response/voucher/voucher.model'
       }
     }
   
-    async getAllVouchers() {
-      const res = await $api<RestData<VoucherModel[]>>('/api/voucher', {
-        method: 'GET',
+  async getAllVouchers() {
+    try {
+      const response = await fetch(`${this.baseApiUrl}/api/voucher`, {
+        headers: {
+          'Authorization': `Bearer ${this.getAccessToken()}`
+        }
       });
-  
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const res = await response.json();
+      console.log('Vouchers response:', res);
+      
       if (res && res.status === EnumStatus.OK) {
         return res;
       }
+      
+      console.error('Get vouchers failed:', res);
       return null;
+    } catch (error) {
+      console.error('Error fetching vouchers:', error);
+      throw error;
     }
-  
-    async getVoucherById(id: string) {
+  }    async getVoucherById(id: string) {
       const res = await $api<RestData<VoucherModel>>(`/api/voucher/${id}`, {
         method: 'GET',
       });
@@ -53,22 +68,35 @@ import type { VoucherModel } from '../models/dto/response/voucher/voucher.model'
       return null;
     }
   
-    async validateVoucher(code: string) {
-      const res = await $api<RestData<VoucherModel>>(`/api/voucher/validate`, {
+  async validateVoucher(code: string, userId: string, subtotal: number) {
+    try {
+      const response = await fetch(`${this.baseApiUrl}/api/voucher/validate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.getAccessToken()}`
+        },
+        body: JSON.stringify({ code, user_id: userId, subtotal }),
       });
-  
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const res = await response.json();
+      console.log('Validate voucher response:', res);
+      
       if (res && res.status === EnumStatus.OK) {
         return res.data;
       }
-  
-      console.error('Voucher không hợp lệ hoặc đã hết hạn:', code);
+      
+      console.error('Validate voucher failed:', res);
       return null;
+    } catch (error) {
+      console.error('Error validating voucher:', error);
+      throw error;
     }
-  
-    async insert(entity: VoucherModel) {
+  }    async insert(entity: VoucherModel) {
       const response = await $api<RestData<VoucherModel>>(`/api/voucher`, {
         method: 'POST',
         headers: {

@@ -15,4 +15,25 @@ class VoucherModel {
     updated_at?: string;
   }
   
-  export { VoucherModel };
+  class DiscountModel {
+    code: string;
+    label: string;
+    type: 'fixed' | 'percentage' | 'shipping';
+    value: number;
+    minAmount: number;
+    constructor(
+      code: string,
+      label: string,
+      type: 'fixed' | 'percentage' | 'shipping',
+      value: number,
+      minAmount: number
+    ) {
+      this.code = code;
+      this.label = label;
+      this.type = type;
+      this.value = value;
+      this.minAmount = minAmount;
+    }
+  }
+  
+  export { VoucherModel, DiscountModel };

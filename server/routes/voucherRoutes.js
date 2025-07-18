@@ -6,13 +6,16 @@ const {
   updateVoucher,
   deleteVoucher,
   applyVoucher,
-  getVoucherDatatable
+  getVoucherDatatable,
+  validateVoucher
 } = require('../controllers/voucherController');
 const { authenticateToken, staffAndAdmin } = require('../middlewares/roleMiddleware');
 
 // ========== PUBLIC ROUTES ==========
 // Route cho user áp dụng voucher
 router.post('/apply', applyVoucher);
+// Route kiểm tra hợp lệ voucher
+router.post('/validate', validateVoucher);
 
 // ========== STAFF & ADMIN ROUTES ==========
 router.use(authenticateToken);

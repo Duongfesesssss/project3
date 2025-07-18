@@ -1,4 +1,5 @@
 import { BaseService } from './base.service';
+import { EnumStatus } from '../utils/enums';
 import type { ThanhToanModel, ThanhToanItemModel } from '../models/dto/response/thanh-toan/thanh-toan.model';
 
 class _ThanhToanService extends BaseService {
@@ -105,6 +106,46 @@ class _ThanhToanService extends BaseService {
       return null;
     }
   }
+
+async createPayOSPayment(params: {
+  orderId: string;
+  orderCode: number;
+  amount: number;
+  description: string;
+  returnUrl: string;
+  cancelUrl: string;
+  buyerName: string;
+  buyerEmail: string;
+  buyerPhone: string;
+}) {
+  try {
+    const response = await fetch(`${this.baseApiUrl}/api/payment/payos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.getAccessToken()}`
+      },
+      body: JSON.stringify(params)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const res = await response.json();
+    if (res && res.success) {
+      return res.data; // chứa: checkoutUrl, qrCode,...
+    }
+
+    console.error('PayOS create failed:', res.message);
+    return null;
+  } catch (error) {
+    console.error('Lỗi khi gọi PayOS:', error);
+    return null;
+  }
+}
+
+
 }
 
 const ThanhToanService = new _ThanhToanService();

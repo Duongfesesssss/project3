@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const { connectToDB } = require('./db');
 const cors = require('cors');
@@ -17,8 +18,9 @@ const voucherRouter = require('./routes/voucherRoutes');
 const stockTransactionRouter = require('./routes/stockTransactionRoutes');
 const userManagementRouter = require('./routes/userManagementRoutes');
 const dashboardRouter = require('./routes/dashboardRoutes');
+const paymentRouter = require('./routes/paymentRoutes');
 
-// Import models để đảm bảo chúng được register
+
 require('./models/stockTransactionModel');
 
 const multer = require('multer');
@@ -120,6 +122,8 @@ app.use('/api/voucher', voucherRouter);
 app.use('/api/stock-transactions', stockTransactionRouter);
 app.use('/api/admin/users', userManagementRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/payment', paymentRouter);
+
 
 const swaggerOptions = {
     swaggerDefinition: {

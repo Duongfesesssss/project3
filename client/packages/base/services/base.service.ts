@@ -9,7 +9,17 @@ abstract class BaseService {
 
   getAccessToken(): string {
     const { token } = useAuth();
-    return token.value!;
+    console.log('Token in service:', token.value);
+    console.log('Token type:', typeof token.value);
+    if (!token.value) {
+      console.warn('Token is null or undefined!');
+      return '';
+    }
+    // Loại bỏ "Bearer " nếu đã có trong token
+    const cleanToken = token.value.startsWith('Bearer ') 
+      ? token.value.replace('Bearer ', '') 
+      : token.value;
+    return cleanToken;
   }
 }
 

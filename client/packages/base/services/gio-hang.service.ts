@@ -1,4 +1,5 @@
 import { BaseService } from './base.service';
+import { EnumStatus } from '../utils/enums';
 import type { GioHangModel, GioHangItemModel } from '../models/dto/response/gio-hang/gio-hang.model';
 
 class _GioHangService extends BaseService {
@@ -11,6 +12,11 @@ class _GioHangService extends BaseService {
       });
 
       if (!response.ok) {
+        // Xử lý lỗi auth cụ thể
+        if (response.status === 401 || response.status === 403) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Lỗi xác thực');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -22,7 +28,8 @@ class _GioHangService extends BaseService {
       return null;
     } catch (error) {
       console.error('Lỗi khi lấy giỏ hàng:', error);
-      return null;
+      // Ném lại lỗi để component có thể xử lý
+      throw error;
     }
   }
 
@@ -42,6 +49,10 @@ class _GioHangService extends BaseService {
       });
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Lỗi xác thực');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -53,7 +64,7 @@ class _GioHangService extends BaseService {
       return null;
     } catch (error) {
       console.error('Lỗi khi thêm vào giỏ hàng:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -73,6 +84,10 @@ class _GioHangService extends BaseService {
       });
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Lỗi xác thực');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -83,7 +98,7 @@ class _GioHangService extends BaseService {
       return null;
     } catch (error) {
       console.error('Lỗi khi cập nhật số lượng:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -102,6 +117,10 @@ class _GioHangService extends BaseService {
       });
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Lỗi xác thực');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -112,7 +131,7 @@ class _GioHangService extends BaseService {
       return null;
     } catch (error) {
       console.error('Lỗi khi xóa sách khỏi giỏ hàng:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -126,6 +145,10 @@ class _GioHangService extends BaseService {
       });
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Lỗi xác thực');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -136,7 +159,7 @@ class _GioHangService extends BaseService {
       return false;
     } catch (error) {
       console.error('Lỗi khi xóa giỏ hàng:', error);
-      return false;
+      throw error;
     }
   }
 }

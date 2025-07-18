@@ -272,11 +272,93 @@ const getVoucherDatatable = async (req, res) => {
   }
 };
 
+// Kiểm tra hợp lệ voucher (không cần order_id, chỉ kiểm tra code, user_id, subtotal)
+const validateVoucher = async (req, res) => {
+  try {
+    const { code, user_id, subtotal } = req.body;
+    if (!code || !user_id || subtotal === undefined) {
+      return res.status(400).json({
+        status: 'ERROR',
+        success: false,
+        message: 'Thiếu thông tin kiểm tra voucher'
+      });
+    }
+    if (!mongoose.Types.ObjectId.isValid(user_id)) {
+      return res.status(400).json({
+        status: 'ERROR',
+        success: false,
+        message: 'ID người dùng không hợp lệ'
+      });
+    }
+    // Tìm voucher
+    const voucher = await Voucher.findOne({ code });
+    if (!voucher) {
+      return res.status(404).json({
+        status: 'ERROR',
+        success: false,
+        message: 'Mã voucher không hợp lệ'
+      });
+    }
+    // Kiểm tra thời hạn
+    const now = new Date();
+    if (now < voucher.valid_from || now > voucher.valid_until) {
+      return res.status(400).json({
+        status: 'ERROR',
+        success: false,
+        message: 'Voucher đã hết hạn hoặc chưa có hiệu lực'
+      });
+    }
+    // Kiểm tra số lần sử dụng
+    if (voucher.used_count >= voucher.usage_limit) {
+      return res.status(400).json({
+        status: 'ERROR',
+        success: false,
+        message: 'Voucher đã hết lượt sử dụng'
+      });
+    }
+    // Kiểm tra giá trị đơn hàng tối thiểu
+    if (subtotal < voucher.min_order_value) {
+      return res.status(400).json({
+        status: 'ERROR',
+        success: false,
+        message: `Đơn hàng tối thiểu ${voucher.min_order_value}đ để áp dụng voucher này`
+      });
+    }
+    // Kiểm tra user đã dùng voucher này chưa (nếu muốn, có thể bỏ qua ở bước này)
+    // const existingUsage = await VoucherUsage.findOne({ voucher_id: voucher._id, user_id });
+    // if (existingUsage) {
+    //   return res.status(400).json({
+    //     status: 'ERROR',
+    //     success: false,
+    //     message: 'Bạn đã sử dụng voucher này'
+    //   });
+    // }
+    // Trả về thông tin giảm giá
+    res.json({
+      status: 'OK',
+      success: true,
+      message: 'Voucher hợp lệ',
+      data: {
+        discount: voucher.discount,
+        voucher: voucher
+      }
+    });
+  } catch (error) {
+    console.error('Lỗi khi kiểm tra voucher:', error);
+    res.status(500).json({
+      status: 'ERROR',
+      success: false,
+      message: 'Lỗi server khi kiểm tra voucher'
+    });
+  }
+};
+
 module.exports = {
   getVouchers,
   createVoucher,
   updateVoucher,
   deleteVoucher,
   applyVoucher,
-  getVoucherDatatable
+  getVoucherDatatable,
+  validateVoucher
 }; 
