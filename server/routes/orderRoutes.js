@@ -7,7 +7,8 @@ const {
   updateOrderStatus,
   getOrderDatatable,
   updateOrder,
-  deleteOrder
+  deleteOrder,
+  getUserPaidOrders
 } = require('../controllers/orderController');
 const { authenticateToken, staffAndAdmin, adminOnly } = require('../middlewares/roleMiddleware');
 
@@ -16,6 +17,11 @@ router.post('/create', createOrder); // Khách hàng tạo đơn hàng
 
 // ========== AUTHENTICATED ROUTES ==========
 router.use(authenticateToken);
+
+// ✅ CUSTOMER: Xem đơn hàng của mình
+router.get('/my-orders', getUserOrders); // Lấy đơn hàng của user hiện tại
+router.get('/detail/:order_id', getOrderDetail); // Xem chi tiết đơn hàng
+router.get('/my-paid-orders', getUserPaidOrders); // Lấy đơn hàng đã thanh toán của user hiện tại
 
 // ✅ STAFF VÀ ADMIN: Quản lý đơn hàng
 router.get('/datatable', staffAndAdmin, getOrderDatatable);

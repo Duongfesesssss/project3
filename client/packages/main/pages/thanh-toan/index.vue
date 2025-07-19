@@ -12,10 +12,11 @@ import Divider from 'primevue/divider';
 import Card from 'primevue/card';
 import { definePageMeta } from '#imports';
 import { ThanhToanService } from '~/packages/base/services/thanh-toan.service';
+import { useAuthStore } from '~/packages/base/stores/auth.store';
 
 const router = useRouter();
 const toast = useToast();
-const { data: authData } = useAuth();
+const authStore = useAuthStore();
 
 definePageMeta({
   layout: 'default',
@@ -33,10 +34,7 @@ const customerInfo = ref({
   fullName: '',
   phone: '',
   email: '',
-  address: '',
-  ward: '',
-  district: '',
-  city: '',
+  address: '', // Địa chỉ đầy đủ trong 1 trường
   note: ''
 });
 
@@ -152,16 +150,14 @@ const loadCheckoutData = () => {
 };
 
 const loadUserInfo = () => {
-  if (authData.value?.user) {
-    const user = authData.value.user;
+  if (authStore.user) {
+    const user = authStore.user;
+    // Chỉ load tên, phone, email - KHÔNG load địa chỉ
     customerInfo.value = {
-      fullName: user.name || '',
+      fullName: user.user_name || '',
       phone: user.phone || '',
       email: user.email || '',
-      address: user.address || '',
-      ward: user.ward || '',
-      district: user.district || '',
-      city: user.city || '',
+      address: '', // Để trống bắt buộc nhập mới
       note: ''
     };
   }
@@ -212,7 +208,7 @@ const removeVoucher = () => {
 };
 
 const validateForm = () => {
-  const required = ['fullName', 'phone', 'address', 'ward', 'district', 'city'];
+  const required = ['fullName', 'phone', 'address'];
   for (const field of required) {
     if (!customerInfo.value[field]) {
       toast.add({ 
@@ -244,12 +240,12 @@ const handlePlaceOrder = async () => {
   try {
     loading.value = true;
     
-    // Tạo địa chỉ giao hàng đầy đủ
-    const shippingAddress = `${customerInfo.value.address}, ${customerInfo.value.ward}, ${customerInfo.value.district}, ${customerInfo.value.city}`;
+    // Địa chỉ giao hàng đã đầy đủ từ 1 trường
+    const shippingAddress = customerInfo.value.address;
     
     // Gọi service tạo đơn hàng
     const result = await ThanhToanService.createOrder(
-      authData.value.user._id,
+      authStore.user._id,
       shippingAddress,
       paymentMethod.value,
       appliedVoucher.value?.code,
@@ -293,6 +289,7 @@ const goBack = () => {
 };
 
 onMounted(() => {
+  authStore.initAuth();
   loadCheckoutData();
   loadUserInfo();
 });
@@ -378,44 +375,11 @@ onMounted(() => {
                 
                 <div class="md:col-span-2">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Địa chỉ <span class="text-red-500">*</span>
+                    Địa chỉ nhận hàng <span class="text-red-500">*</span>
                   </label>
                   <InputText 
                     v-model="customerInfo.address"
-                    placeholder="Số nhà, tên đường"
-                    class="w-full"
-                  />
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Phường/Xã <span class="text-red-500">*</span>
-                  </label>
-                  <InputText 
-                    v-model="customerInfo.ward"
-                    placeholder="Chọn phường/xã"
-                    class="w-full"
-                  />
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Quận/Huyện <span class="text-red-500">*</span>
-                  </label>
-                  <InputText 
-                    v-model="customerInfo.district"
-                    placeholder="Chọn quận/huyện"
-                    class="w-full"
-                  />
-                </div>
-                
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Tỉnh/Thành phố <span class="text-red-500">*</span>
-                  </label>
-                  <InputText 
-                    v-model="customerInfo.city"
-                    placeholder="Chọn tỉnh/thành phố"
+                    placeholder="Nhập địa chỉ đầy đủ (VD: 123 Nguyễn Văn Linh, Phường Tân Thuận Đông, Quận 7, TP. Hồ Chí Minh)"
                     class="w-full"
                   />
                 </div>

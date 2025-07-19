@@ -1,43 +1,51 @@
 // server/services/payosService.js
 const PayOS = require('@payos/node');
-const crypto = require('crypto');
 
-// Khởi tạo PayOS với biến môi trường
-const payos = new PayOS({
-  clientId: process.env.PAYOS_CLIENT_ID,
-  apiKey: process.env.PAYOS_API_KEY,
-  checksumKey: process.env.PAYOS_CHECKSUM_KEY,
-});
+// Khởi tạo PayOS instance
+const payOS = new PayOS(
+  process.env.PAYOS_CLIENT_ID,
+  process.env.PAYOS_API_KEY,
+  process.env.PAYOS_CHECKSUM_KEY
+);
 
 /**
  * Tạo đơn hàng PayOS và trả về link/QR thanh toán
  * @param {Object} params
  * @returns {Promise<{success: boolean, data?: any, message?: string}>}
  */
-async function createPayOSOrder({ amount, description, orderCode, returnUrl, cancelUrl, buyerName, buyerEmail, buyerPhone }) {
+async function createPayOSOrder({ amount, description, orderCode, returnUrl, cancelUrl, buyerName, buyerEmail, buyerPhone, items }) {
   try {
-    const order = await payos.createOrder({
+    const requestData = {
+      orderCode,
       amount,
       description,
-      orderCode,
-      returnUrl,
       cancelUrl,
-      buyerName,
-      buyerEmail,
-      buyerPhone,
-    });
+      returnUrl,
+    };
+
+    // Thêm các field optional nếu có
+    if (buyerName) requestData.buyerName = buyerName;
+    if (buyerEmail) requestData.buyerEmail = buyerEmail;
+    if (buyerPhone) requestData.buyerPhone = buyerPhone;
+    if (items && items.length > 0) requestData.items = items;
+
+    console.log('PayOS Request Data:', requestData); // Debug log
+
+    // Sử dụng PayOS SDK thay vì gọi API trực tiếp
+    const paymentLinkResponse = await payOS.createPaymentLink(requestData);
 
     return {
       success: true,
       data: {
-        checkoutUrl: order.checkoutUrl,
-        qrCode: order.qrCode,
-        orderCode: order.orderCode,
+        checkoutUrl: paymentLinkResponse.checkoutUrl,
+        qrCode: paymentLinkResponse.qrCode,
+        orderCode: paymentLinkResponse.orderCode,
         amount,
         description,
       },
     };
   } catch (error) {
+    console.error('PayOS Error:', error); // Debug log
     return {
       success: false,
       message: error.message || 'Lỗi tạo đơn hàng PayOS',
@@ -53,15 +61,16 @@ async function createPayOSOrder({ amount, description, orderCode, returnUrl, can
  */
 async function getPayOSOrderStatus(orderCode) {
   try {
-    const order = await payos.getOrder(orderCode);
+    const result = await payOS.getPaymentLinkInformation(orderCode);
+    
     return {
       success: true,
       data: {
-        orderCode: order.orderCode,
-        status: order.status,
-        amount: order.amount,
-        description: order.description,
-        transactions: order.transactions,
+        orderCode: result.orderCode,
+        status: result.status,
+        amount: result.amount,
+        description: result.description,
+        transactions: result.transactions,
       },
     };
   } catch (error) {
@@ -79,17 +88,7 @@ async function getPayOSOrderStatus(orderCode) {
  */
 async function verifyPayOSWebhook(webhookData) {
   try {
-    const { signature, ...data } = webhookData;
-    
-    // Tạo signature để so sánh
-    const sortedKeys = Object.keys(data).sort();
-    const signatureStr = sortedKeys.map(key => `${key}=${data[key]}`).join('&');
-    const expectedSignature = crypto
-      .createHmac('sha256', process.env.PAYOS_CHECKSUM_KEY)
-      .update(signatureStr)
-      .digest('hex');
-    
-    return signature === expectedSignature;
+    return payOS.verifyPaymentWebhookData(webhookData);
   } catch (error) {
     console.error('Webhook verification error:', error);
     return false;
@@ -103,7 +102,7 @@ async function verifyPayOSWebhook(webhookData) {
  */
 async function cancelPayOSOrder(orderCode) {
   try {
-    const result = await payos.cancelOrder(orderCode);
+    const result = await payOS.cancelPaymentLink(orderCode);
     return {
       success: true,
       data: result,

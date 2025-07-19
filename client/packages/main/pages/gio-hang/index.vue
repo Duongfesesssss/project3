@@ -51,6 +51,7 @@ const fetchCart = async () => {
     const cartData = await GioHangService.getGioHangByUserId(userId);
     if (cartData?.items?.length > 0) {
       cart.value = cartData;
+      console.log('cartData:', cartData);
       selectedItems.value = cartData.items.map(item => item._id!).filter(Boolean);
     } else {
       cart.value = null;
@@ -166,10 +167,65 @@ const removeAppliedVoucher = () => {
 
 const proceedToCheckout = async () => {
   if (selectedItems.value.length === 0) {
-    toast.add({ severity: 'warn', summary: 'Thông báo', detail: 'Vui lòng chọn ít nhất một sản phẩm để thanh toán', life: 3000 });
+    toast.add({
+      severity: 'warn',
+      summary: 'Thông báo',
+      detail: 'Vui lòng chọn ít nhất một sản phẩm để thanh toán',
+      life: 3000
+    });
     return;
   }
-}
+  
+  try {
+    const result = await ThanhToanService.createOrder(
+      authData.value?.user?._id!,
+      selectedItemsData.value.map(item => ({
+        book_id: item.book_id?._id!,
+        quantity: item.quantity!,
+        price: item.price!
+      })),
+      'Hà Nội', // shipping_address
+      'payos', // payment_method
+      appliedVoucher.value?.voucher?._id || undefined, // voucher_id
+      '' // note
+    );
+
+    if (result) {
+      toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Đơn hàng đã được tạo thành công!',
+        life: 3000
+      });
+      
+      // Lưu danh sách items đã chọn để xóa sau khi thanh toán thành công
+      sessionStorage.setItem('pendingOrderItems', JSON.stringify({
+        orderId: result._id,
+        selectedItems: selectedItems.value,
+        userId: authData.value?.user?._id
+      }));
+      
+      // Chuyển đến trang thanh toán PayOS (không xóa items khỏi giỏ hàng)
+      router.push(`/thanh-toan/${result._id}`);
+    } else {
+      toast.add({
+        severity: 'error',
+        summary: 'Lỗi',
+        detail: 'Tạo đơn hàng thất bại!',
+        life: 3000
+      });
+    }
+  } catch (error) {
+    console.error('Lỗi tạo đơn hàng:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.',
+      life: 3000
+    });
+  }
+};
+
 
 
 onMounted(() => {

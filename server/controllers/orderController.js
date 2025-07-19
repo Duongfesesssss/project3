@@ -1,11 +1,11 @@
-const { Order, OrderItem } = require('../models/orderModel');
+const Order = require('../models/orderModel');
 const Cart = require('../models/cartModel');
 const mongoose = require('mongoose');
 
 // Tạo đơn hàng mới
 const createOrder = async (req, res) => {
   try {
-    const { user_id } = req.body;
+    const { user_id, items, shipping_address, payment_method, voucher_id, note } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(user_id)) {
       return res.status(400).json({
@@ -15,58 +15,40 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // Lấy giỏ hàng của user
-    const cart = await Cart.findOne({ user_id })
-      .populate({
-        path: 'items.book_id',
-        select: 'title price'
-      });
-
-    if (!cart || cart.items.length === 0) {
+    if (!items || items.length === 0) {
       return res.status(400).json({
         status: 'ERROR',
         success: false,
-        message: 'Giỏ hàng trống'
+        message: 'Danh sách sản phẩm không được trống'
       });
     }
 
-    // Tạo đơn hàng mới
+    // Tính tổng tiền
+    const total_amount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    const generateOrderCode = () => {
+      return Number(`${Date.now()}${Math.floor(Math.random() * 1000)}`);
+    };
+
     const order = new Order({
       user_id,
-      order_date: new Date(),
+      items,
+      total_amount,
+      shipping_address: shipping_address || '',
+      payment_method: payment_method || 'payos',
+      voucher: voucher_id || null,
+      note: note || '',
       status: 'pending',
-      total_amount: cart.total_amount,
-      shipping_address,
-      voucher_id: voucher_id || null,
-      created_at: new Date(),
-      updated_at: new Date()
+      orderCode: generateOrderCode()
     });
 
     await order.save();
-
-    // Tạo các order items
-    const orderItems = cart.items.map(item => ({
-      order_id: order._id,
-      book_id: item.book_id._id,
-      quantity: item.quantity,
-      price: item.price,
-      created_at: new Date(),
-      updated_at: new Date()
-    }));
-
-    await OrderItem.insertMany(orderItems);
-
-    // Xóa giỏ hàng sau khi tạo đơn hàng thành công
-    await Cart.findOneAndDelete({ user_id });
 
     res.status(201).json({
       status: 'OK',
       success: true,
       message: 'Tạo đơn hàng thành công',
-      data: {
-        order,
-        items: orderItems
-      }
+      data: order
     });
   } catch (error) {
     console.error('Lỗi khi tạo đơn hàng:', error);
@@ -120,6 +102,8 @@ const getUserOrders = async (req, res) => {
 const getOrderDetail = async (req, res) => {
   try {
     const { order_id } = req.params;
+    const userId = req.user.id; // Từ middleware authenticateToken
+    const userRole = req.user.role;
 
     if (!mongoose.Types.ObjectId.isValid(order_id)) {
       return res.status(400).json({
@@ -143,6 +127,15 @@ const getOrderDetail = async (req, res) => {
         status: 'ERROR',
         success: false,
         message: 'Không tìm thấy đơn hàng'
+      });
+    }
+
+    // Kiểm tra quyền: customer chỉ xem được đơn hàng của mình
+    if (userRole === 'customer' && order.user_id.toString() !== userId) {
+      return res.status(403).json({
+        status: 'ERROR',
+        success: false,
+        message: 'Bạn không có quyền xem đơn hàng này'
       });
     }
 
@@ -355,6 +348,40 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+// Lấy đơn hàng đã thanh toán của user
+const getUserPaidOrders = async (req, res) => {
+  try {
+    const user_id = req.user._id; // Lấy từ user object
+
+    const orders = await Order.find({ 
+      user_id,
+      payment_status: 'paid'
+    })
+    .populate({
+      path: 'items',
+      populate: {
+        path: 'book_id',
+        select: 'title author image_link price'
+      }
+    })
+    .sort({ created_at: -1 });
+
+    res.json({
+      status: 'OK',
+      success: true,
+      message: 'Lấy danh sách đơn hàng đã thanh toán thành công',
+      data: orders
+    });
+  } catch (error) {
+    console.error('Lỗi khi lấy đơn hàng đã thanh toán:', error);
+    res.status(500).json({
+      status: 'ERROR',
+      success: false,
+      message: 'Lỗi server khi lấy đơn hàng đã thanh toán'
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getUserOrders,
@@ -362,5 +389,6 @@ module.exports = {
   updateOrderStatus,
   getOrderDatatable,
   updateOrder,
-  deleteOrder
+  deleteOrder,
+  getUserPaidOrders
 }; 

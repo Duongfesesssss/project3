@@ -3,37 +3,46 @@ import { EnumStatus } from '../utils/enums';
 import type { ThanhToanModel, ThanhToanItemModel } from '../models/dto/response/thanh-toan/thanh-toan.model';
 
 class _ThanhToanService extends BaseService {
-  async createOrder(userId: string, shippingAddress: string, paymentMethod: string, voucherId?: string, note?: string) {
-    try {
-      const response = await fetch(`${this.baseApiUrl}/api/order/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getAccessToken()}`
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          shipping_address: shippingAddress,
-          payment_method: paymentMethod,
-          voucher_id: voucherId,
-          note: note
-        })
-      });
+async createOrder(
+  userId: string,
+  items: Array<{ book_id: string, quantity: number, price: number }>,
+  shippingAddress: string,
+  paymentMethod: string,
+  voucherId?: string,
+  note?: string
+) {
+  try {
+    const response = await fetch(`${this.baseApiUrl}/api/order/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.getAccessToken()}`
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        items: items,
+        shipping_address: shippingAddress,
+        payment_method: paymentMethod,
+        voucher_id: voucherId,
+        note: note
+      })
+    });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const res = await response.json();
-      if (res && res.status === EnumStatus.OK) {
-        return res.data;
-      }
-      return null;
-    } catch (error) {
-      console.error('Lỗi khi tạo đơn hàng:', error);
-      return null;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const res = await response.json();
+    if (res && res.status === EnumStatus.OK) {
+      return res.data;
+    }
+    return null;
+  } catch (error) {
+    console.error('Lỗi khi tạo đơn hàng:', error);
+    return null;
   }
+}
+
 
   async getUserOrders(userId: string) {
     try {
@@ -60,7 +69,7 @@ class _ThanhToanService extends BaseService {
 
   async getOrderDetail(orderId: string) {
     try {
-      const response = await fetch(`${this.baseApiUrl}/api/order/${orderId}`, {
+      const response = await fetch(`${this.baseApiUrl}/api/order/detail/${orderId}`, {
         headers: {
           'Authorization': `Bearer ${this.getAccessToken()}`
         }
@@ -114,9 +123,6 @@ async createPayOSPayment(params: {
   description: string;
   returnUrl: string;
   cancelUrl: string;
-  buyerName: string;
-  buyerEmail: string;
-  buyerPhone: string;
 }) {
   try {
     const response = await fetch(`${this.baseApiUrl}/api/payment/payos`, {
