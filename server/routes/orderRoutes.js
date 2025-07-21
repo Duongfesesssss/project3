@@ -8,6 +8,7 @@ const {
   getOrderDatatable,
   updateOrder,
   deleteOrder,
+  updatePaymentStatus,
   getUserPaidOrders
 } = require('../controllers/orderController');
 const { authenticateToken, staffAndAdmin, adminOnly } = require('../middlewares/roleMiddleware');
@@ -32,5 +33,8 @@ router.patch('/:order_id/status', staffAndAdmin, updateOrderStatus);
 // ✅ STAFF VÀ ADMIN: Cập nhật và xóa đơn hàng
 router.put('/update/:order_id', staffAndAdmin, updateOrder);
 router.delete('/delete/:order_id', staffAndAdmin, deleteOrder);
+
+// ✅ PUBLIC: Cập nhật trạng thái thanh toán (được gọi từ webhook PayOS)
+router.patch('/payment-status/:orderCode', updatePaymentStatus);
 
 module.exports = router; 

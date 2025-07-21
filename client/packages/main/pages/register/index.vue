@@ -90,10 +90,15 @@ const doSignUp = handleSignUpSubmit(async () => {
     toast.add({
       severity: 'success',
       summary: 'Thành công',
-      detail: 'Đăng ký thành công',
+      detail: 'Đăng ký thành công! Chuyển hướng đến trang đăng nhập...',
       life: 2000,
     });
     resetForm();
+    
+    // Chuyển hướng đến trang đăng nhập sau 2 giây
+    setTimeout(() => {
+      navigateTo('/login');
+    }, 2000);
   } else {
     toast.add({
       severity: 'error',

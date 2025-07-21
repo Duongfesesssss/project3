@@ -7,10 +7,9 @@ const scheduleOrderCancellation = (orderId, orderCode) => {
     try {
       const order = await Order.findById(orderId);
       
-      if (order && order.payment_status === 'pending') {
+      if (order && order.status === 'pending') {
         await Order.findByIdAndUpdate(orderId, {
           status: 'cancelled',
-          payment_status: 'cancelled',
           updated_at: new Date()
         });
         
@@ -144,10 +143,9 @@ exports.handlePayOSWebhook = async (req, res) => {
       // Cập nhật payment_status trong database
       try {
         const updatedOrder = await Order.findOneAndUpdate(
-          { order_code: data.orderCode },
+          { orderCode: data.orderCode },
           { 
-            payment_status: 'paid',
-            status: 'processing',
+            status: 'paid',
             updated_at: new Date()
           },
           { new: true }

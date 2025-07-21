@@ -56,16 +56,28 @@ class _VoucherService extends BaseService {
       throw error;
     }
   }    async getVoucherById(id: string) {
-      const res = await $api<RestData<VoucherModel>>(`/api/voucher/${id}`, {
-        method: 'GET',
-      });
-  
-      if (res && res.status === EnumStatus.OK) {
-        return res.data;
+      try {
+        const response = await fetch(`${this.baseApiUrl}/api/voucher/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${this.getAccessToken()}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const res = await response.json();
+        if (res && res.status === EnumStatus.OK) {
+          return res.data;
+        }
+
+        console.error('Không tìm thấy voucher với ID:', id);
+        return null;
+      } catch (error) {
+        console.error('Lỗi khi lấy thông tin voucher:', error);
+        return null;
       }
-  
-      console.error('Không tìm thấy voucher với ID:', id);
-      return null;
     }
   
   async validateVoucher(code: string, userId: string, subtotal: number) {

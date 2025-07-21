@@ -9,7 +9,9 @@ async createOrder(
   shippingAddress: string,
   paymentMethod: string,
   voucherId?: string,
-  note?: string
+  note?: string,
+  shippingFee?: number,
+  discountAmount?: number
 ) {
   try {
     const response = await fetch(`${this.baseApiUrl}/api/order/create`, {
@@ -24,7 +26,9 @@ async createOrder(
         shipping_address: shippingAddress,
         payment_method: paymentMethod,
         voucher_id: voucherId,
-        note: note
+        note: note,
+        shipping_fee: shippingFee,
+        discount_amount: discountAmount
       })
     });
 
@@ -115,6 +119,29 @@ async createOrder(
       return null;
     }
   }
+
+async getUserPaidOrders() {
+  try {
+    const response = await fetch(`${this.baseApiUrl}/api/order/my-paid-orders`, {
+      headers: {
+        'Authorization': `Bearer ${this.getAccessToken()}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const res = await response.json();
+    if (res && res.status === EnumStatus.OK) {
+      return res.data;
+    }
+    return null;
+  } catch (error) {
+    console.error('Lỗi khi lấy đơn hàng đã thanh toán:', error);
+    return null;
+  }
+}
 
 async createPayOSPayment(params: {
   orderId: string;

@@ -187,7 +187,9 @@ const proceedToCheckout = async () => {
       'Hà Nội', // shipping_address
       'payos', // payment_method
       appliedVoucher.value?.voucher?._id || undefined, // voucher_id
-      '' // note
+      '', // note
+      shippingFee.value, // shipping_fee
+      discountAmount.value // discount_amount
     );
 
     if (result) {

@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 // Tạo đơn hàng mới
 const createOrder = async (req, res) => {
   try {
-    const { user_id, items, shipping_address, payment_method, voucher_id, note } = req.body;
+    const { user_id, items, shipping_address, payment_method, voucher_id, note, shipping_fee, discount_amount } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(user_id)) {
       return res.status(400).json({
@@ -23,8 +23,17 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // Tính tổng tiền
-    const total_amount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    // Tính tổng tiền sản phẩm
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    // Tính phí ship (mặc định 30k nếu không có, miễn phí nếu >= 500k)
+    const finalShippingFee = shipping_fee !== undefined ? shipping_fee : (subtotal >= 500000 ? 0 : 30000);
+    
+    // Tính discount (mặc định 0 nếu không có)
+    const finalDiscountAmount = discount_amount || 0;
+    
+    // Tính tổng cuối cùng
+    const total_amount = Math.max(0, subtotal + finalShippingFee - finalDiscountAmount);
 
     const generateOrderCode = () => {
       return Number(`${Date.now()}${Math.floor(Math.random() * 1000)}`);
@@ -78,7 +87,7 @@ const getUserOrders = async (req, res) => {
         path: 'items',
         populate: {
           path: 'book_id',
-          select: 'title image_link price'
+          select: 'title image_link price slug'
         }
       })
       .sort({ created_at: -1 });
@@ -118,7 +127,7 @@ const getOrderDetail = async (req, res) => {
         path: 'items',
         populate: {
           path: 'book_id',
-          select: 'title image_link price author publisher'
+          select: 'title image_link price author publisher slug'
         }
       });
 
@@ -168,7 +177,7 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
-    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const validStatuses = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         status: 'ERROR',
@@ -234,7 +243,7 @@ const getOrderDatatable = async (req, res) => {
         path: 'items',
         populate: {
           path: 'book_id',
-          select: 'title image_link price'
+          select: 'title image_link price slug'
         }
       })
       .sort(sort)
@@ -348,6 +357,53 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+// Cập nhật trạng thái thanh toán đơn hàng thành "paid"
+const updatePaymentStatus = async (req, res) => {
+  try {
+    const { orderCode } = req.params;
+
+    if (!orderCode) {
+      return res.status(400).json({
+        status: 'ERROR',
+        success: false,
+        message: 'Thiếu mã đơn hàng'
+      });
+    }
+
+    const order = await Order.findOneAndUpdate(
+      { orderCode: Number(orderCode) },
+      { 
+        status: 'paid',
+        updated_at: new Date()
+      },
+      { new: true }
+    );
+
+    if (!order) {
+      return res.status(404).json({
+        status: 'ERROR',
+        success: false,
+        message: 'Không tìm thấy đơn hàng'
+      });
+    }
+
+    res.json({
+      status: 'OK',
+      success: true,
+      message: 'Cập nhật trạng thái thanh toán thành công',
+      data: order
+    });
+  } catch (error) {
+    console.error('Lỗi khi cập nhật trạng thái thanh toán:', error);
+    res.status(500).json({
+      status: 'ERROR',
+      success: false,
+      message: 'Lỗi server khi cập nhật trạng thái thanh toán'
+    });
+  }
+};
+
+
 // Lấy đơn hàng đã thanh toán của user
 const getUserPaidOrders = async (req, res) => {
   try {
@@ -355,13 +411,13 @@ const getUserPaidOrders = async (req, res) => {
 
     const orders = await Order.find({ 
       user_id,
-      payment_status: 'paid'
+      status: 'paid'
     })
     .populate({
       path: 'items',
       populate: {
         path: 'book_id',
-        select: 'title author image_link price'
+        select: 'title author image_link price slug'
       }
     })
     .sort({ created_at: -1 });
@@ -390,5 +446,6 @@ module.exports = {
   getOrderDatatable,
   updateOrder,
   deleteOrder,
+  updatePaymentStatus,
   getUserPaidOrders
 }; 
