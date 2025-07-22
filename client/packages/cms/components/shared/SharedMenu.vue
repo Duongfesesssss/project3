@@ -39,6 +39,11 @@ const model = computed(() => {
               icon: 'pi pi-fw pi-book',
               to: '/cms/the-loai',
             },
+            {
+              label: 'Quản lý đơn hàng',
+              icon: 'pi pi-fw pi-shopping-cart',
+              to: '/cms/don-hang',
+            },
         {
           label: 'Hệ thống',
           items: [

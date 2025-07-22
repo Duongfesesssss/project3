@@ -25,7 +25,7 @@ router.get('/detail/:order_id', getOrderDetail); // Xem chi tiết đơn hàng
 router.get('/my-paid-orders', getUserPaidOrders); // Lấy đơn hàng đã thanh toán của user hiện tại
 
 // ✅ STAFF VÀ ADMIN: Quản lý đơn hàng
-router.get('/datatable', staffAndAdmin, getOrderDatatable);
+router.post('/datatable', staffAndAdmin, getOrderDatatable);
 router.get('/user/:user_id', staffAndAdmin, getUserOrders);
 router.get('/:order_id', staffAndAdmin, getOrderDetail);
 router.patch('/:order_id/status', staffAndAdmin, updateOrderStatus);

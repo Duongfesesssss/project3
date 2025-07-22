@@ -222,10 +222,17 @@ const updateOrderStatus = async (req, res) => {
 // Lấy dữ liệu cho datatable
 const getOrderDatatable = async (req, res) => {
   try {
-    const { page = 1, limit = 10, sort = '-created_at', search = '' } = req.query;
+    const { page = 1, limit = 10, sort = '-createdAt', search = '', status } = req.body;
     
     // Tạo query tìm kiếm
     const query = {};
+    
+    // Filter theo status nếu có
+    if (status) {
+      query.status = status;
+    }
+    
+    // Tìm kiếm
     if (search) {
       query.$or = [
         { 'user_id': { $regex: search, $options: 'i' } },
@@ -239,6 +246,10 @@ const getOrderDatatable = async (req, res) => {
 
     // Lấy dữ liệu với phân trang
     const orders = await Order.find(query)
+      .populate({
+        path: 'user_id',
+        select: 'email name'
+      })
       .populate({
         path: 'items',
         populate: {

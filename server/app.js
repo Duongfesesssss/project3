@@ -117,7 +117,7 @@ app.use('/api/publisher', publisherRouter);
 app.use('/api/supplier', supplierRouter);
 app.use('/api/genre', genreRouter);
 app.use('/api/cart', cartRouter);
-app.use('/api/order', orderRouter);
+app.use('/api/orders', orderRouter);
 app.use('/api/voucher', voucherRouter);
 app.use('/api/stock-transactions', stockTransactionRouter);
 app.use('/api/admin/users', userManagementRouter);
