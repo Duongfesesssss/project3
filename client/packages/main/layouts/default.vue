@@ -138,7 +138,7 @@ const doLogout = async () => {
 const searchQuery = ref('');
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
-    router.push(`/search?q=${encodeURIComponent(searchQuery.value.trim())}`);
+    router.push(`/tim-kiem`)
     searchQuery.value = '';
   }
 };
@@ -312,7 +312,7 @@ const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store
                     <button @click="openChangePasswordModal" class="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-100">
                       <i class="pi pi-lock mr-2"></i> Đổi mật khẩu
                     </button>
-                    <NuxtLink to="/orders" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <NuxtLink to="/don-hang-da-thanh-toan" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
                       <i class="pi pi-shopping-bag mr-2"></i> Đơn hàng của tôi
                     </NuxtLink>
                     <NuxtLink to="/wishlist" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">

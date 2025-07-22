@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const { Book, BookGenres } = require('../models/bookModel');
 const Supplier = require('../models/supplierModel');
 const Publisher = require('../models/publisherModel');
@@ -62,6 +63,168 @@ router.get('/publishers', async (req, res) => {
       status: 'ERROR',
       metadata: null,
       message: 'Lỗi server. Không thể lấy danh sách nhà xuất bản.',
+    });
+  }
+});
+
+// Phân trang cho sách - PUBLIC để dùng cho trang tìm kiếm
+router.post('/datatable', async (req, res) => {
+  try {
+    const { 
+      page = 0, 
+      rows = 10, 
+      first = 0, 
+      sortField = '', 
+      sortOrder = 'desc',
+      keyword = '',
+      genre_id = '',
+      publisher_id = '',
+      supplier_id = '',
+      min_price = 0,
+      max_price = 0
+    } = req.body;
+
+    // Build match conditions
+    const matchConditions = {};
+    
+    // Keyword search
+    if (keyword) {
+      matchConditions.$or = [
+        { title: { $regex: keyword, $options: 'i' } },
+        { author: { $regex: keyword, $options: 'i' } },
+        { isbn: { $regex: keyword, $options: 'i' } }
+      ];
+    }
+    
+    // Filter by genres (MultiSelect support)
+    if (genre_id) {
+      // Single select compatibility
+      matchConditions.genre_ids = { $in: [new mongoose.Types.ObjectId(genre_id)] };
+    } else if (req.body.genre_ids && req.body.genre_ids.length > 0) {
+      // MultiSelect support
+      matchConditions.genre_ids = { 
+        $in: req.body.genre_ids.map(id => new mongoose.Types.ObjectId(id)) 
+      };
+    }
+    
+    // Filter by publishers (MultiSelect support)
+    if (publisher_id) {
+      // Single select compatibility
+      matchConditions.publisher = new mongoose.Types.ObjectId(publisher_id);
+    } else if (req.body.publisher_ids && req.body.publisher_ids.length > 0) {
+      // MultiSelect support
+      matchConditions.publisher = { 
+        $in: req.body.publisher_ids.map(id => new mongoose.Types.ObjectId(id)) 
+      };
+    }
+    
+    // Filter by suppliers (MultiSelect support)
+    if (supplier_id) {
+      // Single select compatibility
+      matchConditions.supplier = new mongoose.Types.ObjectId(supplier_id);
+    } else if (req.body.supplier_ids && req.body.supplier_ids.length > 0) {
+      // MultiSelect support
+      matchConditions.supplier = { 
+        $in: req.body.supplier_ids.map(id => new mongoose.Types.ObjectId(id)) 
+      };
+    }
+    
+    // Filter by stock status (MultiSelect support)
+    if (req.body.stock_status && req.body.stock_status.length > 0) {
+      matchConditions.stock_status = { $in: req.body.stock_status };
+    }
+    
+    // Price range filter
+    if (min_price > 0 || max_price > 0) {
+      matchConditions.price = {};
+      if (min_price > 0) matchConditions.price.$gte = Number(min_price);
+      if (max_price > 0) matchConditions.price.$lte = Number(max_price);
+    }
+
+    // Language filter
+    if (req.body.language) {
+      matchConditions.language = req.body.language;
+    }
+
+    // Build sort object
+    const sortObj = {};
+    if (sortField && sortField !== 'undefined') {
+      sortObj[sortField] = sortOrder === 'asc' ? 1 : -1;
+    } else {
+      sortObj['createdAt'] = -1;
+    }
+
+    const totalRecords = await Book.countDocuments(matchConditions);
+    const bookList = await Book.aggregate([
+      { $match: matchConditions },
+      { $sort: sortObj },
+      { $skip: first },
+      { $limit: Number(rows) },
+      {
+        $lookup: {
+          from: 'genres',
+          localField: 'genre_ids',
+          foreignField: '_id',
+          as: 'genres',
+        },
+      },
+      {
+        $lookup: {
+          from: 'publishers',
+          localField: 'publisher',
+          foreignField: '_id',
+          as: 'publisher',
+        },
+      },
+      { $unwind: { path: '$publisher', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'suppliers',
+          localField: 'supplier',
+          foreignField: '_id',
+          as: 'supplier',
+        },
+      },
+      { $unwind: { path: '$supplier', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          title: 1,
+          author: 1,
+          genres: 1,
+          image_link: 1,
+          publisher: 1,
+          supplier: 1,
+          published_date: 1,
+          isbn: 1,
+          price: 1,
+          language: 1,
+          pages: 1,
+          stock_quantity: 1,
+          sold_quantity: 1,
+          stock_status: 1,
+          genre_ids: 1,
+          description: 1,
+          slug: 1,
+        },
+      },
+    ]);
+
+    const totalPages = Math.ceil(totalRecords / rows);
+
+    res.status(200).json({
+      status: 'OK',
+      data: bookList,
+      rows: Number(rows),
+      first: first,
+      page: page,
+      totalRecords: totalRecords,
+      totalPages: totalPages,
+    });
+  } catch (error) {
+    console.error('Lỗi lấy thông tin datatable sách:', error);
+    res.status(500).json({
+      status: 'ERROR',
+      message: 'Lỗi server. Không thể lấy thông tin sách.',
     });
   }
 });
@@ -134,83 +297,6 @@ router.use(authenticateToken); // Từ đây trở xuống cần đăng nhập
 router.get('/', staffAndAdmin, getAllBooks);
 router.post('/create', staffAndAdmin, createBook);
 
-// Phân trang cho sách - CMS
-router.post('/datatable', staffAndAdmin, async (req, res) => {
-  try {
-    const { page = 0, rows = 10 } = req.body;
-    const first = req.body.first || 0;
-
-    const totalRecords = await Book.countDocuments();
-    const bookList = await Book.aggregate([
-      { $skip: first },
-      { $limit: Number(rows) },
-      {
-        $lookup: {
-          from: 'genres',
-          localField: 'genre_ids',
-          foreignField: '_id',
-          as: 'genres',
-        },
-      },
-      {
-        $lookup: {
-          from: 'publishers',
-          localField: 'publisher',
-          foreignField: '_id',
-          as: 'publisher',
-        },
-      },
-      { $unwind: { path: '$publisher', preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: 'suppliers',
-          localField: 'supplier',
-          foreignField: '_id',
-          as: 'supplier',
-        },
-      },
-      { $unwind: { path: '$supplier', preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          title: 1,
-          author: 1,
-          genres: 1,
-          image_link: 1,
-          publisher: 1,
-          supplier: 1,
-          published_date: 1,
-          isbn: 1,
-          price: 1,
-          language: 1,
-          pages: 1,
-          stock_quantity: 1,
-          sold_quantity: 1,
-          stock_status: 1,
-          genre_ids: 1,
-          description: 1,
-        },
-      },
-    ]);
-
-    const totalPages = Math.ceil(totalRecords / rows);
-
-    res.status(200).json({
-      success: true,
-      data: bookList,
-      rows: Number(rows),
-      first: first,
-      page: page,
-      totalRecords: totalRecords,
-      totalPages: totalPages,
-    });
-  } catch (error) {
-    console.error('Lỗi lấy thông tin datatable sách:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi server. Không thể lấy thông tin sách.',
-    });
-  }
-});
 
 // ========== STAFF VÀ ADMIN: Thống kê và quản lý kho ==========
 router.get('/stock/stats', staffAndAdmin, getStockStats);

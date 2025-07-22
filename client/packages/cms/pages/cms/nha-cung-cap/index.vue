@@ -52,7 +52,7 @@
             <div class="col-span-1">
               <IconField icon-position="left">
                 <InputIcon><i class="pi pi-search" /></InputIcon>
-                <InputText v-model="keyWords" placeholder="Tìm kiếm" class="w-full" />
+                <InputText v-model="keyWords" placeholder="Tìm kiếm" class="w-full" @keyup.enter="timKiem" />
               </IconField>
               <span class="text-red-500">{{ errors.keyWords }}</span>
             </div>

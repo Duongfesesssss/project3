@@ -115,39 +115,130 @@
       @sort="onSort($event as SortEvent)"
     >
       <template #header>
-        <div class="grid grid-cols-1 xl:grid-cols-5 md:grid-cols-3 gap-4 mb-1">
-          <div class="col-span-1">
+        <div class="grid grid-cols-1 xl:grid-cols-8 md:grid-cols-4 gap-4 mb-4">
+          <!-- Keyword Search -->
+          <div class="col-span-2">
+            <label class="block text-sm font-medium mb-1">Tìm kiếm</label>
             <IconField icon-position="left">
               <InputIcon>
                 <i class="pi pi-search" />
               </InputIcon>
               <InputText
                 v-model="keyWords"
-                placeholder="Tìm kiếm"
+                placeholder="Tên sách, tác giả, ISBN..."
                 class="w-full"
+                @keyup.enter="timKiem"
               />
             </IconField>
             <span class="text-red-500">{{ errors.keyWords }}</span>
           </div>
-          <div class="col-span-1">
-            <Button
-              type="button"
-              icon="pi pi-filter"
-              label="Tìm kiếm"
+
+          <!-- Genre MultiSelect -->
+          <div class="col-span-2">
+            <label class="block text-sm font-medium mb-1">Thể loại</label>
+            <MultiSelect
+              v-model="selectedGenres"
+              :options="genres"
+              option-label="name"
+              option-value="_id"
+              placeholder="Chọn thể loại"
               class="w-full"
-              @click="timKiem"
+              :max-selected-labels="2"
+              display="chip"
             />
           </div>
-          <div class="col-span-1">
-            <Button
-              type="button"
-              icon="pi pi-filter-slash"
-              label="Bỏ lọc"
-              outlined
-              severity="danger"
+
+          <!-- Publisher MultiSelect -->
+          <div class="col-span-2">
+            <label class="block text-sm font-medium mb-1">Nhà xuất bản</label>
+            <MultiSelect
+              v-model="selectedPublishers"
+              :options="publishers"
+              option-label="name"
+              option-value="_id"
+              placeholder="Chọn NXB"
               class="w-full"
-              @click="clearFilter()"
+              :max-selected-labels="2"
+              display="chip"
             />
+          </div>
+
+          <!-- Supplier MultiSelect -->
+          <div class="col-span-2">
+            <label class="block text-sm font-medium mb-1">Nhà cung cấp</label>
+            <MultiSelect
+              v-model="selectedSuppliers"
+              :options="suppliers"
+              option-label="name"
+              option-value="_id"
+              placeholder="Chọn NCC"
+              class="w-full"
+              :max-selected-labels="2"
+              display="chip"
+            />
+          </div>
+
+          <!-- Stock Status MultiSelect -->
+          <div class="col-span-2">
+            <label class="block text-sm font-medium mb-1">Trạng thái kho</label>
+            <MultiSelect
+              v-model="selectedStockStatus"
+              :options="stockStatusOptions"
+              option-label="label"
+              option-value="value"
+              placeholder="Chọn trạng thái"
+              class="w-full"
+              :max-selected-labels="1"
+              display="chip"
+            />
+          </div>
+
+          <!-- Price Range -->
+          <div class="col-span-1">
+            <label class="block text-sm font-medium mb-1">Giá từ</label>
+            <InputNumber
+              v-model="minPrice"
+              :min="0"
+              placeholder="0"
+              class="w-full"
+              currency="VND"
+              locale="vi-VN"
+            />
+          </div>
+
+          <div class="col-span-1">
+            <label class="block text-sm font-medium mb-1">Giá đến</label>
+            <InputNumber
+              v-model="maxPrice"
+              :min="0"
+              placeholder="1000000"
+              class="w-full"
+              currency="VND"
+              locale="vi-VN"
+            />
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="col-span-4">
+            <div class="block text-sm font-medium mb-1" style="height: 20px;"></div>
+            <div class="flex flex-column gap-2">
+              <Button
+                type="button"
+                icon="pi pi-filter"
+                label="Lọc"
+                class="w-full"
+                @click="timKiem"
+              />
+              <Button
+                type="button"
+                icon="pi pi-filter-slash"
+                label="Xóa lọc"
+                outlined
+                severity="danger"
+                class="w-full"
+                @click="clearFilter"
+              />
+            </div>
           </div>
         </div>
       </template>
@@ -404,6 +495,23 @@ const stockStats = ref({
   out_of_stock_count: 0,
   total_stock_value: 0
 });
+
+// MultiSelect data
+const genres = ref([]);
+const publishers = ref([]);
+const suppliers = ref([]);
+const selectedGenres = ref([]);
+const selectedPublishers = ref([]);
+const selectedSuppliers = ref([]);
+const selectedStockStatus = ref([]);
+const minPrice = ref(0);
+const maxPrice = ref(0);
+
+const stockStatusOptions = ref([
+  { label: 'Còn hàng', value: 'in_stock' },
+  { label: 'Sắp hết', value: 'low_stock' },
+  { label: 'Hết hàng', value: 'out_of_stock' }
+]);
 const items = ref([{ label: 'Quản lý' }, { label: 'Quản lý sách' }]);
 const currentPageNumber = ref(0);
 const isOpenModal = ref<boolean>(false);
@@ -440,17 +548,34 @@ const filterProject = ref({
 const initFilters = () => {
   filters.value = {
     keyword: '',
+    genre_ids: [],
+    publisher_ids: [],
+    supplier_ids: [],
+    stock_status: [],
+    min_price: 0,
+    max_price: 0
   };
 };
 
 initFilters();
 
 const clearFilter = () => {
+  // Clear UI controls
+  keyWords.value = '';
+  selectedGenres.value = [];
+  selectedPublishers.value = [];
+  selectedSuppliers.value = [];
+  selectedStockStatus.value = [];
+  minPrice.value = 0;
+  maxPrice.value = 0;
+  
+  // Reset filters
   initFilters();
   filterProject.value.first = 0;
+  filterProject.value.page = 0;
+  
   setTimeout(() => {
     reloadDataTable();
-    keyWords.value = '';
   }, 200);
 };
 
@@ -501,14 +626,57 @@ const onSort = (event: SortEvent) => {
   reloadDataTable();
 };
 
+// Load dropdown data
+const fetchDropdownData = async () => {
+  try {
+    // Fetch genres
+    const genresResponse = await fetch('/api/book/genres');
+    if (genresResponse.ok) {
+      const genresData = await genresResponse.json();
+      if (genresData.status === 'OK') {
+        genres.value = genresData.data || [];
+      }
+    }
+
+    // Fetch publishers  
+    const publishersResponse = await fetch('/api/book/publishers');
+    if (publishersResponse.ok) {
+      const publishersData = await publishersResponse.json();
+      if (publishersData.status === 'OK') {
+        publishers.value = publishersData.data || [];
+      }
+    }
+
+    // Fetch suppliers
+    const suppliersResponse = await fetch('/api/book/suppliers');
+    if (suppliersResponse.ok) {
+      const suppliersData = await suppliersResponse.json();
+      if (suppliersData.status === 'OK') {
+        suppliers.value = suppliersData.data || [];
+      }
+    }
+  } catch (error) {
+    console.error('Lỗi khi tải dữ liệu dropdown:', error);
+  }
+};
+
 onMounted(() => {
+  fetchDropdownData();
   onLoadTable();
   loadStockStats(); // Load stock stats khi khởi tạo
 });
 
 const timKiem = handleSubmit(async () => {
   filters.value.keyword = keyWords.value;
+  filters.value.genre_ids = selectedGenres.value;
+  filters.value.publisher_ids = selectedPublishers.value;
+  filters.value.supplier_ids = selectedSuppliers.value;
+  filters.value.stock_status = selectedStockStatus.value;
+  filters.value.min_price = minPrice.value || 0;
+  filters.value.max_price = maxPrice.value || 0;
+  
   filterProject.value.first = 0;
+  filterProject.value.page = 0;
   reloadDataTable();
 });
 

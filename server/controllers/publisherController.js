@@ -54,18 +54,39 @@ const getPublisherById = async (req, res) => {
   }
 };
 
-// Phân trang cho nhà cung cấp
+// Phân trang cho nhà xuất bản
 const getPublisherDatatable = async (req, res) => {
   try {
-    const { page = 0, rows = 10 } = req.body;
-    const first = req.body.first || 0;
-    const totalRecords = await Publisher.countDocuments();
-    const publishers = await Publisher.find()
+    const { page = 0, rows = 10, first = 0, sortField = '', sortOrder = 'desc', keyword = '' } = req.body;
+    
+    // Tạo query tìm kiếm
+    const query = {};
+    if (keyword) {
+      query.$or = [
+        { name: { $regex: keyword, $options: 'i' } },
+        { email: { $regex: keyword, $options: 'i' } },
+        { phone: { $regex: keyword, $options: 'i' } },
+        { address: { $regex: keyword, $options: 'i' } },
+        { description: { $regex: keyword, $options: 'i' } }
+      ];
+    }
+
+    // Build sort object
+    const sortObj = {};
+    if (sortField && sortField !== 'undefined') {
+      sortObj[sortField] = sortOrder === 'asc' ? 1 : -1;
+    } else {
+      sortObj['name'] = 1; // Default sort by name
+    }
+
+    const totalRecords = await Publisher.countDocuments(query);
+    const publishers = await Publisher.find(query)
+      .sort(sortObj)
       .skip(first)
       .limit(Number(rows));
     const totalPages = Math.ceil(totalRecords / rows);
     res.status(200).json({
-      success: true,
+      status: 'OK',
       data: publishers,
       rows: Number(rows),
       first: first,

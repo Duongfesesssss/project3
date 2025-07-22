@@ -222,7 +222,7 @@ const updateOrderStatus = async (req, res) => {
 // Lấy dữ liệu cho datatable
 const getOrderDatatable = async (req, res) => {
   try {
-    const { page = 1, limit = 10, sort = '-createdAt', search = '', status } = req.body;
+    const { page = 0, rows = 10, first = 0, sort = '-createdAt', keyword = '', status } = req.body;
     
     // Tạo query tìm kiếm
     const query = {};
@@ -232,13 +232,41 @@ const getOrderDatatable = async (req, res) => {
       query.status = status;
     }
     
-    // Tìm kiếm
-    if (search) {
-      query.$or = [
-        { 'user_id': { $regex: search, $options: 'i' } },
-        { 'shipping_address': { $regex: search, $options: 'i' } },
-        { 'status': { $regex: search, $options: 'i' } }
+    // Tìm kiếm theo keyword - cần tìm user trước
+    let userIds = [];
+    if (keyword && isNaN(keyword)) {
+      // Tìm user có email chứa keyword
+      const User = require('../models/userModel');
+      const users = await User.find({ 
+        email: { $regex: keyword, $options: 'i' } 
+      }).select('_id');
+      userIds = users.map(user => user._id);
+    }
+
+    // Tìm kiếm theo keyword
+    if (keyword) {
+      const searchConditions = [
+        { 'shipping_address': { $regex: keyword, $options: 'i' } },
+        { 'status': { $regex: keyword, $options: 'i' } }
       ];
+      
+      // Tìm kiếm theo orderCode (convert thành string để dùng regex)
+      searchConditions.push({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$orderCode" },
+            regex: keyword,
+            options: "i"
+          }
+        }
+      });
+      
+      // Thêm tìm kiếm theo user_id nếu có
+      if (userIds.length > 0) {
+        searchConditions.push({ 'user_id': { $in: userIds } });
+      }
+      
+      query.$or = searchConditions;
     }
 
     // Lấy tổng số bản ghi
@@ -258,16 +286,17 @@ const getOrderDatatable = async (req, res) => {
         }
       })
       .sort(sort)
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
+      .limit(Number(rows))
+      .skip(first);
 
     res.json({
       status: 'OK',
-      success: true,
       data: orders,
-      totalRecords,
-      currentPage: page,
-      totalPages: Math.ceil(totalRecords / limit)
+      rows: Number(rows),
+      first: first,
+      page: page,
+      totalRecords: totalRecords,
+      totalPages: Math.ceil(totalRecords / rows)
     });
   } catch (error) {
     console.error('Lỗi khi lấy dữ liệu order datatable:', error);

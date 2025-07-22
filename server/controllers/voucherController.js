@@ -234,33 +234,42 @@ const applyVoucher = async (req, res) => {
 // Lấy dữ liệu cho datatable
 const getVoucherDatatable = async (req, res) => {
   try {
-    const { page = 1, limit = 10, sort = '-created_at', search = '' } = req.query;
+    const { page = 0, rows = 10, first = 0, sortField = '', sortOrder = 'desc', keyword = '' } = req.body;
     
     // Tạo query tìm kiếm
     const query = {};
-    if (search) {
+    if (keyword) {
       query.$or = [
-        { code: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { code: { $regex: keyword, $options: 'i' } },
+        { description: { $regex: keyword, $options: 'i' } }
       ];
     }
 
     // Lấy tổng số bản ghi
     const totalRecords = await Voucher.countDocuments(query);
 
+    // Tạo sort object
+    const sortObj = {};
+    if (sortField) {
+      sortObj[sortField] = sortOrder === 'asc' ? 1 : -1;
+    } else {
+      sortObj['createdAt'] = -1; // Default sort
+    }
+
     // Lấy dữ liệu với phân trang
     const vouchers = await Voucher.find(query)
-      .sort(sort)
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
+      .sort(sortObj)
+      .limit(Number(rows))
+      .skip(first);
 
     res.json({
       status: 'OK',
-      success: true,
       data: vouchers,
-      totalRecords,
-      currentPage: page,
-      totalPages: Math.ceil(totalRecords / limit)
+      rows: Number(rows),
+      first: first,
+      page: page,
+      totalRecords: totalRecords,
+      totalPages: Math.ceil(totalRecords / rows)
     });
   } catch (error) {
     console.error('Lỗi khi lấy dữ liệu voucher datatable:', error);

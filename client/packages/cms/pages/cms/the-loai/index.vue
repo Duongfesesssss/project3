@@ -80,6 +80,7 @@
                   v-model="keyWords"
                   placeholder="Tìm kiếm"
                   class="w-full"
+                  @keyup.enter="timKiem"
                 />
               </IconField>
               <span class="text-red-500">{{ errors.keyWords }}</span>

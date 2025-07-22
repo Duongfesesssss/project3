@@ -29,7 +29,7 @@ class _DonHangService extends BaseService {
 
       const res = await response.json();
       if (res && res.status === EnumStatus.OK) {
-        return res.data;
+        return res;
       }
       return null;
     } catch (error) {

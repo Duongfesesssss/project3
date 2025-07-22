@@ -48,9 +48,50 @@
       paginator
       paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
       current-page-report-template="hiển thị {first} đến {last} trong {totalRecords} đơn hàng"
+      :total-records="totalRecords"
       :loading="loading"
       data-key="id"
+      @page="onPage($event)"
+      @sort="onSort($event)"
     >
+      <template #header>
+        <div class="grid grid-cols-1 xl:grid-cols-5 md:grid-cols-3 gap-4 mb-1">
+          <div class="col-span-1">
+            <IconField icon-position="left">
+              <InputIcon>
+                <i class="pi pi-search" />
+              </InputIcon>
+              <InputText
+                v-model="keyWords"
+                placeholder="Tìm kiếm theo mã đơn hàng, địa chỉ..."
+                class="w-full"
+                @keyup.enter="timKiem"
+              />
+            </IconField>
+          </div>
+          <div class="col-span-1">
+            <Button
+              type="button"
+              icon="pi pi-filter"
+              label="Tìm kiếm"
+              class="w-full"
+              @click="timKiem"
+            />
+          </div>
+          <div class="col-span-1">
+            <Button
+              type="button"
+              icon="pi pi-filter-slash"
+              label="Bỏ lọc"
+              outlined
+              severity="danger"
+              class="w-full"
+              @click="clearFilter"
+            />
+          </div>
+        </div>
+      </template>
+
             <template #empty>
               <div class="text-center p-4">
                 <i class="pi pi-inbox text-4xl text-400 mb-3"></i>
@@ -275,19 +316,32 @@ const orderDetailVisible = ref(false)
 const selectedOrder = ref(null)
 const toast = useToast()
 
+// Search data
+const keyWords = ref('')
+const filterProject = ref({
+  rows: 10,
+  first: 0,
+  page: 0,
+  sortField: '',
+  sortOrder: 'desc'
+})
+const filters = ref({
+  keyword: ''
+})
+const totalRecords = ref(0)
+
 
 // Methods
 const fetchOrders = async () => {
   loading.value = true
   try {
-    const data = await DonHangService.getDatatable({
-      page: 1,
-      limit: 100,
-      sort: '-createdAt',
-      status: 'paid'  // Lọc chỉ lấy đơn hàng đã thanh toán
-    })
+    const payload = Object.assign(filterProject.value, filters.value)
+    const response = await DonHangService.getDatatable(payload)
     
-    orders.value = data || []
+    if (response) {
+      orders.value = response.data || []
+      totalRecords.value = response.totalRecords || 0
+    }
   } catch (error) {
     console.error('Lỗi khi tải danh sách đơn hàng:', error)
     toast.add({
@@ -299,6 +353,34 @@ const fetchOrders = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const timKiem = () => {
+  filters.value.keyword = keyWords.value
+  filterProject.value.first = 0
+  filterProject.value.page = 0
+  fetchOrders()
+}
+
+const clearFilter = () => {
+  keyWords.value = ''
+  filters.value.keyword = ''
+  filterProject.value.first = 0
+  filterProject.value.page = 0
+  fetchOrders()
+}
+
+const onPage = (event) => {
+  filterProject.value.first = event.first
+  filterProject.value.rows = event.rows
+  filterProject.value.page = event.page
+  fetchOrders()
+}
+
+const onSort = (event) => {
+  filterProject.value.sortField = event.sortField
+  filterProject.value.sortOrder = event.sortOrder
+  fetchOrders()
 }
 
 
