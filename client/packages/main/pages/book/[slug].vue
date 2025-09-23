@@ -8,6 +8,7 @@ import { useToast } from 'primevue/usetoast';
 import Toast from 'primevue/toast';
 import Button from 'primevue/button';
 import InputNumber from 'primevue/inputnumber';
+import BookReviews from '@/packages/base/components/BookReviews.vue';
 
 definePageMeta({
   layout: 'default',
@@ -19,7 +20,7 @@ const slug = route.params.slug as string;
 const book = ref<BookModel | null>(null);
 const quantity = ref(1);
 const toast = useToast();
-const { data: user } = useAuth();
+const { data: session } = useAuth();
 
 onMounted(async () => {
   const data = await BookService.getBookBySlug(slug);
@@ -32,13 +33,13 @@ const handleAddToCart = () => {
     return;
   }
 
-  if (!user.value?.user?._id) {
+  if (!session.value?.user?._id) {
     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng đăng nhập để thêm vào giỏ hàng', life: 3000 });
     return;
   }
 
   GioHangService.addToCart(
-    user.value.user._id,
+    session.value.user._id,
     book.value._id,
     quantity.value
   )
@@ -160,7 +161,7 @@ const handleAddToCart = () => {
                 </div>
                 <div>
                   <span class="font-medium">Hình thức bìa:</span>
-                  <span class="ml-1">{{ book.cover_type || 'Bìa Mềm' }}</span>
+                  <span class="ml-1">Bìa Mềm</span>
                 </div>
               </div>
 
@@ -186,7 +187,7 @@ const handleAddToCart = () => {
             <div class="bg-gradient-to-r from-red-500 to-pink-500 rounded-lg p-4 mb-6 text-white">
               <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center">
-                  <span class="text-lg font-bold mr-3">FLASH SALE</span>
+                  <span class="text-lg font-bold mr-3">⚡ FLASH SALE</span>
                   <div class="flex space-x-1">
                     <div class="bg-black bg-opacity-30 px-2 py-1 rounded text-sm font-bold">01</div>
                     <div class="bg-black bg-opacity-30 px-2 py-1 rounded text-sm font-bold">55</div>
@@ -195,7 +196,7 @@ const handleAddToCart = () => {
                 </div>
                 <div class="text-right">
                   <div class="text-sm opacity-90">Đã bán</div>
-                  <div class="font-bold">0</div>
+                  <div class="font-bold">12</div>
                 </div>
               </div>
               
@@ -209,7 +210,7 @@ const handleAddToCart = () => {
             <div class="mb-6">
               <div class="flex items-baseline space-x-3 mb-2">
                 <span class="text-3xl font-bold text-red-600">{{ Number(book.price).toLocaleString() }}₫</span>
-                <span class="text-lg text-gray-500 line-through">{{ Number(book.price + 20000).toLocaleString() }}₫</span>
+                <span class="text-lg text-gray-500 line-through">{{ Number((book.price || 0) + 20000).toLocaleString() }}₫</span>
                 <span class="bg-red-100 text-red-600 px-2 py-1 rounded text-sm font-semibold">-24%</span>
               </div>
               <div class="text-sm text-blue-600 font-medium">4 nhà sách còn hàng</div>
@@ -311,11 +312,25 @@ const handleAddToCart = () => {
       <!-- Book Description -->
       <div class="mt-8 bg-white rounded-lg shadow-sm p-6">
         <h2 class="text-xl font-bold text-gray-900 mb-4">Mô tả sản phẩm</h2>
-        <div class="prose max-w-none text-gray-700 leading-relaxed">
+        <div class="prose max-w-none text-gray-700 leading-relaxed mb-6">
           <p class="whitespace-pre-line">
             {{ book.description || 'Chưa có mô tả chi tiết cho cuốn sách này.' }}
           </p>
         </div>
+        
+        <!-- Audio Player Component -->
+        <div v-if="book.description && book.description.trim().length > 0">
+          <h3 class="text-lg font-semibold text-gray-900 mb-3">🎧 Nghe mô tả bằng giọng nói</h3>
+          <AudioPlayer 
+            :text="book.description" 
+            :book-id="book._id"
+          />
+        </div>
+      </div>
+
+      <!-- Book Reviews Section -->
+      <div v-if="book._id" class="mt-8">
+        <BookReviews :book-id="book._id" />
       </div>
     </div>
 

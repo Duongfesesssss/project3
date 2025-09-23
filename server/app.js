@@ -19,6 +19,8 @@ const stockTransactionRouter = require('./routes/stockTransactionRoutes');
 const userManagementRouter = require('./routes/userManagementRoutes');
 const dashboardRouter = require('./routes/dashboardRoutes');
 const paymentRouter = require('./routes/paymentRoutes');
+const textToSpeechRouter = require('./routes/textToSpeechRoutes');
+const reviewRouter = require('./routes/reviewRoutes');
 
 
 require('./models/stockTransactionModel');
@@ -117,12 +119,14 @@ app.use('/api/publisher', publisherRouter);
 app.use('/api/supplier', supplierRouter);
 app.use('/api/genre', genreRouter);
 app.use('/api/cart', cartRouter);
-app.use('/api/orders', orderRouter);
+app.use('/api/order', orderRouter); // ✅ Đổi từ orders thành order
 app.use('/api/voucher', voucherRouter);
 app.use('/api/stock-transactions', stockTransactionRouter);
 app.use('/api/admin/users', userManagementRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/payment', paymentRouter);
+app.use('/api/text-to-speech', textToSpeechRouter);
+app.use('/api/review', reviewRouter);
 
 
 const swaggerOptions = {

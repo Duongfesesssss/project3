@@ -10,7 +10,7 @@ class _DonHangService extends BaseService {
     status?: string;
   }) {
     try {
-      const response = await fetch(`${this.baseApiUrl}/api/orders/datatable`, {
+      const response = await fetch(`${this.baseApiUrl}/api/order/datatable`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ class _DonHangService extends BaseService {
 
   async getOrderDetail(orderId: string) {
     try {
-      const response = await fetch(`${this.baseApiUrl}/api/orders/${orderId}`, {
+      const response = await fetch(`${this.baseApiUrl}/api/order/${orderId}`, {
         headers: {
           'Authorization': `Bearer ${this.getAccessToken()}`
         }
@@ -67,7 +67,7 @@ class _DonHangService extends BaseService {
 
   async updateOrderStatus(orderId: string, status: string) {
     try {
-      const response = await fetch(`${this.baseApiUrl}/api/orders/${orderId}/status`, {
+      const response = await fetch(`${this.baseApiUrl}/api/order/${orderId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

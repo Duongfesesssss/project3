@@ -292,6 +292,7 @@ const closeDealsModal = () => {
     <Dialog v-model:visible="showDealsModal" modal header="🔥 Ưu đãi đặc biệt hôm nay" :style="{ width: '90vw', maxWidth: '800px' }" class="deals-modal">
       <div class="space-y-6">
         <!-- Flash Sale -->
+        <!-- Flash Sale -->
         <div class="bg-gradient-to-r from-red-500 to-pink-500 rounded-xl p-6 text-white">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-2xl font-bold">⚡ Flash Sale</h3>

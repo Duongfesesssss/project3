@@ -442,7 +442,7 @@ const onPageChange = (event) => {
 
 const viewBookDetail = (book) => {
   // Navigate to book detail page
-  navigateTo(`/sach/${book.slug}`)
+  navigateTo(`/book/${book.slug}`)
 }
 
 // Helper Functions

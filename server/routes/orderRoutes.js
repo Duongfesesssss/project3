@@ -16,6 +16,9 @@ const { authenticateToken, staffAndAdmin, adminOnly } = require('../middlewares/
 // ========== PUBLIC/CUSTOMER ROUTES ==========
 router.post('/create', createOrder); // Khách hàng tạo đơn hàng
 
+// ✅ PUBLIC: Cập nhật trạng thái thanh toán (được gọi từ webhook PayOS)
+router.patch('/payment-status/:orderCode', updatePaymentStatus);
+
 // ========== AUTHENTICATED ROUTES ==========
 router.use(authenticateToken);
 
@@ -33,8 +36,5 @@ router.patch('/:order_id/status', staffAndAdmin, updateOrderStatus);
 // ✅ STAFF VÀ ADMIN: Cập nhật và xóa đơn hàng
 router.put('/update/:order_id', staffAndAdmin, updateOrder);
 router.delete('/delete/:order_id', staffAndAdmin, deleteOrder);
-
-// ✅ PUBLIC: Cập nhật trạng thái thanh toán (được gọi từ webhook PayOS)
-router.patch('/payment-status/:orderCode', updatePaymentStatus);
 
 module.exports = router; 

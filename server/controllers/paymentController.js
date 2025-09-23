@@ -106,6 +106,26 @@ exports.getPayOSPaymentStatus = async (req, res) => {
     const result = await getPayOSOrderStatus(orderCode);
 
     if (result.success) {
+      // Nếu trạng thái PayOS là PAID, tự động cập nhật database
+      if (result.data.status === 'PAID') {
+        try {
+          const updatedOrder = await Order.findOneAndUpdate(
+            { orderCode: Number(orderCode) },
+            { 
+              status: 'paid',
+              updated_at: new Date()
+            },
+            { new: true }
+          );
+
+          if (updatedOrder) {
+            console.log(`✅ Đã cập nhật đơn hàng ${orderCode} thành đã thanh toán từ status check`);
+          }
+        } catch (dbError) {
+          console.error('❌ Lỗi cập nhật database từ status check:', dbError);
+        }
+      }
+
       res.json({
         success: true,
         data: result.data
@@ -126,10 +146,12 @@ exports.getPayOSPaymentStatus = async (req, res) => {
 exports.handlePayOSWebhook = async (req, res) => {
   try {
     const webhookData = req.body;
+    console.log('🎯 PayOS Webhook received:', JSON.stringify(webhookData, null, 2));
 
     const isValid = await verifyPayOSWebhook(webhookData);
 
     if (!isValid) {
+      console.log('❌ Webhook signature không hợp lệ');
       return res.status(400).json({
         success: false,
         message: 'Webhook signature không hợp lệ'
@@ -137,27 +159,29 @@ exports.handlePayOSWebhook = async (req, res) => {
     }
 
     const { data } = webhookData;
-    if (data && data.orderCode && data.status === 'PAID') {
-      console.log('Đơn hàng đã thanh toán:', data);
+    if (data && data.orderCode) {
+      console.log(`📋 Processing orderCode: ${data.orderCode}, status: ${data.status}`);
 
-      // Cập nhật payment_status trong database
-      try {
-        const updatedOrder = await Order.findOneAndUpdate(
-          { orderCode: data.orderCode },
-          { 
-            status: 'paid',
-            updated_at: new Date()
-          },
-          { new: true }
-        );
+      if (data.status === 'PAID') {
+        // Cập nhật payment_status trong database
+        try {
+          const updatedOrder = await Order.findOneAndUpdate(
+            { orderCode: Number(data.orderCode) },
+            { 
+              status: 'paid',
+              updated_at: new Date()
+            },
+            { new: true }
+          );
 
-        if (updatedOrder) {
-          console.log(`Đã cập nhật đơn hàng ${data.orderCode} thành đã thanh toán`);
-        } else {
-          console.log(`Không tìm thấy đơn hàng với orderCode: ${data.orderCode}`);
+          if (updatedOrder) {
+            console.log(`✅ Đã cập nhật đơn hàng ${data.orderCode} thành đã thanh toán qua webhook`);
+          } else {
+            console.log(`❌ Không tìm thấy đơn hàng với orderCode: ${data.orderCode}`);
+          }
+        } catch (dbError) {
+          console.error('❌ Lỗi cập nhật database:', dbError);
         }
-      } catch (dbError) {
-        console.error('Lỗi cập nhật database:', dbError);
       }
 
       return res.json({
@@ -165,16 +189,90 @@ exports.handlePayOSWebhook = async (req, res) => {
         message: 'Webhook xử lý thành công'
       });
     } else {
+      console.log('❌ Webhook không có data hoặc orderCode');
       return res.status(400).json({
         success: false,
-        message: 'Webhook không hợp lệ hoặc đơn chưa thanh toán'
+        message: 'Webhook không hợp lệ hoặc thiếu orderCode'
       });
     }
   } catch (err) {
-    console.error('Lỗi webhook:', err);
+    console.error('❌ Lỗi webhook:', err);
     res.status(500).json({
       success: false,
       message: 'Xử lý webhook thất bại',
+      detail: err.message
+    });
+  }
+};
+
+// Sync manual payment status - gọi khi cần cập nhật trạng thái thủ công
+exports.syncPaymentStatus = async (req, res) => {
+  try {
+    const { orderCode } = req.params;
+
+    if (!orderCode) {
+      return res.status(400).json({
+        success: false,
+        message: 'Thiếu orderCode'
+      });
+    }
+
+    console.log(`🔄 Manual sync cho orderCode: ${orderCode}`);
+
+    // Kiểm tra trạng thái từ PayOS
+    const payosResult = await getPayOSOrderStatus(orderCode);
+
+    if (!payosResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể kiểm tra trạng thái PayOS: ${payosResult.message}`
+      });
+    }
+
+    console.log(`📊 PayOS status: ${payosResult.data.status}`);
+
+    // Nếu PayOS báo PAID, cập nhật database
+    if (payosResult.data.status === 'PAID') {
+      const updatedOrder = await Order.findOneAndUpdate(
+        { orderCode: Number(orderCode) },
+        { 
+          status: 'paid',
+          updated_at: new Date()
+        },
+        { new: true }
+      );
+
+      if (updatedOrder) {
+        console.log(`✅ Manual sync thành công cho orderCode: ${orderCode}`);
+        return res.json({
+          success: true,
+          message: 'Đã cập nhật trạng thái thanh toán thành công',
+          data: {
+            orderCode: orderCode,
+            oldStatus: 'pending',
+            newStatus: 'paid',
+            payosData: payosResult.data
+          }
+        });
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: `Không tìm thấy đơn hàng với orderCode: ${orderCode}`
+        });
+      }
+    } else {
+      return res.json({
+        success: false,
+        message: `Đơn hàng chưa được thanh toán trên PayOS. Trạng thái hiện tại: ${payosResult.data.status}`,
+        data: payosResult.data
+      });
+    }
+
+  } catch (err) {
+    console.error('❌ Lỗi sync payment status:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi khi sync trạng thái thanh toán',
       detail: err.message
     });
   }
