@@ -23,6 +23,7 @@ jobs:
         with:
           node-version: 20
           cache: "yarn"
+          cache-dependency-path: "${{ matrix.folder }}/yarn.lock"
 
       - name: Install dependencies (yarn)
         run: |
