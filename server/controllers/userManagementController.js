@@ -1,5 +1,5 @@
 const User = require('../models/userModel');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // Lấy danh sách tất cả users (Admin only)
 const getAllUsers = async (req, res) => {

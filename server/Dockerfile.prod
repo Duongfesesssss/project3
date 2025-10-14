@@ -1,0 +1,32 @@
+# Production Dockerfile cho Backend
+FROM node:20-alpine AS base
+
+# Tạo user non-root cho security
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY yarn.lock ./
+
+# Install dependencies
+RUN yarn install --frozen-lockfile --production=false && yarn cache clean
+
+# Copy source code
+COPY . .
+
+# Change ownership
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+# Expose port
+EXPOSE 8888
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node healthcheck.js || exit 1
+
+# Start command
+CMD ["node", "app.js"]

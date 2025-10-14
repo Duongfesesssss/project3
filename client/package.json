@@ -32,6 +32,8 @@
     "yup": "^1.6.1"
   },
   "devDependencies": {
+    "esbuild": "^0.19.12",
+    "rollup": "^4.9.6",
     "sass-embedded": "^1.81.0"
   }
 }

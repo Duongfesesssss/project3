@@ -1,0 +1,50 @@
+# Docker Compose - Chạy tất cả cùng lúc
+version: '3.8'
+
+services:
+  # Database MongoDB
+  database:
+    image: mongo:7
+    container_name: bookstore-db
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: 123456
+    volumes:
+      - db_data:/data/db
+
+  # Backend API
+  backend:
+    build: ./server
+    container_name: bookstore-backend
+    ports:
+      - "8888:8888"
+    environment:
+      - MONGODB_URI=mongodb://admin:123456@database:27017/bookstore?authSource=admin
+      - JWT_SECRET=my-secret-key
+    depends_on:
+      - database
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+
+  # Frontend Website
+  frontend:
+    build: ./client
+    container_name: bookstore-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # Dùng tên service backend thay vì localhost để container frontend gọi đúng
+      - NUXT_PUBLIC_API_BASE=http://backend:8888
+    depends_on:
+      - backend
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+
+
+# Lưu trữ dữ liệu database
+volumes:
+  db_data:

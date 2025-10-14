@@ -92,12 +92,12 @@ primevue: {
   components: true,
   runtimeConfig: {
     public: {
-      baseURL: 'http://localhost:8888',
+      baseURL: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8888',
     },
   },
   routeRules: {
     '/api/**': {
-      proxy: 'http://localhost:8888/api/**',  // Cố định proxy
+      proxy: (process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8888') + '/api/**',
     },
   },
   

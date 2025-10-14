@@ -1,5 +1,5 @@
 const User = require('../models/userModel');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // Script tạo admin đầu tiên - chỉ chạy 1 lần
 const createInitialAdmin = async () => {
