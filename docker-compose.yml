@@ -37,7 +37,7 @@ services:
       - "3000:3000"
     environment:
       # Dùng tên service backend thay vì localhost để container frontend gọi đúng
-      - NUXT_PUBLIC_API_BASE=http://backend:8888
+      - NUXT_PUBLIC_API_BASE=/api
     depends_on:
       - backend
     volumes:
