@@ -16,6 +16,7 @@
     "android:open": "npx cap open android"
   },
   "dependencies": {
+    "@sidebase/nuxt-auth": "^0.7.2",
     "@capacitor/android": "^7.4.3",
     "@capacitor/cli": "^7.4.3",
     "@capacitor/core": "^7.4.3",
