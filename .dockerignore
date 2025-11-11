@@ -39,8 +39,19 @@
 *.swo
 *~
 
-# Docker (không bắt buộc, nhưng để cũng được)
-docker-compose*.yml
+# Mobile
+client/android/
+client/ios/
+**/android/app/build/
+**/android/.gradle/
+**/android/.cxx/
+**/android/local.properties
+*.jks
+*.keystore
+key.properties
+*.keystore.properties
+*.apk
+*.aab
 
-# ⚠️ KHÔNG ignore lockfiles
-# (giữ nguyên yarn.lock / package-lock.json để cache deps)
+# Docker (không cần đưa compose vào build context)
+docker-compose*.yml
