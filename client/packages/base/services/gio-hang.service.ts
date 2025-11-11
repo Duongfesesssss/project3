@@ -7,7 +7,7 @@ class _GioHangService extends BaseService {
     try {
       const response = await fetch(`${this.baseApiUrl}/api/cart/${userId}`, {
         headers: {
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         }
       });
 
@@ -39,7 +39,7 @@ class _GioHangService extends BaseService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         },
         body: JSON.stringify({
           user_id: userId,
@@ -74,7 +74,7 @@ class _GioHangService extends BaseService {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         },
         body: JSON.stringify({
           user_id: userId,
@@ -108,7 +108,7 @@ class _GioHangService extends BaseService {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         },
         body: JSON.stringify({
           user_id: userId,
@@ -140,7 +140,7 @@ class _GioHangService extends BaseService {
       const response = await fetch(`${this.baseApiUrl}/api/cart/clear/${userId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         }
       });
 

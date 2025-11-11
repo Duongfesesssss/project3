@@ -30,10 +30,13 @@ const path = require('path');
 // Sử dụng middleware để xử lý dữ liệu JSON
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:3000',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true,
-  }));
+  origin: (origin, callback) => {
+    // Cho phép mọi origin trong quá trình dev (mobile WebView, IP nội bộ)
+    callback(null, true);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: true,
+}));
 // Kết nối đến DB
 connectToDB();
 

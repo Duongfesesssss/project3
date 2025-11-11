@@ -2,6 +2,9 @@ import Aura from '@primevue/themes/aura';
 import { defaultOptions } from 'primevue/config';
 import path from 'path';
 export default defineNuxtConfig({
+  plugins: [
+    '~/packages/base/plugins/fetch-base.client.ts'
+  ],
   compatibilityDate: '2024-04-03',
   devtools: { enabled: false },
   app: {
@@ -59,7 +62,8 @@ primevue: {
     extractCSS: true,
   },
   auth: {
-    baseURL: process.env.BASE_URL,
+    // Dùng absolute URL để tránh gọi về http://localhost trong app Capacitor
+    baseURL: process.env.NUXT_PUBLIC_AUTH_BASE || (process.env.NUXT_PUBLIC_API_BASE ? `${process.env.NUXT_PUBLIC_API_BASE}/api/auth` : 'http://192.168.0.116:8888/api/auth'),
     provider: {
       type: 'local',
       endpoints: {
@@ -92,13 +96,24 @@ primevue: {
   components: true,
   runtimeConfig: {
     public: {
-      baseURL: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8888',
+      baseURL: 'http://192.168.251.97:8888',
+      apiBase: 'http://192.168.251.97:8888'
+      // baseURL: 'http://192.168.0.116:8888',
+      // apiBase: 'http://192.168.0.116:8888'
     },
   },
   routeRules: {
     '/api/**': {
       proxy: (process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8888') + '/api/**',
     },
+  },
+  
+  nitro: {
+    prerender: {
+      failOnError: false,
+      crawlLinks: true,
+      ignore: ['/api']
+    }
   },
   
   typescript: {

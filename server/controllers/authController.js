@@ -6,6 +6,10 @@ const nodemailer = require('nodemailer');
 
 const login = async (req, res) => {
   try {
+    console.log('---[LOGIN API]---');
+    console.log('Thời điểm:', new Date().toISOString());
+    console.log('req.body:', req.body);
+    console.log('req.headers:', req.headers);
     const { email, password } = req.body;
 
     // Tìm người dùng theo email

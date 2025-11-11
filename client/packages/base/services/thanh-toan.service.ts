@@ -18,7 +18,7 @@ async createOrder(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAccessToken()}`
+        'Authorization': this.getAccessToken()
       },
       body: JSON.stringify({
         user_id: userId,
@@ -52,7 +52,7 @@ async createOrder(
     try {
       const response = await fetch(`${this.baseApiUrl}/api/order/user/${userId}`, {
         headers: {
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         }
       });
 
@@ -75,7 +75,7 @@ async createOrder(
     try {
       const response = await fetch(`${this.baseApiUrl}/api/order/detail/${orderId}`, {
         headers: {
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         }
       });
 
@@ -100,7 +100,7 @@ async createOrder(
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         },
         body: JSON.stringify({ status })
       });
@@ -124,7 +124,7 @@ async getUserPaidOrders() {
   try {
     const response = await fetch(`${this.baseApiUrl}/api/order/my-paid-orders`, {
       headers: {
-        'Authorization': `Bearer ${this.getAccessToken()}`
+        'Authorization': this.getAccessToken()
       }
     });
 
@@ -156,7 +156,7 @@ async createPayOSPayment(params: {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAccessToken()}`
+        'Authorization': this.getAccessToken()
       },
       body: JSON.stringify(params)
     });

@@ -2,9 +2,26 @@ abstract class BaseService {
   public readonly baseApiUrl: string;
 
   constructor() {
-    // const runtimeConfig = useRuntimeConfig()
-    this.baseApiUrl = 'http://localhost:8888';
-    // this.baseApiUrl = runtimeConfig.public.baseURL;
+    let apiBase = '';
+    // Client side: đọc từ __NUXT__.config.public để không cần composable
+    if (typeof window !== 'undefined') {
+      try {
+        // @ts-ignore
+        const pub = (window.__NUXT__ && window.__NUXT__.config && window.__NUXT__.config.public) || {};
+        apiBase = (pub.apiBase || pub.baseURL || '').toString();
+      } catch {}
+    }
+    // Server side hoặc fallback: dùng biến môi trường
+    if (!apiBase && typeof process !== 'undefined') {
+      // Nuxt sẽ inline các biến NUXT_PUBLIC_*
+      // @ts-ignore
+      apiBase = (process.env.NUXT_PUBLIC_API_BASE || process.env.NUXT_PUBLIC_BASE_URL || '').toString();
+    }
+    // Fallback cuối cùng: IP cục bộ bạn đang dùng
+    if (!apiBase) {
+      apiBase = 'http://192.168.0.116:8888';
+    }
+    this.baseApiUrl = apiBase;
   }
 
   getAccessToken(): string {
@@ -15,11 +32,10 @@ abstract class BaseService {
       console.warn('Token is null or undefined!');
       return '';
     }
-    // Loại bỏ "Bearer " nếu đã có trong token
-    const cleanToken = token.value.startsWith('Bearer ') 
-      ? token.value.replace('Bearer ', '') 
-      : token.value;
-    return cleanToken;
+    // Đảm bảo luôn trả về đúng format: 'Bearer <token>'
+    return token.value.startsWith('Bearer ')
+      ? token.value
+      : `Bearer ${token.value}`;
   }
 }
 

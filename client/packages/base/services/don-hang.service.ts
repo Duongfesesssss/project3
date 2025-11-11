@@ -14,7 +14,7 @@ class _DonHangService extends BaseService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         },
         body: JSON.stringify(params)
       });
@@ -42,7 +42,7 @@ class _DonHangService extends BaseService {
     try {
       const response = await fetch(`${this.baseApiUrl}/api/order/${orderId}`, {
         headers: {
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         }
       });
 
@@ -71,7 +71,7 @@ class _DonHangService extends BaseService {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         },
         body: JSON.stringify({ status })
       });
