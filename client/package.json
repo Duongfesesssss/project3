@@ -32,6 +32,7 @@
     "pinia": "^3.0.3",
     "primevue": "^4.2.1",
     "sass": "^1.81.0",
+    "tailwindcss-primeui": "^0.3.4",
     "vee-validate": "^4.15.0",
     "vite": "^6.0.0",
     "vue": "latest",
