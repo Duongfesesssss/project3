@@ -98,13 +98,17 @@ router.post('/datatable', async (req, res) => {
     
     // Filter by genres (MultiSelect support)
     if (genre_id) {
-      // Single select compatibility
-      matchConditions.genre_ids = { $in: [new mongoose.Types.ObjectId(genre_id)] };
-    } else if (req.body.genre_ids && req.body.genre_ids.length > 0) {
-      // MultiSelect support
-      matchConditions.genre_ids = { 
-        $in: req.body.genre_ids.map(id => new mongoose.Types.ObjectId(id)) 
-      };
+      const parsedGenre = Number(genre_id);
+      if (!Number.isNaN(parsedGenre)) {
+        matchConditions.genre_ids = { $in: [parsedGenre] };
+      }
+    } else if (Array.isArray(req.body.genre_ids) && req.body.genre_ids.length > 0) {
+      const parsedGenres = req.body.genre_ids
+        .map((id) => Number(id))
+        .filter((value) => !Number.isNaN(value));
+      if (parsedGenres.length > 0) {
+        matchConditions.genre_ids = { $in: parsedGenres };
+      }
     }
     
     // Filter by publishers (MultiSelect support)

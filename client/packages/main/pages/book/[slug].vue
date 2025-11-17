@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { BookService } from '~/packages/base/services/book.service';
 import { GioHangService } from '~/packages/base/services/gio-hang.service';
 import type { BookModel } from '~/packages/base/models/dto/response/book/book.model';
@@ -8,7 +8,10 @@ import { useToast } from 'primevue/usetoast';
 import Toast from 'primevue/toast';
 import Button from 'primevue/button';
 import InputNumber from 'primevue/inputnumber';
+import Image from 'primevue/image';
 import BookReviews from '@/packages/base/components/BookReviews.vue';
+import { useCartStore } from '~/packages/base/stores/cart.store';
+import { useWishlistStore } from '~/packages/base/stores/wishlist.store';
 
 definePageMeta({
   layout: 'default',
@@ -21,10 +24,20 @@ const book = ref<BookModel | null>(null);
 const quantity = ref(1);
 const toast = useToast();
 const { data: session } = useAuth();
+const cartStore = useCartStore();
+const wishlistStore = useWishlistStore();
 
 onMounted(async () => {
+  wishlistStore.init();
   const data = await BookService.getBookBySlug(slug);
   book.value = data || null;
+});
+
+const isInWishlist = computed(() => {
+  if (!book.value?._id) {
+    return false;
+  }
+  return wishlistStore.isFavorite(book.value._id);
 });
 
 const handleAddToCart = () => {
@@ -47,6 +60,10 @@ const handleAddToCart = () => {
       console.log(result);
       if (result) {
         toast.add({ severity: 'success', summary: 'Thành công', detail: 'Đã thêm vào giỏ hàng', life: 3000 });
+        const userId = session.value?.user?._id;
+        if (userId) {
+          cartStore.fetchCart(userId);
+        }
       } else {
         toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể thêm vào giỏ hàng', life: 3000 });
       }
@@ -55,6 +72,19 @@ const handleAddToCart = () => {
       console.error('Lỗi khi thêm vào giỏ hàng:', error);
       toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Có lỗi xảy ra khi thêm vào giỏ hàng', life: 3000 });
     });
+};
+
+const handleToggleWishlist = () => {
+  if (!book.value) {
+    return;
+  }
+  const updated = wishlistStore.toggleBook(book.value);
+  toast.add({
+    severity: updated ? 'success' : 'info',
+    summary: updated ? 'Đã thêm yêu thích' : 'Đã gỡ yêu thích',
+    detail: updated ? 'Sách đã nằm trong danh sách yêu thích' : 'Đã xóa khỏi danh sách yêu thích',
+    life: 2000,
+  });
 };
 </script>
 
@@ -80,19 +110,23 @@ const handleAddToCart = () => {
           <div class="bg-white rounded-lg shadow-sm p-6">
             <!-- Main Image -->
             <div class="mb-4">
-              <img 
-                :src="book.image_link || '/placeholder.jpg'" 
-                :alt="book.title" 
-                class="w-full max-w-md mx-auto rounded-lg shadow-md"
+              <Image
+                :src="book.image_link || '/placeholder.jpg'"
+                :alt="book.title"
+                preview
+                image-class="w-full max-w-md mx-auto rounded-lg shadow-md cursor-zoom-in"
+                preview-class="max-w-4xl"
               />
             </div>
             
             <!-- Thumbnail Gallery -->
             <div class="flex justify-center space-x-2 mb-6">
               <div v-for="n in 4" :key="n" class="relative">
-                <img 
-                  :src="book.image_link || '/placeholder.jpg'" 
-                  class="w-16 h-20 object-cover rounded border-2 border-gray-200 hover:border-blue-500 cursor-pointer transition-colors"
+                <Image
+                  :src="book.image_link || '/placeholder.jpg'"
+                  preview
+                  image-class="w-16 h-20 object-cover rounded border-2 border-gray-200 hover:border-blue-500 cursor-zoom-in transition-colors"
+                  preview-class="max-w-3xl"
                 />
                 <div v-if="n === 4" class="absolute inset-0 bg-black bg-opacity-50 rounded flex items-center justify-center">
                   <span class="text-white text-sm font-semibold">+5</span>
@@ -112,6 +146,13 @@ const handleAddToCart = () => {
               <Button 
                 label="Mua ngay" 
                 class="w-full !bg-red-500 hover:!bg-red-600 !border-red-500 !py-3 !font-semibold"
+              />
+              <Button
+                :label="isInWishlist ? 'Đã trong yêu thích' : 'Thêm vào yêu thích'"
+                :icon="isInWishlist ? 'pi pi-heart-fill' : 'pi pi-heart'"
+                outlined
+                class="w-full !border-pink-500 !text-pink-500 hover:!bg-pink-50 !py-3"
+                @click="handleToggleWishlist"
               />
             </div>
 

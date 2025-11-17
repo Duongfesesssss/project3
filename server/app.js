@@ -21,6 +21,7 @@ const dashboardRouter = require('./routes/dashboardRoutes');
 const paymentRouter = require('./routes/paymentRoutes');
 const textToSpeechRouter = require('./routes/textToSpeechRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
+const memberRouter = require('./routes/memberRoutes');
 
 
 require('./models/stockTransactionModel');
@@ -130,6 +131,7 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/text-to-speech', textToSpeechRouter);
 app.use('/api/review', reviewRouter);
+app.use('/api/member', memberRouter);
 
 
 const swaggerOptions = {

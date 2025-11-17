@@ -209,11 +209,11 @@
             class="book-card bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
             @click="viewBookDetail(book)"
           >
-            <div class="aspect-w-3 aspect-h-4">
+            <div class="h-72 w-full bg-slate-50 rounded-t-lg overflow-hidden">
               <img
                 :src="book.image_link || '/placeholder-book.jpg'"
                 :alt="book.title"
-                class="w-full h-48 object-cover rounded-t-lg"
+                class="h-full w-full object-cover"
               />
             </div>
             <div class="p-4">
@@ -243,7 +243,7 @@
               <img
                 :src="book.image_link || '/placeholder-book.jpg'"
                 :alt="book.title"
-                class="w-20 h-28 object-cover rounded"
+                class="w-32 h-44 object-cover rounded bg-slate-50"
               />
               <div class="flex-1">
                 <h3 class="font-semibold text-lg mb-2">{{ book.title }}</h3>
@@ -287,7 +287,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, watch } from 'vue'
 
 definePageMeta({
   layout: 'default',
@@ -369,6 +369,41 @@ const fetchDropdownData = async () => {
   } catch (error) {
     console.error('Error loading dropdown data:', error)
   }
+}
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '')
+
+const route = useRoute()
+const selectedGenreSlug = ref<string | null>(null)
+
+const syncRouteQuery = () => {
+  if (route.query.q) {
+    const keyword = Array.isArray(route.query.q) ? route.query.q[0] : route.query.q
+    searchParams.keyword = keyword || ''
+  }
+  const rawGenre = route.query.genre
+  selectedGenreSlug.value = rawGenre ? (Array.isArray(rawGenre) ? rawGenre[0] : rawGenre) : null
+}
+
+const applyGenreFilterFromRoute = () => {
+  if (!selectedGenreSlug.value || !genres.value.length) {
+    if (!selectedGenreSlug.value) {
+      searchParams.selectedGenres = []
+    }
+    return false
+  }
+  const matched = genres.value.find((genre: any) => slugify(genre.name) === selectedGenreSlug.value)
+  if (matched) {
+    searchParams.selectedGenres = [matched._id]
+    return true
+  }
+  return false
 }
 
 const performSearch = async () => {
@@ -497,16 +532,22 @@ const getStockStatusSeverity = (status) => {
   return severityMap[status] || 'info'
 }
 
-// Lifecycle
-onMounted(() => {
-  fetchDropdownData()
-  
-  // Check if there are URL params for initial search
-  const route = useRoute()
-  if (route.query.q) {
-    searchParams.keyword = route.query.q
+watch(
+  () => route.query.genre,
+  async () => {
+    syncRouteQuery()
+    applyGenreFilterFromRoute()
+    paginationFirst.value = 0
+    await performSearch()
   }
-    performSearch()
+)
+
+// Lifecycle
+onMounted(async () => {
+  await fetchDropdownData()
+  syncRouteQuery()
+  applyGenreFilterFromRoute()
+  performSearch()
 })
 </script>
 

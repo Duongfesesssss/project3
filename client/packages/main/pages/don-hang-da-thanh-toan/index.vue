@@ -186,6 +186,7 @@ import { useToast } from 'primevue/usetoast';
 import { useRouter } from 'vue-router';
 import { ThanhToanService } from '~/packages/base/services/thanh-toan.service';
 import { GioHangService } from '~/packages/base/services/gio-hang.service';
+import { useCartStore } from '~/packages/base/stores/cart.store';
 
 definePageMeta({
   layout: 'default',
@@ -195,6 +196,7 @@ definePageMeta({
 const { data: authData } = useAuth();
 const toast = useToast();
 const router = useRouter();
+const cartStore = useCartStore();
 
 // State
 const loading = ref(false);
@@ -305,6 +307,7 @@ const reorderItems = async (order) => {
         detail: `Đã thêm ${successCount} sản phẩm vào giỏ hàng`, 
         life: 3000 
       });
+      cartStore.fetchCart(userId);
       
       // Chuyển đến giỏ hàng
       setTimeout(() => {

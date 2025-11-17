@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/packages/base/stores/auth.store';
+import { useCartStore } from '~/packages/base/stores/cart.store';
 import ThongTinCaNhan from '~/components/shared/modals/ThongTinCaNhan.vue';
 import ThayDoiMatKhau from '~/components/shared/modals/ThayDoiMatKhau.vue';
 
@@ -21,6 +22,7 @@ const isShowDropdown = ref(false);
 const isShowCategoryMenu = ref(false);
 const user = ref<any>(null);
 const router = useRouter();
+const cartStore = useCartStore();
 
 // Modal states
 const showProfileModal = ref(false);
@@ -60,6 +62,32 @@ watch(data, (newData: any) => {
   }
 }, { immediate: true });
 
+const sessionUserId = computed(() => {
+  const sessionUser = (data.value as any)?.user;
+  if (sessionUser?._id) {
+    return sessionUser._id;
+  }
+  if (user.value?._id) {
+    return user.value._id;
+  }
+  const authStoreUser = authStore.user as any;
+  if (authStoreUser?._id) {
+    return authStoreUser._id;
+  }
+  if (authStore.user?.id) {
+    return authStore.user.id;
+  }
+  return null;
+});
+
+watch(sessionUserId, (newUserId) => {
+  if (newUserId) {
+    cartStore.fetchCart(newUserId);
+  } else {
+    cartStore.reset();
+  }
+}, { immediate: true });
+
 onMounted(() => {
   doCheckSp();
 });
@@ -73,39 +101,56 @@ const categories = ref([
     label: 'Văn học',
     icon: 'pi pi-book',
     items: [
-      { label: 'Tiểu thuyết', link: '/category/tieu-thuyet' },
-      { label: 'Truyện ngắn', link: '/category/truyen-ngan' },
-      { label: 'Thơ', link: '/category/tho' }
+      { label: 'Tiểu thuyết', slug: 'tieu-thuyet' },
+      { label: 'Truyện ngắn', slug: 'truyen-ngan' },
+      { label: 'Thơ', slug: 'tho' }
     ]
   },
   {
     label: 'Kinh tế',
     icon: 'pi pi-chart-line',
     items: [
-      { label: 'Quản trị kinh doanh', link: '/category/quan-tri-kinh-doanh' },
-      { label: 'Marketing - Bán hàng', link: '/category/marketing-ban-hang' },
-      { label: 'Tài chính', link: '/category/tai-chinh' }
+      { label: 'Quản trị kinh doanh', slug: 'quan-tri-kinh-doanh' },
+      { label: 'Marketing - Bán hàng', slug: 'marketing-ban-hang' },
+      { label: 'Tài chính', slug: 'tai-chinh' }
     ]
   },
   {
     label: 'Kỹ năng sống',
     icon: 'pi pi-users',
     items: [
-      { label: 'Phát triển bản thân', link: '/category/phat-trien-ban-than' },
-      { label: 'Tâm lý', link: '/category/tam-ly' },
-      { label: 'Sức khỏe', link: '/category/suc-khoe' }
+      { label: 'Phát triển bản thân', slug: 'phat-trien-ban-than' },
+      { label: 'Tâm lý', slug: 'tam-ly' },
+      { label: 'Sức khỏe', slug: 'suc-khoe' }
     ]
   },
   {
     label: 'Thiếu nhi',
     icon: 'pi pi-star',
     items: [
-      { label: 'Truyện tranh', link: '/category/truyen-tranh' },
-      { label: 'Truyện cổ tích', link: '/category/truyen-co-tich' },
-      { label: 'Sách tô màu', link: '/category/sach-to-mau' }
+      { label: 'Truyện tranh', slug: 'truyen-tranh' },
+      { label: 'Truyện cổ tích', slug: 'truyen-co-tich' },
+      { label: 'Sách tô màu', slug: 'sach-to-mau' }
     ]
   }
 ]);
+
+const slugify = (value) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+
+const handleCategorySelect = (item) => {
+  const slug = item.slug || slugify(item.label);
+  router.push({
+    path: '/tim-kiem',
+    query: { genre: slug }
+  });
+  closeCategoryMenu();
+};
 
 const doLogout = async () => {
   try {
@@ -116,6 +161,7 @@ const doLogout = async () => {
     // Reset user data và auth store
     user.value = null;
     authStore.clearAuth();
+    cartStore.reset();
     isShowDropdown.value = false;
     toast.add({
       severity: 'success',
@@ -151,7 +197,7 @@ const closeCategoryMenu = () => {
   isShowCategoryMenu.value = false;
 };
 
-const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store/service
+const cartItemCount = computed(() => cartStore.totalQuantity);
 </script>
 
 <template>
@@ -196,7 +242,7 @@ const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store
                     fill="#ffffff"
                   />
                 </svg>
-                <span class="text-white font-bold text-2xl ml-2">Bookkie</span>
+                <span class="text-white font-bold text-2xl ml-2">Bookie</span>
               </NuxtLink>
             </div>
 
@@ -213,30 +259,45 @@ const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store
 
             <!-- Categories (Desktop) -->
             <div class="hidden lg:flex items-center space-x-6">
-              <div 
-                v-for="category in categories" 
-                :key="category.label"
-                class="relative group"
-              >
+              <div class="relative group">
                 <button class="flex items-center text-white hover:text-yellow-200 transition-colors">
-                  <i :class="[category.icon, 'mr-1']"></i>
-                  <span>{{ category.label }}</span>
+                  <i class="pi pi-th-large mr-1"></i>
+                  <span>Thể loại</span>
                   <i class="pi pi-chevron-down ml-1 text-xs"></i>
                 </button>
-                
-                <!-- Dropdown -->
-                <div class="absolute left-0 top-full mt-1 w-56 bg-white rounded-lg shadow-lg py-2 hidden group-hover:block z-50">
-                  <NuxtLink 
-                    v-for="item in category.items" 
-                    :key="item.label"
-                    :to="item.link"
-                    class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                  >
-                    {{ item.label }}
-                  </NuxtLink>
+
+                <div
+                  class="absolute left-0 top-full mt-3 w-[720px] max-w-[80vw] rounded-2xl bg-white p-6 shadow-2xl hidden group-hover:block z-50"
+                >
+                  <div class="grid grid-cols-2 gap-6">
+                    <div
+                      v-for="category in categories"
+                      :key="category.label"
+                      class="space-y-3"
+                    >
+                      <p class="font-semibold text-gray-900 flex items-center gap-2">
+                        <i :class="[category.icon, 'text-blue-500']"></i>
+                        {{ category.label }}
+                      </p>
+                      <ul class="space-y-2">
+                        <li
+                          v-for="item in category.items"
+                          :key="item.label"
+                        >
+                          <button
+                            type="button"
+                            class="text-left text-gray-600 hover:text-blue-600 w-full"
+                            @click="handleCategorySelect(item)"
+                          >
+                            {{ item.label }}
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
-              
+
               <NuxtLink to="/flash-sale" class="flex items-center text-white hover:text-yellow-200 transition-colors">
                 <i class="pi pi-bolt mr-1"></i>
                 <span>Flash Sale</span>
@@ -268,7 +329,7 @@ const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store
             </div>
 
             <!-- Right Actions -->
-            <div class="flex items-center space-x-1 sm:space-x-4">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-4 justify-end">
               <!-- Search Button (Mobile) -->
               <button class="md:hidden text-white p-2 rounded-full hover:bg-white/10">
                 <i class="pi pi-search"></i>
@@ -318,6 +379,9 @@ const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store
                     <NuxtLink to="/wishlist" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
                       <i class="pi pi-heart mr-2"></i> Sách yêu thích
                     </NuxtLink>
+                    <NuxtLink to="/the-cua-toi" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <i class="pi pi-id-card mr-2"></i> Thẻ của tôi
+                    </NuxtLink>
                     <!-- Chỉ hiển thị cho admin/staff -->
                     <NuxtLink 
                       v-if="canAccessAdmin" 
@@ -334,8 +398,11 @@ const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store
                 </template>
 
                 <template v-else>
-                  <NuxtLink to="/login" class="flex items-center bg-white text-blue-600 px-4 py-2 rounded-full font-medium hover:bg-gray-100 transition">
-                    <i class="pi pi-user mr-1"></i>
+                  <NuxtLink
+                    to="/login"
+                    class="flex items-center justify-center bg-white text-blue-600 px-4 py-2 rounded-full font-medium hover:bg-gray-100 transition w-full sm:w-auto gap-2 text-sm sm:text-base"
+                  >
+                    <i class="pi pi-user"></i>
                     <span>Đăng nhập</span>
                   </NuxtLink>
                 </template>
@@ -389,14 +456,15 @@ const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store
               {{ category.label }}
             </div>
             <div class="pl-6 space-y-1">
-              <NuxtLink 
+              <button 
                 v-for="item in category.items" 
                 :key="item.label"
-                :to="item.link"
-                class="block py-1 text-gray-600 hover:text-blue-600"
+                type="button"
+                class="block py-1 text-left text-gray-600 hover:text-blue-600 w-full"
+                @click="handleCategorySelect(item)"
               >
                 {{ item.label }}
-              </NuxtLink>
+              </button>
             </div>
           </div>
           
@@ -428,7 +496,7 @@ const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <!-- About -->
           <div>
-            <h3 class="text-lg font-semibold mb-4">Về Bookkie</h3>
+            <h3 class="text-lg font-semibold mb-4">Về Bookie</h3>
             <p class="text-gray-300 mb-4">Hệ thống bán sách online hàng đầu Việt Nam với hàng ngàn đầu sách chất lượng cao.</p>
             <div class="flex space-x-4">
               <a href="#" class="text-gray-300 hover:text-white">
@@ -480,7 +548,7 @@ const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store
               </li>
               <li class="flex items-center">
                 <i class="pi pi-envelope mr-2 text-gray-400"></i>
-                <span class="text-gray-300">support@bookkie.vn</span>
+                <span class="text-gray-300">support@bookie.vn</span>
               </li>
               <li class="flex items-center">
                 <i class="pi pi-clock mr-2 text-gray-400"></i>
@@ -491,7 +559,7 @@ const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store
         </div>
         
         <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-          <p>© 2025 Bookkie - Hệ thống bán sách online. Tất cả quyền được bảo lưu.</p>
+          <p>© 2025 Bookie - Hệ thống bán sách online. Tất cả quyền được bảo lưu.</p>
         </div>
       </div>
     </footer>
@@ -519,6 +587,7 @@ const cartItemCount = ref(4); // Thay thế bằng dữ liệu thực từ store
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  line-clamp: 2;
   overflow: hidden;
 }
 </style>

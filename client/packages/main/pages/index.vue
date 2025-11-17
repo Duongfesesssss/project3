@@ -1,12 +1,19 @@
 <script lang="ts" setup>
 import { BookService } from '~/packages/base/services/book.service';
+import { GioHangService } from '~/packages/base/services/gio-hang.service';
 import Carousel from 'primevue/carousel';
 import Button from 'primevue/button';
 import Popover from 'primevue/popover';
-import { ref, computed, nextTick, onMounted } from 'vue';
-import type { BookModel } from '~/packages/base/models/dto/response/book/book.model';
-import { definePageMeta } from '#imports';
 import Dialog from 'primevue/dialog';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
+import { ref, computed, nextTick, onMounted } from 'vue';
+import Paginator from 'primevue/paginator';
+import type { BookModel } from '~/packages/base/models/dto/response/book/book.model';
+import { definePageMeta, useRouter } from '#imports';
+import { useWishlistStore } from '~/packages/base/stores/wishlist.store';
+import { useAuthStore } from '~/packages/base/stores/auth.store';
+import { useCartStore } from '~/packages/base/stores/cart.store';
 
 definePageMeta({
   layout: 'default',
@@ -15,6 +22,12 @@ definePageMeta({
 
 const loading = ref(true);
 const listBook = ref<BookModel[]>([]);
+const toast = useToast();
+const wishlistStore = useWishlistStore();
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+const router = useRouter();
+const addToCartId = ref<string | null>(null);
 
 const onLoadTable = () => {
   loading.value = true;
@@ -31,6 +44,7 @@ const onLoadTable = () => {
 };
 
 onMounted(() => {
+  wishlistStore.init();
   onLoadTable();
 });
 
@@ -53,6 +67,23 @@ const books = computed(() =>
     slug: toSlug(book.title),
   }))
 );
+
+const featuredFirst = ref(0);
+
+const pagedFeatured = computed(() => {
+  if (!books.value.length) return [];
+  const start = featuredFirst.value;
+  const slice = books.value.slice(start, start + 16);
+  const pages = [];
+  for (let i = 0; i < slice.length; i += 4) {
+    pages.push({ page: start + i, items: slice.slice(i, i + 4) });
+  }
+  return pages;
+});
+
+const onFeaturedPage = (event: any) => {
+  featuredFirst.value = event.first;
+};
 
 const op = ref();
 const selectedProduct = ref<BookModel | null>(null);
@@ -84,10 +115,74 @@ const openDealsModal = () => {
 const closeDealsModal = () => {
   showDealsModal.value = false;
 };
+
+const toggleFavorite = (book: BookModel) => {
+  if (!book?._id) {
+    return;
+  }
+  const updated = wishlistStore.toggleBook(book);
+  toast.add({
+    severity: updated ? 'success' : 'info',
+    summary: updated ? 'Đã thêm yêu thích' : 'Đã gỡ yêu thích',
+    detail: updated ? `${book.title} đã nằm trong danh sách` : `${book.title} đã được loại bỏ`,
+    life: 2000,
+  });
+};
+
+const isFavorite = (bookId?: string) => wishlistStore.isFavorite(bookId);
+
+const toggleFavoriteFromPopover = () => {
+  if (selectedProduct.value) {
+    toggleFavorite(selectedProduct.value);
+  }
+};
+
+const getCurrentUserId = () => {
+  const user = authStore.user as any;
+  return user?._id || user?.id || null;
+};
+
+const addBookToCart = async (book: BookModel) => {
+  if (!book?._id) {
+    return;
+  }
+  const userId = getCurrentUserId();
+  if (!userId) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Cần đăng nhập',
+      detail: 'Vui lòng đăng nhập để thêm vào giỏ hàng',
+      life: 2500,
+    });
+    router.push('/login');
+    return;
+  }
+  try {
+    addToCartId.value = book._id;
+    await GioHangService.addToCart(userId, book._id, 1);
+    await cartStore.fetchCart(userId);
+    toast.add({
+      severity: 'success',
+      summary: 'Đã thêm giỏ hàng',
+      detail: `${book.title} đã được thêm vào giỏ`,
+      life: 2000,
+    });
+  } catch (error: any) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: error?.message || 'Không thể thêm vào giỏ hàng',
+      life: 3000,
+    });
+  } finally {
+    addToCartId.value = null;
+  }
+};
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-50">
+    <Toast />
     <!-- Hero Section -->
     <section class="relative bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white overflow-hidden">
       <div class="absolute inset-0 bg-black/20"></div>
@@ -95,7 +190,7 @@ const closeDealsModal = () => {
         <div class="text-center space-y-6">
           <h1 class="text-4xl lg:text-6xl font-bold leading-tight">
             Chào mừng đến với 
-            <span class="text-yellow-300">Bookkie</span> 📚
+            <span class="text-yellow-300">Bookie</span> 📚
           </h1>
           <p class="text-xl lg:text-2xl text-blue-100 max-w-3xl mx-auto">
             Khám phá hàng ngàn đầu sách chất lượng với giá tốt nhất
@@ -126,46 +221,67 @@ const closeDealsModal = () => {
               <span class="text-lg">Đang tải sách...</span>
             </div>
           </div>
-
-          <Carousel v-else-if="books.length > 0" :value="books" :numVisible="4" :numScroll="2" :responsiveOptions="[
-            { breakpoint: '1024px', numVisible: 3, numScroll: 1 },
-            { breakpoint: '768px', numVisible: 2, numScroll: 1 },
-            { breakpoint: '560px', numVisible: 1, numScroll: 1 }
-          ]">
-            <template #item="slotProps">
-              <div class="p-3">
-                <div class="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-gray-100">
-                  <div class="relative overflow-hidden cursor-pointer" @click="displayProduct($event, slotProps.data)">
-                    <NuxtLink :to="`/book/${slotProps.data.slug}`">
-                      <img 
-                        class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300" 
-                        :src="slotProps.data.image" 
-                        :alt="slotProps.data.title" 
-                      />
-                    </NuxtLink>
-                    <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button icon="pi pi-heart" severity="secondary" outlined class="!bg-white/90 !border-none shadow-lg" />
-                    </div>
+          <div v-else-if="books.length > 0" class="space-y-10">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" v-for="page in pagedFeatured" :key="page.page">
+              <div
+                v-for="book in page.items"
+                :key="book._id"
+                class="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-gray-100"
+              >
+                <div class="relative overflow-hidden cursor-pointer" @click="displayProduct($event, book)">
+                  <NuxtLink :to="`/book/${book.slug}`">
+                    <img
+                      class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300"
+                      :src="book.image"
+                      :alt="book.title"
+                    />
+                  </NuxtLink>
+                  <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      :icon="isFavorite(book._id) ? 'pi pi-heart-fill' : 'pi pi-heart'"
+                      severity="secondary"
+                      outlined
+                      :class="[
+                        '!border-none shadow-lg',
+                        isFavorite(book._id) ? '!bg-red-500 !text-white' : '!bg-white/90 !text-gray-700'
+                      ]"
+                      @click.stop="toggleFavorite(book)"
+                    />
                   </div>
-                  
-                  <div class="p-6">
-                    <NuxtLink :to="`/book/${slotProps.data.slug}`">
-                      <h3 class="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                        {{ slotProps.data.title }}
-                      </h3>
-                    </NuxtLink>
-                    
-                    <div class="flex items-center justify-between mt-4">
-                      <div class="text-2xl font-bold text-red-600">
-                        {{ slotProps.data.price }} đ
-                      </div>
-                      <Button icon="pi pi-shopping-cart" class="!bg-blue-600 hover:!bg-blue-700 !border-blue-600 shadow-lg" />
+                </div>
+
+                <div class="p-6">
+                  <NuxtLink :to="`/book/${book.slug}`">
+                    <h3 class="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                      {{ book.title }}
+                    </h3>
+                  </NuxtLink>
+
+                  <div class="flex items-center justify-between mt-4">
+                    <div class="text-2xl font-bold text-red-600">
+                      {{ book.price }} đ
                     </div>
+                    <Button
+                      icon="pi pi-shopping-cart"
+                      class="!bg-blue-600 hover:!bg-blue-700 !border-blue-600 shadow-lg"
+                      :loading="addToCartId === book._id"
+                      @click.stop="addBookToCart(book)"
+                    />
                   </div>
                 </div>
               </div>
-            </template>
-          </Carousel>
+            </div>
+
+            <div class="flex justify-center">
+              <Paginator
+                :rows="16"
+                :total-records="books.length"
+  
+                :first="featuredFirst"
+                @page="onFeaturedPage"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -200,7 +316,16 @@ const closeDealsModal = () => {
                       </span>
                     </div>
                     <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button icon="pi pi-heart" severity="secondary" outlined class="!bg-white/90 !border-none shadow-lg" />
+                      <Button
+                        :icon="isFavorite(slotProps.data._id) ? 'pi pi-heart-fill' : 'pi pi-heart'"
+                        severity="secondary"
+                        outlined
+                        :class="[
+                          '!border-none shadow-lg',
+                          isFavorite(slotProps.data._id) ? '!bg-red-500 !text-white' : '!bg-white/90 !text-gray-700'
+                        ]"
+                        @click.stop="toggleFavorite(slotProps.data)"
+                      />
                     </div>
                   </div>
                   
@@ -215,7 +340,12 @@ const closeDealsModal = () => {
                       <div class="text-2xl font-bold text-red-600">
                         {{ slotProps.data.price }} đ
                       </div>
-                      <Button icon="pi pi-shopping-cart" class="!bg-blue-600 hover:!bg-blue-700 !border-blue-600 shadow-lg" />
+                      <Button
+                        icon="pi pi-shopping-cart"
+                        class="!bg-blue-600 hover:!bg-blue-700 !border-blue-600 shadow-lg"
+                        :loading="addToCartId === slotProps.data._id"
+                        @click.stop="addBookToCart(slotProps.data)"
+                      />
                     </div>
                   </div>
                 </div>
@@ -283,7 +413,11 @@ const closeDealsModal = () => {
           <div class="text-red-600 font-bold text-2xl mb-4">{{ selectedProduct.price }} đ</div>
           <div class="flex gap-3 w-full">
             <Button icon="pi pi-shopping-cart" label="Mua ngay" class="flex-1 !bg-red-500 hover:!bg-red-600 !border-red-500" @click="hidePopover" />
-            <Button icon="pi pi-heart" outlined @click="hidePopover" />
+            <Button
+              :icon="isFavorite(selectedProduct?._id) ? 'pi pi-heart-fill' : 'pi pi-heart'"
+              outlined
+              @click="() => { toggleFavoriteFromPopover(); hidePopover(); }"
+            />
           </div>
         </div>
       </div>
@@ -371,6 +505,7 @@ const closeDealsModal = () => {
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

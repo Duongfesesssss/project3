@@ -269,6 +269,7 @@ import { useToast } from 'primevue/usetoast';
 import { ThanhToanService } from '~/packages/base/services/thanh-toan.service';
 import { GioHangService } from '~/packages/base/services/gio-hang.service';
 import { VoucherService } from '~/packages/base/services/voucher.service';
+import { useCartStore } from '~/packages/base/stores/cart.store';
 
 definePageMeta({
   layout: 'default',
@@ -279,6 +280,7 @@ const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 const { data: authData } = useAuth();
+const cartStore = useCartStore();
 
 // State
 const loading = ref(false);
@@ -440,6 +442,7 @@ const reorderItems = async () => {
         detail: `Đã thêm ${successCount} sản phẩm vào giỏ hàng`, 
         life: 3000 
       });
+      cartStore.fetchCart(userId);
       
       setTimeout(() => {
         router.push('/gio-hang');

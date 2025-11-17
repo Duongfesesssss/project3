@@ -7,6 +7,7 @@ import { VoucherService } from '~/packages/base/services/voucher.service';
 import { ThanhToanService } from '~/packages/base/services/thanh-toan.service';
 import type { GioHangModel } from '~/packages/base/models/dto/response/gio-hang/gio-hang.model';
 import type { VoucherModel } from '~/packages/base/models/dto/response/voucher/voucher.model';
+import { useCartStore } from '~/packages/base/stores/cart.store';
 
 const { data: authData } = useAuth();
 const toast = useToast();
@@ -42,6 +43,8 @@ const total = computed(() => Math.max(0, subtotal.value + shippingFee.value - di
 
 const isAllSelected = computed(() => !!cart.value?.items?.length && selectedItems.value.length === cart.value.items.length);
 
+const cartStore = useCartStore();
+
 const fetchCart = async () => {
   try {
     loading.value = true;
@@ -53,9 +56,11 @@ const fetchCart = async () => {
       cart.value = cartData;
       console.log('cartData:', cartData);
       selectedItems.value = cartData.items.map(item => item._id!).filter(Boolean);
+      cartStore.setItemsFromResponse(cartData);
     } else {
       cart.value = null;
       selectedItems.value = [];
+      cartStore.reset();
     }
   } catch (error: any) {
     // Xử lý lỗi auth - chuyển hướng đến trang đăng nhập
@@ -65,6 +70,7 @@ const fetchCart = async () => {
       return;
     }
     toast.add({ severity: "error", summary: "Lỗi", detail: "Không thể lấy thông tin giỏ hàng", life: 3000 });
+    cartStore.reset();
   } finally {
     loading.value = false;
   }
@@ -199,6 +205,8 @@ const proceedToCheckout = async () => {
         detail: 'Đơn hàng đã được tạo thành công!',
         life: 3000
       });
+      cartStore.reset();
+      await fetchCart();
       
       // Lưu danh sách items đã chọn để xóa sau khi thanh toán thành công
       sessionStorage.setItem('pendingOrderItems', JSON.stringify({

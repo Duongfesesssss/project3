@@ -192,12 +192,18 @@
 
       <Column field="image_link" header="Ảnh" style="min-width: 8rem">
         <template #body="{ data }">
-          <img 
+          <button
             v-if="data.image_link"
-            :src="data.image_link" 
-            :alt="data.title"
-            class="w-4rem h-4rem object-fit-cover border-round"
-          />
+            type="button"
+            class="p-0 border-none bg-transparent cursor-zoom-in"
+            @click="openImagePreview(data)"
+          >
+            <img
+              :src="data.image_link"
+              :alt="data.title"
+              class="w-4rem h-4rem object-fit-cover border-round shadow-1"
+            />
+          </button>
           <span v-else class="text-400">Không có ảnh</span>
         </template>
       </Column>
@@ -278,12 +284,31 @@
         </template>
       </Column>
     </DataTable>
+
+    <Dialog
+      v-model:visible="isImagePreviewOpen"
+      modal
+      :header="previewTitle || 'Ảnh sách'"
+      :style="{ width: '40vw', maxWidth: '640px' }"
+      :breakpoints="{ '960px': '75vw', '640px': '95vw' }"
+    >
+      <div class="flex flex-column gap-3">
+        <img
+          v-if="previewImage"
+          :src="previewImage"
+          :alt="previewTitle"
+          class="w-full h-auto rounded shadow-2"
+        />
+        <span v-else class="text-500 text-center">Không có ảnh để hiển thị</span>
+      </div>
+    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import Dialog from 'primevue/dialog'
 
 // Layout imports
 definePageMeta({
@@ -301,6 +326,9 @@ const publishers = ref([])
 const suppliers = ref([])
 const loading = ref(false)
 const toast = useToast()
+const isImagePreviewOpen = ref(false)
+const previewImage = ref('')
+const previewTitle = ref('')
 
 // Filter data
 const keyWords = ref('')
@@ -499,6 +527,14 @@ const editBook = (book) => {
 const deleteBook = (book) => {
   // TODO: Implement delete book
   console.log('Delete book:', book)
+}
+
+const openImagePreview = (book) => {
+  previewImage.value = book?.image_link || ''
+  previewTitle.value = book?.title || 'Ảnh sách'
+  if (previewImage.value) {
+    isImagePreviewOpen.value = true
+  }
 }
 
 // Lifecycle
