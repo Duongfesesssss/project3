@@ -1,6 +1,7 @@
 const Review = require('../models/reviewModel');
 const Order = require('../models/orderModel');
 const mongoose = require('mongoose');
+const { addPointsFromReview } = require('../services/memberService');
 
 // Tạo review mới
 const createReview = async (req, res) => {
@@ -68,6 +69,12 @@ const createReview = async (req, res) => {
 
     // Populate user info để trả về
     await review.populate('user_id', 'username email');
+
+    try {
+      await addPointsFromReview({ userId: user_id, reviewId: review._id });
+    } catch (bonusError) {
+      console.error('Không thể cộng điểm thưởng review:', bonusError);
+    }
 
     res.status(201).json({
       status: 'OK',

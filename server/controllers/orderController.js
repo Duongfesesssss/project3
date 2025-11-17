@@ -1,6 +1,7 @@
 const Order = require('../models/orderModel');
 const Cart = require('../models/cartModel');
 const mongoose = require('mongoose');
+const { addPointsFromOrder } = require('../services/memberService');
 
 // Tạo đơn hàng mới
 const createOrder = async (req, res) => {
@@ -201,6 +202,14 @@ const updateOrderStatus = async (req, res) => {
         success: false,
         message: 'Không tìm thấy đơn hàng'
       });
+    }
+
+    if (status === 'delivered') {
+      try {
+        await addPointsFromOrder(order);
+      } catch (bonusError) {
+        console.error('Lỗi khi cộng điểm từ đơn hàng:', bonusError);
+      }
     }
 
     res.json({

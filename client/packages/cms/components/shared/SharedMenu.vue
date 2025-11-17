@@ -44,6 +44,11 @@ const model = computed(() => {
               icon: 'pi pi-fw pi-shopping-cart',
               to: '/cms/don-hang',
             },
+                {
+                  label: 'Quản lý thẻ thành viên',
+                  icon: 'pi pi-fw pi-id-card',
+                  to: '/cms/membership',
+                },
         {
           label: 'Hệ thống',
           items: [

@@ -1,47 +1,7 @@
 import { BaseService } from './base.service';
 import { EnumStatus } from '../utils/enums';
-
-export interface ReviewModel {
-  _id?: string;
-  user_id: {
-    _id: string;
-    username: string;
-    email: string;
-    avatar?: string;
-  };
-  book_id: string;
-  order_id: string;
-  rating: number;
-  comment: string;
-  helpful_count: number;
-  verified_purchase: boolean;
-  status: 'pending' | 'approved' | 'rejected';
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface ReviewStatistics {
-  average_rating: number;
-  total_reviews: number;
-  rating_distribution: {
-    1: number;
-    2: number;
-    3: number;
-    4: number;
-    5: number;
-  };
-}
-
-export interface ReviewResponse {
-  reviews: ReviewModel[];
-  pagination: {
-    current_page: number;
-    total_pages: number;
-    total_reviews: number;
-    limit: number;
-  };
-  statistics: ReviewStatistics;
-}
+import type { ReviewResponse } from '~/packages/base/models/dto/response/review/review-response.model';
+import type { ReviewModel } from '~/packages/base/models/dto/response/review/review.model';
 
 class _ReviewService extends BaseService {
   // Lấy reviews của một sách

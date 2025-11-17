@@ -45,22 +45,22 @@ connectToDB();
 
 // Cấu hình multer để lưu trữ file
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      // Kiểm tra loại file để lưu vào thư mục tương ứng
-      if (file.mimetype.startsWith('image/')) {
-        cb(null, 'uploads/images/'); // Lưu ảnh vào thư mục 'uploads/images'
-      } else if (file.mimetype.startsWith('video/')) {
-        cb(null, 'uploads/videos/'); // Lưu video vào thư mục 'uploads/videos'
-      } else {
-        cb(new Error('File không hợp lệ! Chỉ chấp nhận ảnh và video.'));
-      }
-    },
-    filename: (req, file, cb) => {
-      cb(null, `${Date.now()}-${file.originalname}`);
-    },
-  });
-  
-  const upload = multer({ storage });
+  destination: (req, file, cb) => {
+    // Kiểm tra loại file để lưu vào thư mục tương ứng
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, 'uploads/images/'); // Lưu ảnh vào thư mục 'uploads/images'
+    } else if (file.mimetype.startsWith('video/')) {
+      cb(null, 'uploads/videos/'); // Lưu video vào thư mục 'uploads/videos'
+    } else {
+      cb(new Error('File không hợp lệ! Chỉ chấp nhận ảnh và video.'));
+    }
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+const upload = multer({ storage });
 
 // API tải ảnh lên
 app.post('/api/upload/images', upload.single('file'), (req, res) => {
@@ -133,25 +133,25 @@ app.use('/api/review', reviewRouter);
 
 
 const swaggerOptions = {
-    swaggerDefinition: {
-        openapi: '3.0.0',
-        info: {
-            title: 'API Documentation',
-            version: '1.0.0',
-            description: 'API documentation for your project',
-        },
-        servers: [
-            {
-                url: `http://localhost:${port}`,
-            },
-        ],
+  swaggerDefinition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API Documentation',
+      version: '1.0.0',
+      description: 'API documentation for your project',
     },
-    apis: ['./routes/*.js'], // Chỉ đường dẫn tới các file chứa API routes
+    servers: [
+      {
+        url: `http://localhost:${port}`,
+      },
+    ],
+  },
+  apis: ['./routes/*.js'], // Chỉ đường dẫn tới các file chứa API routes
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 // Khởi động server
 app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
+  console.log(`Server is running at http://localhost:${port}`);
 });

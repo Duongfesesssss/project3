@@ -215,7 +215,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { ReviewService, type ReviewModel, type ReviewResponse } from '../services/review.service'
+import { ReviewService } from '../services/review.service'
+import type { ReviewModel } from '../models/dto/response/review/review.model'
+import type { ReviewResponse } from '../models/dto/response/review/review-response.model'
 import Button from 'primevue/button'
 import Textarea from 'primevue/textarea'
 import Dropdown from 'primevue/dropdown'

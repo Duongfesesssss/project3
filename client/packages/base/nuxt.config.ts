@@ -1,6 +1,14 @@
 import Aura from '@primevue/themes/aura';
 import { defaultOptions } from 'primevue/config';
 import path from 'path';
+
+const DEFAULT_LOCAL_API = 'http://localhost:8888';
+const sanitizeUrl = (url?: string) => (url ? url.replace(/\/$/, '') : undefined);
+const configuredApiBase = sanitizeUrl(process.env.NUXT_PUBLIC_API_BASE) || sanitizeUrl(process.env.API_BASE_URL);
+const runtimeApiBase = configuredApiBase || sanitizeUrl(DEFAULT_LOCAL_API)!;
+const runtimeBaseUrl = sanitizeUrl(process.env.NUXT_PUBLIC_BASE_URL) || runtimeApiBase;
+const authBaseUrl = sanitizeUrl(process.env.NUXT_PUBLIC_AUTH_BASE) || `${runtimeApiBase}/api/auth`;
+
 export default defineNuxtConfig({
   plugins: [
     '~/packages/base/plugins/fetch-base.client.ts'
@@ -49,9 +57,7 @@ primevue: {
       preset: Aura,
     },
     ripple: true,
-    locale: {
-      ...defaultOptions.locale,
-    },
+    locale: defaultOptions.locale as any,
   },
   autoImport: true,
   components: {
@@ -62,8 +68,8 @@ primevue: {
     extractCSS: true,
   },
   auth: {
-    // Dùng absolute URL để tránh gọi về http://localhost trong app Capacitor
-    baseURL: process.env.NUXT_PUBLIC_AUTH_BASE || (process.env.NUXT_PUBLIC_API_BASE ? `${process.env.NUXT_PUBLIC_API_BASE}/api/auth` : 'http://192.168.0.116:8888/api/auth'),
+    // Dùng absolute URL để tránh gọi sai host trong các môi trường khác nhau
+    baseURL: authBaseUrl,
     provider: {
       type: 'local',
       endpoints: {
@@ -85,7 +91,6 @@ primevue: {
       isEnabled: true,
       allow404WithoutAuth: true,
       addDefaultCallbackUrl: true,
-      ignorePaths: ['/login', '/register', '/forgot-password'],
     },
   },
   googleFonts: {
@@ -96,15 +101,13 @@ primevue: {
   components: true,
   runtimeConfig: {
     public: {
-      baseURL: 'http://192.168.251.97:8888',
-      apiBase: 'http://192.168.251.97:8888'
-      // baseURL: 'http://192.168.0.116:8888',
-      // apiBase: 'http://192.168.0.116:8888'
+      baseURL: runtimeBaseUrl,
+      apiBase: runtimeApiBase,
     },
   },
   routeRules: {
     '/api/**': {
-      proxy: (process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8888') + '/api/**',
+      proxy: `${runtimeApiBase}/api/**`,
     },
   },
   
