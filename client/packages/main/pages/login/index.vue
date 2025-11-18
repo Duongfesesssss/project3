@@ -132,7 +132,7 @@ const doLogin = handleLoginSubmit(async () => {
         email: loginEmail.value,
         password: loginPassword.value,
       },
-      { callbackUrl: '/', external: true }
+      { callbackUrl: '/' }
     );
     
     // Cập nhật auth store với thông tin user sau khi đăng nhập thành công
