@@ -35,6 +35,7 @@
     "popper.js": "^1.16.1",
     "primeicons": "^7.0.0",
     "primevue": "^4.2.1",
+    "quill": "^2.0.2",
     "sass": "^1.81.0",
     "tailwindcss-primeui": "^0.3.4",
     "vee-validate": "^4.15.0",
