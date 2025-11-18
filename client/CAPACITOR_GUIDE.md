@@ -26,6 +26,7 @@ yarn generate
 ```
 
 Lệnh này sẽ:
+
 - Build toàn bộ dự án Nuxt.js
 - Tạo thư mục `.output/public` với các file tĩnh
 - Có thể bỏ qua các warning về 404 pages (đã cấu hình `failOnError: false`)
@@ -37,6 +38,7 @@ npx cap sync android
 ```
 
 Lệnh này sẽ:
+
 - Copy các file web assets vào Android project
 - Cập nhật plugins Capacitor
 - Chuẩn bị project Android
@@ -56,21 +58,22 @@ Lệnh này sẽ mở Android Studio với project đã được tạo.
 ### 1. Cấu Hình Capacitor (`capacitor.config.ts`)
 
 ```typescript
-import type { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'com.example.app',          // Thay đổi thành package ID của bạn
-  appName: 'nuxt-app',                // Tên ứng dụng
-  webDir: '.output/public',           // Thư mục chứa build output
+  appId: "com.example.app", // Thay đổi thành package ID của bạn
+  appName: "nuxt-app", // Tên ứng dụng
+  webDir: ".output/public", // Thư mục chứa build output
   server: {
-    androidScheme: 'https'            // Sử dụng HTTPS scheme
-  }
+    androidScheme: "https", // Sử dụng HTTPS scheme
+  },
 };
 
 export default config;
 ```
 
 **Lưu ý quan trọng:**
+
 - Thay đổi `appId` thành package ID duy nhất của bạn (ví dụ: `com.yourcompany.yourapp`)
 - `appName` là tên hiển thị trên điện thoại
 
@@ -79,14 +82,14 @@ export default config;
 ```typescript
 export default defineNuxtConfig({
   // ... các config khác
-  
+
   nitro: {
     prerender: {
-      failOnError: false,   // Bỏ qua lỗi 404 khi prerender
+      failOnError: false, // Bỏ qua lỗi 404 khi prerender
       crawlLinks: true,
-      ignore: ['/api']
-    }
-  }
+      ignore: ["/api"],
+    },
+  },
 });
 ```
 
@@ -161,7 +164,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     // ... existing config
-    
+
     signingConfigs {
         release {
             keyAlias keystoreProperties['keyAlias']
@@ -170,7 +173,7 @@ android {
             storePassword keystoreProperties['storePassword']
         }
     }
-    
+
     buildTypes {
         release {
             signingConfig signingConfigs.release
@@ -185,11 +188,13 @@ android {
 Trong Android Studio:
 
 **Cho APK:**
+
 - **Build** → **Build Bundle(s) / APK(s)** → **Build APK(s)**
 - Chọn **Build Variant** = **release**
 - File: `android/app/build/outputs/apk/release/app-release.apk`
 
 **Cho AAB (Google Play):**
+
 - **Build** → **Build Bundle(s) / APK(s)** → **Build Bundle(s)**
 - File: `android/app/build/outputs/bundle/release/app-release.aab`
 
@@ -217,24 +222,31 @@ yarn build:mobile
 ## 🐛 Xử Lý Lỗi Thường Gặp
 
 ### 1. Lỗi "webDir does not exist"
+
 **Nguyên nhân:** Chưa build Nuxt.js  
 **Giải pháp:** Chạy `yarn generate` trước
 
 ### 2. Lỗi "Android SDK not found"
+
 **Nguyên nhân:** Chưa cài Android Studio hoặc SDK  
-**Giải pháp:** 
+**Giải pháp:**
+
 - Cài Android Studio
 - Mở Android Studio → SDK Manager → cài Android SDK
 
 ### 3. Lỗi "JAVA_HOME not set"
+
 **Nguyên nhân:** Chưa cài JDK hoặc chưa set biến môi trường  
 **Giải pháp:**
+
 - Cài JDK 17+
 - Set JAVA_HOME trong Environment Variables
 
 ### 4. App crash khi mở
+
 **Nguyên nhân:** API endpoints không đúng  
 **Giải pháp:**
+
 - Kiểm tra `runtimeConfig.public.baseURL` trong nuxt.config.ts
 - Đảm bảo backend server accessible từ mobile device
 - Có thể cần thay `localhost` bằng IP thực của máy
@@ -270,12 +282,14 @@ npx ngrok http 8888
 ## 📱 Test Trên Thiết Bị
 
 ### Emulator:
+
 1. Mở Android Studio
 2. **Tools** → **Device Manager**
 3. Tạo virtual device
 4. Chạy `yarn android:dev`
 
 ### Thiết Bị Thật:
+
 1. Bật Developer Options trên điện thoại
 2. Bật USB Debugging
 3. Kết nối USB
@@ -291,6 +305,7 @@ npx ngrok http 8888
 ## 💡 Tips
 
 1. **Live Reload:** Trong development, bạn có thể cấu hình Capacitor để load từ dev server:
+
    ```typescript
    // capacitor.config.ts (chỉ dùng khi dev)
    server: {
@@ -300,6 +315,7 @@ npx ngrok http 8888
    ```
 
 2. **Optimize Build Size:**
+
    - Sử dụng code splitting
    - Optimize images
    - Tree shaking
