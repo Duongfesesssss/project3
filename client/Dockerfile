@@ -1,24 +1,30 @@
-# Dockerfile cho Frontend
-FROM node:20-alpine
+# Dockerfile build & run Nuxt 3 ở chế độ production (dùng cho CI/CD)
 
-# Tạo thư mục làm việc
+## ---------- Build stage ----------
+FROM node:20-alpine AS build
 WORKDIR /app
 
-# Thiết lập biến môi trường để ổn định esbuild
+ENV NUXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+# Copy file cấu hình workspace trước để cache dependency layer
+COPY package.json yarn.lock ./
+COPY packages ./packages
+
+RUN yarn install --ignore-engines --frozen-lockfile --production=false
+
+# Copy phần còn lại và build
+COPY . .
+RUN yarn build
+
+## ---------- Runtime stage ----------
+FROM gcr.io/distroless/nodejs20 AS prod
+WORKDIR /app
+
 ENV NUXT_TELEMETRY_DISABLED=1
 
-# Copy package.json trước (để cache dependencies)
-COPY package*.json ./
+COPY --from=build /app/.output /app/.output
 
-# Cài đặt dependencies
-RUN yarn install --ignore-engines
-
-# Copy toàn bộ source code
-COPY . .
-
-# Mở port 3000
 EXPOSE 3000
 
-# Chạy ứng dụng với host binding
-CMD ["yarn", "dev", "--host", "0.0.0.0"]
+CMD ["/app/.output/server/index.mjs"]

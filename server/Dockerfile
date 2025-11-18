@@ -1,23 +1,20 @@
-# Dockerfile cho Backend
-FROM node:20-alpine
+# Dockerfile backend chuẩn production cho CI/CD
 
-# Tạo thư mục làm việc
+FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Copy package.json trước (để cache dependencies)
-COPY package*.json ./
+COPY package.json yarn.lock ./
 
-# Cài đặt dependencies
-RUN yarn install --ignore-engines
+RUN yarn install --ignore-engines --frozen-lockfile --production=true
 
-# Thay bcrypt bằng bcryptjs để tránh lỗi native module
-RUN yarn remove bcrypt && yarn add bcryptjs --ignore-engines
+FROM node:20-alpine AS runner
+WORKDIR /app
 
-# Copy toàn bộ source code
+ENV NODE_ENV=production
+
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Mở port 8888
 EXPOSE 8888
 
-# Chạy ứng dụng
-CMD ["yarn", "dev"]
+CMD ["yarn", "start"]
