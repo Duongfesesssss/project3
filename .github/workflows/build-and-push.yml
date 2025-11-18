@@ -2,7 +2,7 @@ name: Build & Push images
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   workflow_dispatch: {}
 
 permissions:
@@ -22,13 +22,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Chuẩn hóa tên image
+        id: prep
+        env:
+          BACKEND_TAG: ghcr.io/${{ github.repository_owner }}/bookstore-backend:main
+          FRONTEND_TAG: ghcr.io/${{ github.repository_owner }}/bookstore-frontend:main
+        run: |
+          echo "backend_tag=${BACKEND_TAG,,}" >> $GITHUB_OUTPUT
+          echo "frontend_tag=${FRONTEND_TAG,,}" >> $GITHUB_OUTPUT
+
       - name: Build & Push backend image
         uses: docker/build-push-action@v6
         with:
           context: ./server
           file: ./server/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/bookstore-backend:main
+          tags: ${{ steps.prep.outputs.backend_tag }}
 
       - name: Build & Push frontend image
         uses: docker/build-push-action@v6
@@ -36,4 +45,4 @@ jobs:
           context: ./client
           file: ./client/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/bookstore-frontend:main
+          tags: ${{ steps.prep.outputs.frontend_tag }}
