@@ -12,6 +12,11 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      NUXT_PUBLIC_API_BASE: ${{ secrets.NUXT_PUBLIC_API_BASE }}
+      NUXT_PUBLIC_BASE_URL: ${{ secrets.NUXT_PUBLIC_BASE_URL }}
+      NUXT_PUBLIC_API_PREFIX: ${{ secrets.NUXT_PUBLIC_API_PREFIX }}
+      NUXT_PUBLIC_AUTH_BASE: ${{ secrets.NUXT_PUBLIC_AUTH_BASE }}
     steps:
       - uses: actions/checkout@v4
 
@@ -46,3 +51,8 @@ jobs:
           file: ./client/Dockerfile
           push: true
           tags: ${{ steps.prep.outputs.frontend_tag }}
+          build-args: |
+            NUXT_PUBLIC_API_BASE=${{ env.NUXT_PUBLIC_API_BASE }}
+            NUXT_PUBLIC_BASE_URL=${{ env.NUXT_PUBLIC_BASE_URL }}
+            NUXT_PUBLIC_API_PREFIX=${{ env.NUXT_PUBLIC_API_PREFIX }}
+            NUXT_PUBLIC_AUTH_BASE=${{ env.NUXT_PUBLIC_AUTH_BASE }}
