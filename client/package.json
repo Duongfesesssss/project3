@@ -37,8 +37,6 @@
     "primevue": "^4.2.1",
     "quill": "^2.0.2",
     "chart.js": "^4.4.3",
-    "chartjs-plugin-datalabels": "^2.3.0",
-    "date-fns": "^3.6.0",
     "sass": "^1.81.0",
     "tailwindcss-primeui": "^0.3.4",
     "vee-validate": "^4.15.0",
