@@ -26,8 +26,19 @@ export function $api<T = any>(
     const rawBase = process.server
       ? (config.apiBase || config.public.apiBase || config.public.baseURL)
       : (config.public.apiBase || config.public.baseURL);
-    const base = (rawBase || '').toString();
-    finalRequest = base.replace(/\/$/, '') + request;
+    const base = (rawBase || '').toString().replace(/\/$/, '');
+    const prefix = (config.public.apiPrefix || '/api').toString();
+    const normalizedPrefix = prefix.startsWith('/') ? prefix : `/${prefix}`;
+    const escapedPrefix = normalizedPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const collapsePattern = new RegExp(`^(?:${escapedPrefix})+`, 'i');
+    let normalizedPath = request.startsWith('/') ? request : `/${request}`;
+    if (collapsePattern.test(normalizedPath)) {
+      normalizedPath = normalizedPath.replace(collapsePattern, normalizedPrefix);
+    } else {
+      normalizedPath = `${normalizedPrefix}${normalizedPath}`;
+    }
+    normalizedPath = normalizedPath.replace(/\/\/{2,}/g, '/');
+    finalRequest = base + normalizedPath;
   }
 
   return $fetch(finalRequest as any, {

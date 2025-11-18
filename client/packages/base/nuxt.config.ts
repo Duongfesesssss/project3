@@ -4,10 +4,28 @@ import path from 'path';
 
 const DEFAULT_LOCAL_API = 'http://localhost:8888';
 const sanitizeUrl = (url?: string) => (url ? url.replace(/\/$/, '') : undefined);
+const normalizePrefix = (prefix?: string) => {
+  if (!prefix) return '/api';
+  const trimmed = prefix.trim();
+  if (!trimmed) return '/api';
+  const noSlashes = trimmed.replace(/^\/+/, '').replace(/\/+$/, '');
+  return `/${noSlashes || 'api'}`;
+};
 const configuredApiBase = sanitizeUrl(process.env.NUXT_PUBLIC_API_BASE) || sanitizeUrl(process.env.API_BASE_URL);
-const runtimeApiBase = configuredApiBase || sanitizeUrl(DEFAULT_LOCAL_API)!;
+let runtimeApiBase = configuredApiBase || sanitizeUrl(DEFAULT_LOCAL_API)!;
 const runtimeBaseUrl = sanitizeUrl(process.env.NUXT_PUBLIC_BASE_URL) || runtimeApiBase;
-const authBaseUrl = sanitizeUrl(process.env.NUXT_PUBLIC_AUTH_BASE) || `${runtimeApiBase}/api/auth`;
+let apiPrefix = normalizePrefix(process.env.NUXT_PUBLIC_API_PREFIX);
+
+if (!process.env.NUXT_PUBLIC_API_PREFIX) {
+  const suffix = apiPrefix.replace(/\/$/, '');
+  if (suffix && runtimeApiBase.endsWith(suffix)) {
+    runtimeApiBase = runtimeApiBase.slice(0, -suffix.length) || runtimeApiBase;
+  }
+}
+
+runtimeApiBase = sanitizeUrl(runtimeApiBase)!;
+
+const authBaseUrl = sanitizeUrl(process.env.NUXT_PUBLIC_AUTH_BASE) || `${runtimeApiBase}${apiPrefix}/auth`;
 
 export default defineNuxtConfig({
   plugins: [
@@ -102,12 +120,13 @@ primevue: {
   runtimeConfig: {
     public: {
       baseURL: runtimeBaseUrl,
-      apiBase: runtimeApiBase,
+      apiBase: `${runtimeApiBase}`,
+      apiPrefix,
     },
   },
   routeRules: {
-    '/api/**': {
-      proxy: `${runtimeApiBase}/api/**`,
+    [`${apiPrefix}/**`]: {
+      proxy: `${runtimeApiBase}${apiPrefix}/**`,
     },
   },
   
