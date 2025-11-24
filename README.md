@@ -12,6 +12,8 @@ Bookie là nền tảng giúp cửa hàng sách quản lý end-to-end:
 
 Mọi thành phần (Nuxt 3 frontend, Express/Mongo backend, mobile Capacitor, CI/CD GHCR) đã được triển khai và vận hành trên cùng domain production ở trên.
 
+Đây là dự án cá nhân được phát triển để showcase khả năng xây dựng một hệ thống quản lý nhà sách hoàn chỉnh end-to-end.
+
 ## 🧱 Cấu trúc dự án
 
 ```
