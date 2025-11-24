@@ -7,6 +7,7 @@ Bookie là nền tảng giúp cửa hàng sách quản lý end-to-end:
 - Website khách hàng để duyệt sách, giỏ hàng, thanh toán, theo dõi đơn hàng.
 - CMS nội bộ cho nhân viên/admin quản lý sách, kho, voucher, khách hàng và báo cáo.
 - Hệ thống tích điểm & hạng thành viên để chăm sóc khách hàng thân thiết.
+- Tích hợp thanh toán PayOS (orderCode, webhook cập nhật trạng thái) bên cạnh COD/chuyển khoản.
 - Ghi nhận nhập/xuất kho real-time, cảnh báo tồn, đồng bộ dữ liệu bán lẻ và online.
 
 Mọi thành phần (Nuxt 3 frontend, Express/Mongo backend, mobile Capacitor, CI/CD GHCR) đã được triển khai và vận hành trên cùng domain production ở trên.
