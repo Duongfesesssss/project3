@@ -87,6 +87,18 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
+    const emailUser = process.env.EMAIL_USER || process.env.EMAIL_HOST;
+    const emailPass = process.env.EMAIL_PASSWORD || process.env.PASSWORD_HOST;
+    const resetBaseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+    if (!emailUser || !emailPass) {
+      return res.status(500).json({ 
+        status: 'ERROR', 
+        success: false, 
+        message: 'Thiếu cấu hình email. Vui lòng liên hệ quản trị viên.' 
+      });
+    }
+
     // Kiểm tra xem email có tồn tại trong cơ sở dữ liệu không
     const user = await User.findOne({ email });
     if (!user) {
@@ -103,18 +115,18 @@ const forgotPassword = async (req, res) => {
     await user.save();
 
     // Tạo liên kết đặt lại mật khẩu
-    const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
+    const resetLink = `${resetBaseUrl}/reset-password?token=${resetToken}`;
 
     // Gửi email chứa liên kết đặt lại mật khẩu
     const transporter = nodemailer.createTransport({
       service: 'Gmail',
       auth: {
-        user: process.env.EMAIL_HOST,
-        pass: process.env.PASSWORD_HOST,
+        user: emailUser,
+        pass: emailPass,
       },
     });
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: emailUser,
       to: email,
       subject: 'Đặt lại mật khẩu',
       html: `

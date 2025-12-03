@@ -120,6 +120,31 @@ async createOrder(
     }
   }
 
+  async updatePaymentStatus(orderCode: number) {
+    try {
+      const response = await fetch(`${this.baseApiUrl}/api/order/payment-status/${orderCode}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': this.getAccessToken()
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const res = await response.json();
+      if (res && res.status === EnumStatus.OK) {
+        return res.data;
+      }
+      return null;
+    } catch (error) {
+      console.error('Lỗi khi cập nhật trạng thái thanh toán:', error);
+      return null;
+    }
+  }
+
 async getUserPaidOrders() {
   try {
     const response = await fetch(`${this.baseApiUrl}/api/order/my-paid-orders`, {

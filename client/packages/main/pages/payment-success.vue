@@ -17,6 +17,23 @@ definePageMeta({
 const loading = ref(true);
 const order = ref(null);
 
+const updatePaidStatus = async (orderData: any) => {
+  if (!orderData?.orderCode) return;
+
+  const updatedOrder = await ThanhToanService.updatePaymentStatus(orderData.orderCode);
+  
+  if (updatedOrder) {
+    order.value = updatedOrder;
+  } else {
+    toast.add({
+      severity: 'warn',
+      summary: 'Chưa xác nhận thanh toán',
+      detail: 'Không thể cập nhật trạng thái đơn hàng. Vui lòng kiểm tra lại sau.',
+      life: 3000
+    });
+  }
+};
+
 const clearCartItems = async () => {
   try {
     // Lấy thông tin items cần xóa từ sessionStorage
@@ -53,9 +70,7 @@ const loadOrderInfo = async () => {
       const orderData = await ThanhToanService.getOrderDetail(orderId);
       if (orderData) {
         order.value = orderData;
-        
-        // Cập nhật trạng thái order thành 'paid'
-        await ThanhToanService.updateOrderStatus(orderId, 'paid');
+        await updatePaidStatus(orderData);
       }
     }
   } catch (error) {
