@@ -23,7 +23,9 @@ class BookModel {
     
     // Thống kê
     rating?: number;
+    average_rating?: number;
     total_reviews?: number;
+    rating_distribution?: Record<number, number>;
     sales_count?: number;
     is_bestseller?: boolean;
     discount?: number;

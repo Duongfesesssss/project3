@@ -33,11 +33,25 @@ const closeEscapeKeyModalInfo = ref<boolean>(true);
 
 const schema = yup.object({
   code: yup.string().required('Mã voucher không được để trống').max(50, 'Tối đa 50 ký tự'),
-  discount: yup.number().required('Giảm giá không được để trống').min(0, 'Giảm giá phải lớn hơn 0').max(100, 'Giảm giá không được vượt quá 100%'),
-  valid_from: yup.date().required('Ngày có hiệu lực không được để trống'),
-  valid_until: yup.date().required('Ngày hết hạn không được để trống'),
-  usage_limit: yup.number().required('Giới hạn sử dụng không được để trống').min(1, 'Giới hạn sử dụng phải lớn hơn 0'),
-  min_order_value: yup.number().required('Giá trị đơn tối thiểu không được để trống').min(0, 'Giá trị đơn tối thiểu phải lớn hơn 0'),
+  discount: yup
+    .number()
+    .typeError('Giảm giá phải là số')
+    .required('Giảm giá không được để trống')
+    .min(0, 'Giảm giá phải lớn hơn 0')
+    .max(100, 'Giảm giá không được vượt quá 100%'),
+  valid_from: yup.date().typeError('Ngày có hiệu lực không hợp lệ').required('Ngày có hiệu lực không được để trống'),
+  valid_until: yup.date().typeError('Ngày hết hạn không hợp lệ').required('Ngày hết hạn không được để trống'),
+  usage_limit: yup
+    .number()
+    .typeError('Giới hạn sử dụng phải là số')
+    .required('Giới hạn sử dụng không được để trống')
+    .min(1, 'Giới hạn sử dụng phải lớn hơn 0'),
+  min_order_value: yup
+    .number()
+    .typeError('Giá trị đơn tối thiểu phải là số')
+    .required('Giá trị đơn tối thiểu không được để trống')
+    .min(0, 'Giá trị đơn tối thiểu phải lớn hơn 0'),
+  visibility: yup.string().oneOf(['private', 'public']).required('Vui lòng chọn loại voucher'),
 });
 
 const { defineField, handleSubmit, errors } = useForm({
@@ -51,6 +65,12 @@ const [valid_from] = defineField('valid_from');
 const [valid_until] = defineField('valid_until');
 const [usage_limit] = defineField('usage_limit');
 const [min_order_value] = defineField('min_order_value');
+const [visibility] = defineField('visibility');
+
+const visibilityOptions = [
+  { label: 'Voucher cá nhân', value: 'private' },
+  { label: 'Voucher cộng đồng', value: 'public' },
+];
 
 watch(
   () => props.voucher,
@@ -63,6 +83,9 @@ watch(
       valid_until.value = newVal.valid_until;
       usage_limit.value = newVal.usage_limit;
       min_order_value.value = newVal.min_order_value;
+      visibility.value = newVal.visibility || 'private';
+    } else {
+      visibility.value = 'private';
     }
   },
   { immediate: true }
@@ -74,14 +97,16 @@ const handleHideModal = () => {
 
 const onSubmit = handleSubmit(async () => {
   const voucherDTO = {
-    _id: _id.value || undefined,
-    code: code.value,
-    discount: discount.value,
-    valid_from: valid_from.value,
-    valid_until: valid_until.value,
-    usage_limit: usage_limit.value,
-    min_order_value: min_order_value.value,
-  };
+      _id: _id.value || undefined,
+      code: code.value,
+      discount: discount.value,
+      valid_from: valid_from.value,
+      valid_until: valid_until.value,
+      usage_limit: usage_limit.value,
+      min_order_value: min_order_value.value,
+      visibility: visibility.value || 'private',
+      type: visibility.value || 'private', // Alias để backend map đúng nếu dùng field type
+    };
 
   ConfirmDialog.showConfirmDialog(
     confirm,
@@ -231,6 +256,20 @@ const onSubmit = handleSubmit(async () => {
                 placeholder="Nhập giá trị đơn tối thiểu"
               />
               <small class="text-red-500">{{ errors.min_order_value }}</small>
+            </div>
+            <div class="min-w-40">
+              <label for="visibility" class="block font-bold mb-3 required">Loại voucher</label>
+              <Select
+                id="visibility"
+                v-model="visibility"
+                :options="visibilityOptions"
+                option-label="label"
+                option-value="value"
+                fluid
+                :invalid="errors.visibility != null"
+                placeholder="Chọn loại voucher"
+              />
+              <small class="text-red-500">{{ errors.visibility }}</small>
             </div>
           </div>
         </div>

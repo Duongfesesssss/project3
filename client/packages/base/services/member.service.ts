@@ -6,12 +6,20 @@ import type { MemberPointHistoryModel } from '~/packages/base/models/dto/respons
 import type { MemberPointHistoryPagination } from '~/packages/base/models/dto/response/member/member-point-history-pagination.model';
 import type { MemberCardWithUser } from '~/packages/base/models/dto/response/member/member-card-with-user.model';
 import type { MembershipTierModel } from '~/packages/base/models/dto/response/member/membership-tier.model';
+import type { VoucherModel } from '~/packages/base/models/dto/response/voucher/voucher.model';
 import type {
   AdjustPointsPayload,
   ListCardsPayload,
   RedeemPointsPayload,
   SaveTierPayload
 } from '~/packages/base/models/dto/request/member/member.payloads';
+
+type RedeemPointsResponse = {
+  card: MemberCardModel;
+  voucher?: VoucherModel;
+  points_spent: number;
+  estimated_value: number;
+};
 
 class _MemberService extends BaseService {
   async getMyMemberCard() {
@@ -37,7 +45,7 @@ class _MemberService extends BaseService {
   }
 
   async redeemPoints(payload: RedeemPointsPayload) {
-    const response = await $api<ApiResponse<MemberCardModel>>('/api/member/me/redeem', {
+    const response = await $api<ApiResponse<RedeemPointsResponse>>('/api/member/me/redeem', {
       method: 'POST',
       body: payload
     });

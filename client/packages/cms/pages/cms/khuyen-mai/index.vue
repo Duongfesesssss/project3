@@ -32,7 +32,7 @@
       sort-field="name"
       :sort-order="-1"
       paginator
-      data-key="id"
+      data-key="_id"
       @page="onPage"
       @sort="onSort"
     >
@@ -65,6 +65,14 @@
 
       <Column field="code" header="Mã voucher" sortable />
       <Column field="discount" header="Giảm (%)" sortable />
+      <Column field="visibility" header="Loại" sortable>
+        <template #body="slotProps">
+          <Tag
+            :value="slotProps.data.visibility === 'public' ? 'Cộng đồng' : 'Cá nhân'"
+            :severity="slotProps.data.visibility === 'public' ? 'success' : 'info'"
+          />
+        </template>
+      </Column>
       <Column field="usage_limit" header="Giới hạn sử dụng" sortable />
       <Column field="used_count" header="Đã sử dụng" sortable />
       <Column field="min_order_value" header="Giá trị đơn tối thiểu" sortable>
@@ -114,6 +122,7 @@ import { VoucherService } from '~/packages/base/services/voucher.service';
 import { VoucherModel } from '~/packages/base/models/dto/response/voucher/voucher.model';
 import VoucherModal from '~/packages/cms/components/shared/voucher/VoucherModal.vue';
 import { formatCurrency, formatDate } from '~/packages/base/utils/format';
+import { useConfirmDialog } from '~/packages/base/composables/useConfirmDialog';
 
 definePageMeta({ layout: 'cms-default' });
 
@@ -127,6 +136,7 @@ const voucherData = ref<VoucherModel>(new VoucherModel());
 const totalRecords = ref(0);
 const loading = ref(false);
 const currentPageNumber = ref(0);
+const { showConfirmDialog } = useConfirmDialog();
 
 const home = ref({ icon: 'pi pi-home', route: '/cms' });
 const items = ref([{ label: 'Quản lý' }, { label: 'Quản lý voucher' }]);
@@ -216,12 +226,13 @@ const onModalOpenEdit = (data: VoucherModel) => {
 };
 
 const confirmDeleteVoucher = (voucher: VoucherModel) => {
-  confirm.require({
-    message: 'Bạn có chắc chắn muốn xóa voucher này?',
-    header: 'Xác nhận',
-    icon: 'pi pi-exclamation-triangle',
-    accept: async () => {
-      const result = await VoucherService.delete(voucher);
+  showConfirmDialog(
+    confirm,
+    'Bạn có chắc chắn muốn xóa voucher này?',
+    'Xác nhận',
+    'pi pi-question-circle',
+    async () => {
+      const result = await VoucherService.delete(voucher._id || (voucher as any).id || voucher);
       if (result?.status === 'OK') {
         toast.add({ severity: 'success', summary: 'Xóa voucher thành công!', life: 3000 });
         reloadDataTable();
@@ -229,7 +240,10 @@ const confirmDeleteVoucher = (voucher: VoucherModel) => {
         toast.add({ severity: 'error', summary: 'Xóa thất bại!', life: 3000 });
       }
     },
-  });
+    () => {},
+    '',
+    ' p-button-danger'
+  );
 };
 
 onMounted(() => onLoadTable());

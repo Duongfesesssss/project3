@@ -1,9 +1,11 @@
 <script lang="ts" setup>
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ref, onMounted, computed } from 'vue';
 import { BookService } from '~/packages/base/services/book.service';
 import { GioHangService } from '~/packages/base/services/gio-hang.service';
+import { VoucherService } from '~/packages/base/services/voucher.service';
 import type { BookModel } from '~/packages/base/models/dto/response/book/book.model';
+import type { VoucherModel } from '~/packages/base/models/dto/response/voucher/voucher.model';
 import { useToast } from 'primevue/usetoast';
 import Toast from 'primevue/toast';
 import Button from 'primevue/button';
@@ -19,6 +21,7 @@ definePageMeta({
 });
 
 const route = useRoute();
+const router = useRouter();
 const slug = route.params.slug as string;
 const book = ref<BookModel | null>(null);
 const quantity = ref(1);
@@ -26,11 +29,61 @@ const toast = useToast();
 const { data: session } = useAuth();
 const cartStore = useCartStore();
 const wishlistStore = useWishlistStore();
+const publicVouchers = ref<VoucherModel[]>([]);
+const loadingPublicVouchers = ref(false);
+const bestVoucher = computed(() => {
+  if (!book.value || !Array.isArray(publicVouchers.value)) return null;
+  const price = Number(book.value.price) || 0;
+  const now = Date.now();
+  const validVouchers = publicVouchers.value.filter((v) => {
+    const minOrder = Number(v.min_order_value) || 0;
+    const validFrom = v.valid_from ? new Date(v.valid_from).getTime() : 0;
+    const validUntil = v.valid_until ? new Date(v.valid_until).getTime() : Number.MAX_SAFE_INTEGER;
+    return price >= minOrder && now >= validFrom && now <= validUntil;
+  });
+  if (!validVouchers.length) return null;
+  return validVouchers.reduce((best, current) => {
+    const bestDiscount = Number(best.discount) || 0;
+    const currentDiscount = Number(current.discount) || 0;
+    return currentDiscount > bestDiscount ? current : best;
+  });
+});
+
+const discountedPrice = computed(() => {
+  if (!book.value) return 0;
+  const price = Number(book.value.price) || 0;
+  const voucher = bestVoucher.value;
+  if (!voucher) return price;
+  const discountPercent = Number(voucher.discount) || 0;
+  const discountAmount = voucher.discount_type === 'fixed'
+    ? Math.min(price, Number(voucher.discount) || 0)
+    : Math.floor((price * discountPercent) / 100);
+  return Math.max(0, price - discountAmount);
+});
+
+const estimatedDelivery = computed(() => {
+  const date = new Date();
+  date.setDate(date.getDate() + 2);
+  return date.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' });
+});
+
+const displaySalesCount = computed(() => {
+  if (!book.value) return 0;
+  return book.value.sales_count || book.value.sold_quantity || 0;
+});
+
+const displayRating = computed(() => {
+  const ratingValue = book.value?.average_rating ?? book.value?.rating ?? 0;
+  const rating = Number(ratingValue) || 0;
+  const reviews = Number(book.value?.total_reviews) || 0;
+  return { rating: rating.toFixed(1), reviews };
+});
 
 onMounted(async () => {
   wishlistStore.init();
   const data = await BookService.getBookBySlug(slug);
   book.value = data || null;
+  loadPublicVouchers();
 });
 
 const isInWishlist = computed(() => {
@@ -78,6 +131,11 @@ const handleToggleWishlist = () => {
   if (!book.value) {
     return;
   }
+  if (!session.value?.user?._id) {
+    toast.add({ severity: 'warn', summary: 'Cần đăng nhập', detail: 'Đăng nhập để lưu vào yêu thích', life: 2500 });
+    router.push('/login');
+    return;
+  }
   const updated = wishlistStore.toggleBook(book.value);
   toast.add({
     severity: updated ? 'success' : 'info',
@@ -85,6 +143,31 @@ const handleToggleWishlist = () => {
     detail: updated ? 'Sách đã nằm trong danh sách yêu thích' : 'Đã xóa khỏi danh sách yêu thích',
     life: 2000,
   });
+};
+
+const loadPublicVouchers = async () => {
+  try {
+    loadingPublicVouchers.value = true;
+    const data = await VoucherService.getPublicVouchers();
+    const getTimeValue = (value?: string | Date) => (value ? new Date(value).getTime() : Number.MAX_SAFE_INTEGER);
+    publicVouchers.value = Array.isArray(data)
+      ? [...data].sort((a, b) => getTimeValue(a.valid_until) - getTimeValue(b.valid_until)).slice(0, 4)
+      : [];
+  } catch (error) {
+    console.error('Không thể tải voucher cộng đồng:', error);
+  } finally {
+    loadingPublicVouchers.value = false;
+  }
+};
+
+const formatVoucherCurrency = (value?: number) => {
+  const safeValue = typeof value === 'number' ? value : 0;
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(safeValue);
+};
+
+const formatVoucherDate = (value?: string | Date) => {
+  if (!value) return 'Không xác định';
+  return new Date(value).toLocaleDateString('vi-VN');
 };
 </script>
 
@@ -210,51 +293,31 @@ const handleToggleWishlist = () => {
               <div class="flex items-center mt-4 space-x-4">
                 <div class="flex items-center">
                   <div class="flex text-yellow-400 mr-1">
-                    <i class="pi pi-star-fill text-sm"></i>
-                    <i class="pi pi-star-fill text-sm"></i>
-                    <i class="pi pi-star-fill text-sm"></i>
-                    <i class="pi pi-star-fill text-sm"></i>
-                    <i class="pi pi-star-fill text-sm"></i>
+                    <i
+                      v-for="star in 5"
+                      :key="star"
+                      :class="star <= Math.round(Number(displayRating.rating)) ? 'pi pi-star-fill text-sm' : 'pi pi-star text-sm'"
+                    ></i>
                   </div>
-                  <span class="text-sm text-gray-600">(0 đánh giá)</span>
+                  <span class="text-sm text-gray-600">({{ displayRating.reviews }} đánh giá)</span>
                 </div>
                 <div class="text-sm text-gray-600">
-                  Đã bán <span class="font-semibold">174</span>
+                  Đã bán <span class="font-semibold">{{ displaySalesCount }}</span>
                 </div>
               </div>
-            </div>
 
-            <!-- Flash Sale Section -->
-            <div class="bg-gradient-to-r from-red-500 to-pink-500 rounded-lg p-4 mb-6 text-white">
-              <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center">
-                  <span class="text-lg font-bold mr-3">⚡ FLASH SALE</span>
-                  <div class="flex space-x-1">
-                    <div class="bg-black bg-opacity-30 px-2 py-1 rounded text-sm font-bold">01</div>
-                    <div class="bg-black bg-opacity-30 px-2 py-1 rounded text-sm font-bold">55</div>
-                    <div class="bg-black bg-opacity-30 px-2 py-1 rounded text-sm font-bold">39</div>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <div class="text-sm opacity-90">Đã bán</div>
-                  <div class="font-bold">12</div>
-                </div>
-              </div>
-              
-              <!-- Progress Bar -->
-              <div class="bg-white bg-opacity-30 rounded-full h-2 mb-2">
-                <div class="bg-white h-2 rounded-full w-[12%]"></div>
-              </div>
             </div>
 
             <!-- Price Section -->
             <div class="mb-6">
               <div class="flex items-baseline space-x-3 mb-2">
-                <span class="text-3xl font-bold text-red-600">{{ Number(book.price).toLocaleString() }}₫</span>
-                <span class="text-lg text-gray-500 line-through">{{ Number((book.price || 0) + 20000).toLocaleString() }}₫</span>
-                <span class="bg-red-100 text-red-600 px-2 py-1 rounded text-sm font-semibold">-24%</span>
+                <span class="text-3xl font-bold text-red-600">{{ Number(discountedPrice).toLocaleString() }}₫</span>
+                <span v-if="bestVoucher" class="text-lg text-gray-500 line-through">{{ Number(book.price || 0).toLocaleString() }}₫</span>
+                <span v-if="bestVoucher" class="bg-red-100 text-red-600 px-2 py-1 rounded text-sm font-semibold">-{{ bestVoucher.discount }}%</span>
               </div>
-              <div class="text-sm text-blue-600 font-medium">4 nhà sách còn hàng</div>
+              <div class="text-sm text-blue-600 font-medium">
+                {{ bestVoucher ? 'Áp dụng tự động mã ' + bestVoucher.code : 'Chọn voucher cộng đồng để giảm thêm' }}
+              </div>
             </div>
 
             <!-- Shipping Information -->
@@ -271,7 +334,7 @@ const handleToggleWishlist = () => {
                   <span class="font-medium text-gray-900">Giao hàng tiêu chuẩn</span>
                 </div>
                 <div class="text-gray-600 ml-6">
-                  Dự kiến giao <span class="font-medium">Thứ năm - 05/06</span>
+                  Dự kiến giao <span class="font-medium">{{ estimatedDelivery }}</span>
                 </div>
               </div>
             </div>
@@ -279,21 +342,27 @@ const handleToggleWishlist = () => {
             <!-- Promotions -->
             <div class="mb-6">
               <h3 class="font-semibold text-gray-900 mb-3">Ưu đãi liên quan</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div class="flex items-center p-3 bg-yellow-50 rounded-lg">
+              <div v-if="loadingPublicVouchers" class="text-gray-500 text-sm flex items-center gap-2">
+                <i class="pi pi-spin pi-spinner"></i>
+                <span>Đang tải voucher cộng đồng...</span>
+              </div>
+              <div v-else-if="publicVouchers.length === 0" class="text-sm text-gray-500">
+                Hiện chưa có voucher cộng đồng nào.
+              </div>
+              <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div
+                  v-for="voucher in publicVouchers"
+                  :key="voucher._id"
+                  class="flex items-center p-3 bg-yellow-50 rounded-lg"
+                >
                   <div class="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center mr-3">
                     <i class="pi pi-percentage text-white text-sm"></i>
                   </div>
                   <div class="text-sm">
-                    <div class="font-medium">Mã giảm 10k - to...</div>
-                  </div>
-                </div>
-                <div class="flex items-center p-3 bg-blue-50 rounded-lg">
-                  <div class="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center mr-3">
-                    <i class="pi pi-credit-card text-white text-sm"></i>
-                  </div>
-                  <div class="text-sm">
-                    <div class="font-medium">Home credit: giả...</div>
+                    <div class="font-medium">Mã {{ voucher.code }} - Giảm {{ voucher.discount }}%</div>
+                    <div class="text-gray-600 text-xs">
+                      Đơn từ {{ formatVoucherCurrency(voucher.min_order_value) }} · HSD {{ formatVoucherDate(voucher.valid_until) }}
+                    </div>
                   </div>
                 </div>
               </div>

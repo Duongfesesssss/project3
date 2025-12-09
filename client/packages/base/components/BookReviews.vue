@@ -153,7 +153,7 @@
             <!-- User Avatar -->
             <div class="flex-shrink-0">
               <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                {{ review.user_id.username.charAt(0).toUpperCase() }}
+                {{ getReviewerInitial(review) }}
               </div>
             </div>
 
@@ -161,7 +161,7 @@
               <!-- User Info and Rating -->
               <div class="flex items-center justify-between mb-2">
                 <div>
-                  <h4 class="font-semibold text-gray-900">{{ review.user_id.username }}</h4>
+                  <h4 class="font-semibold text-gray-900">{{ getReviewerName(review) }}</h4>
                   <div class="flex items-center space-x-2">
                     <div class="flex text-yellow-400">
                       <i v-for="star in 5" :key="star" 
@@ -266,6 +266,16 @@ const getRatingPercentage = (rating: number): number => {
   return (reviewData.value.statistics.rating_distribution[rating] / total) * 100
 }
 
+const getReviewerName = (review: any): string => {
+  const user = review?.user_id || review?.user
+  return user?.display_name || user?.full_name || user?.user_name || user?.email?.split('@')[0] || 'Người dùng'
+}
+
+const getReviewerInitial = (review: any): string => {
+  const name = getReviewerName(review)
+  return name ? name.charAt(0).toUpperCase() : 'U'
+}
+
 const formatDate = (date: Date): string => {
   return new Date(date).toLocaleDateString('vi-VN')
 }
@@ -300,15 +310,20 @@ const loadMoreReviews = async () => {
 }
 
 const checkUserReviewStatus = async () => {
-  const result = await ReviewService.canUserReview(props.bookId)
-  if (result) {
-    canWriteReview.value = result.can_review
-    if (result.reason === 'already_reviewed' && result.existing_review) {
-      userExistingReview.value = result.existing_review
+  try {
+    const result = await ReviewService.canUserReview(props.bookId)
+    if (result) {
+      canWriteReview.value = result.can_review
+      if (result.reason === 'already_reviewed' && result.existing_review) {
+        userExistingReview.value = result.existing_review
+      }
+      if (result.order_id) {
+        orderIdForReview.value = result.order_id
+      }
     }
-    if (result.order_id) {
-      orderIdForReview.value = result.order_id
-    }
+  } catch (error) {
+    // Khách vãng lai không cần kiểm tra quyền review; vẫn cho xem danh sách
+    canWriteReview.value = false
   }
 }
 

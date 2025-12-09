@@ -2,8 +2,11 @@ export interface ReviewModel {
   _id?: string;
   user_id: {
     _id: string;
-    username: string;
-    email: string;
+    user_name?: string;
+    username?: string;
+    full_name?: string;
+    display_name?: string;
+    email?: string;
     avatar?: string;
   };
   book_id: string;

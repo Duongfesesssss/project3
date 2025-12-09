@@ -50,7 +50,7 @@ class _ReviewService extends BaseService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         },
         body: JSON.stringify(reviewData)
       });
@@ -81,7 +81,7 @@ class _ReviewService extends BaseService {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         },
         body: JSON.stringify(updateData)
       });
@@ -108,7 +108,7 @@ class _ReviewService extends BaseService {
       const response = await fetch(`${this.baseApiUrl}/api/review/${reviewId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         }
       });
 
@@ -135,7 +135,7 @@ class _ReviewService extends BaseService {
     try {
       const response = await fetch(`${this.baseApiUrl}/api/review/can-review/${bookId}`, {
         headers: {
-          'Authorization': `Bearer ${this.getAccessToken()}`
+          'Authorization': this.getAccessToken()
         }
       });
 
