@@ -17,9 +17,9 @@ abstract class BaseService {
       // @ts-ignore
       apiBase = (process.env.NUXT_PUBLIC_API_BASE || process.env.NUXT_PUBLIC_BASE_URL || '').toString();
     }
-    // Fallback cuối cùng: IP cục bộ bạn đang dùng
+    // Fallback cuối cùng: localhost cho local development
     if (!apiBase) {
-      apiBase = 'http://192.168.0.116:8888';
+      apiBase = 'http://localhost:8888';
     }
     this.baseApiUrl = apiBase;
   }

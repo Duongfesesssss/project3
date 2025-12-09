@@ -1,0 +1,54 @@
+# .cursorrules - Bookie Project
+
+
+
+## 1. Project Context
+
+- **Root**: `project3`
+
+- **Architecture**: Nuxt 3 Monorepo (Packages: `base`, `main` - khách, `cms` - admin).
+
+- **Stack**: Vue 3 Composition API (`<script setup lang="ts">`), Pinia, PrimeVue, Tailwind CSS.
+
+
+
+## 2. UI/UX Rules (Modern & Clean)
+
+- **Styling Strategy**: 
+
+  - Sử dụng **PrimeVue Unstyled (Passthrough `pt`)** hoặc ghi đè class.
+
+  - Tuyệt đối hạn chế style inline hoặc file CSS riêng. Dùng **Tailwind Utility Classes** 100%.
+
+- **Design System**:
+
+  - **Border**: Hạn chế border cứng. Dùng `shadow-sm` hoặc `shadow-md` để tạo chiều sâu.
+
+  - **Radius**: Bo góc mềm mại `rounded-xl` hoặc `rounded-2xl` cho Card/Modal.
+
+  - **Spacing**: Dùng nhiều whitespace (`p-4`, `gap-6`, `my-8`) cho thoáng.
+
+  - **Colors**: Primary color theo theme dự án. Text phụ dùng `text-slate-500`.
+
+
+
+## 3. Component Rules
+
+- **Structure**: Template <-> Script <-> Style.
+
+- **Props**: Luôn define interface Props rõ ràng.
+
+- **Images**: Luôn dùng class `object-cover` và set `aspect-ratio` (ví dụ `aspect-[2/3]` cho sách) để tránh méo ảnh.
+
+
+
+## 4. Behavior
+
+- Khi được yêu cầu sửa UI: Tự động phân tích xem component thuộc package nào (`main` hay `cms`) để sửa đúng chỗ.
+
+- Luôn ưu tiên Mobile-first.
+
+
+
+tạm thời thế đã
+
