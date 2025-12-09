@@ -6,6 +6,11 @@ export const useTextToSpeech = () => {
   const isLoading = ref(false)
   const error = ref(null)
   const currentAudio = ref(null)
+  const runtimeConfig = useRuntimeConfig()
+
+  const apiBase = runtimeConfig.public?.apiBase || runtimeConfig.public?.apiURL || ''
+  const apiPrefix = runtimeConfig.public?.apiPrefix || '/api'
+  const ttsBase = `${apiBase}${apiPrefix}/text-to-speech`
 
   /**
    * Tự động phát hiện ngôn ngữ từ text
@@ -49,7 +54,7 @@ export const useTextToSpeech = () => {
       // Gọi API backend
       console.log('🌐 Calling API with:', { text: text.substring(0, 50), provider, voiceId })
       
-      const response = await fetch('http://localhost:8888/api/text-to-speech/synthesize', {
+      const response = await fetch(`${ttsBase}/synthesize`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -157,7 +162,7 @@ export const useTextToSpeech = () => {
    */
   const getVoices = async () => {
     try {
-      const response = await $fetch('http://localhost:8888/api/text-to-speech/voices')
+      const response = await $fetch(`${ttsBase}/voices`)
       return response.data
     } catch (err) {
       console.error('Lỗi lấy danh sách giọng:', err)
