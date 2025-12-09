@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Button from 'primevue/button';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import { useWishlistStore } from '~/packages/base/stores/wishlist.store';
+import { BookService } from '~/packages/base/services/book.service';
 
 definePageMeta({
   layout: 'default',
@@ -14,9 +15,46 @@ definePageMeta({
 const wishlistStore = useWishlistStore();
 const router = useRouter();
 const toast = useToast();
+const refreshing = ref(false);
+
+const formatPrice = (value?: number) => {
+  const safe = typeof value === 'number' ? value : 0;
+  return safe.toLocaleString('vi-VN') + ' đ';
+};
+
+const refreshWishlistData = async () => {
+  try {
+    refreshing.value = true;
+    wishlistStore.init();
+    if (!wishlistStore.items.length) return;
+    // Lấy lại thông tin sách mới nhất theo id
+    const updatedItems = await Promise.all(
+      wishlistStore.items.map(async (item) => {
+        if (!item._id) return null;
+        const latest = await BookService.getBookById(item._id);
+        if (!latest) return item;
+        return {
+          ...item,
+          title: latest.title || item.title,
+          author: latest.author || item.author,
+          price: latest.price ?? item.price,
+          image_link: latest.image_link || item.image_link,
+          slug: latest.slug || item.slug,
+        };
+      })
+    );
+    wishlistStore.items = updatedItems.filter(Boolean) as any;
+    wishlistStore.persist();
+  } catch (error) {
+    console.error('Không thể cập nhật danh sách yêu thích:', error);
+  } finally {
+    refreshing.value = false;
+  }
+};
 
 onMounted(() => {
   wishlistStore.init();
+  refreshWishlistData();
 });
 
 const hasItems = computed(() => wishlistStore.total > 0);
@@ -58,6 +96,7 @@ const removeItem = (bookId: string) => {
       </div>
 
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-if="refreshing" class="sm:col-span-2 lg:col-span-3 text-sm text-gray-500 mb-2">Đang đồng bộ giá và thông tin sách...</div>
         <div
           v-for="item in wishlistStore.items"
           :key="item._id"
@@ -78,7 +117,7 @@ const removeItem = (bookId: string) => {
             <h3 class="text-lg font-semibold text-gray-900 line-clamp-2">{{ item.title }}</h3>
             <p class="text-sm text-gray-500 mt-1">{{ item.author || 'Chưa cập nhật tác giả' }}</p>
             <div class="mt-4 flex items-center justify-between">
-              <span class="text-xl font-bold text-red-600">{{ (item.price || 0).toLocaleString() }} đ</span>
+              <span class="text-xl font-bold text-red-600">{{ formatPrice(item.price) }}</span>
               <Button label="Xem chi tiết" text class="!text-blue-600 hover:!text-blue-800" @click="viewBook(item)" />
             </div>
           </div>

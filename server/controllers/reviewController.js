@@ -3,6 +3,31 @@ const Order = require('../models/orderModel');
 const mongoose = require('mongoose');
 const { addPointsFromReview } = require('../services/memberService');
 
+const buildDisplayName = (user) => {
+  if (!user) return 'Người dùng';
+  if (user.full_name) return user.full_name;
+  if (user.user_name) return user.user_name;
+  if (user.email) return user.email.split('@')[0];
+  return 'Người dùng';
+};
+
+const serializeReview = (review) => {
+  if (!review) return review;
+  const obj = review.toObject ? review.toObject() : review;
+  const user = obj.user_id || obj.user || null;
+  return {
+    ...obj,
+    user_id: user ? {
+      _id: user._id,
+      user_name: user.user_name,
+      full_name: user.full_name,
+      email: user.email,
+      avatar: user.avatar,
+      display_name: buildDisplayName(user)
+    } : null
+  };
+};
+
 // Tạo review mới
 const createReview = async (req, res) => {
   try {
@@ -26,12 +51,20 @@ const createReview = async (req, res) => {
       });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(book_id)) {
+      return res.status(400).json({
+        status: 'ERROR',
+        success: false,
+        message: 'ID sách không hợp lệ'
+      });
+    }
+
     // Kiểm tra user đã mua sách này chưa
     const order = await Order.findOne({
       _id: order_id,
       user_id: user_id,
-      status: 'completed', // Chỉ cho review khi đơn hàng hoàn thành
-      'items.book_id': book_id
+      status: { $nin: ['cancelled'] }, // Cho phép review mọi đơn không bị hủy
+      'items.book_id': new mongoose.Types.ObjectId(book_id)
     });
 
     if (!order) {
@@ -46,7 +79,7 @@ const createReview = async (req, res) => {
     const existingReview = await Review.findOne({
       user_id: user_id,
       book_id: book_id
-    });
+    }).populate('user_id', 'user_name full_name email avatar');
 
     if (existingReview) {
       return res.status(400).json({
@@ -68,7 +101,7 @@ const createReview = async (req, res) => {
     await review.save();
 
     // Populate user info để trả về
-    await review.populate('user_id', 'username email');
+    await review.populate('user_id', 'user_name full_name email avatar');
 
     try {
       await addPointsFromReview({ userId: user_id, reviewId: review._id });
@@ -80,7 +113,7 @@ const createReview = async (req, res) => {
       status: 'OK',
       success: true,
       message: 'Đánh giá đã được tạo thành công',
-      data: review
+      data: serializeReview(review)
     });
 
   } catch (error) {
@@ -118,7 +151,7 @@ const getBookReviews = async (req, res) => {
       book_id: book_id,
       status: 'approved'
     })
-    .populate('user_id', 'username email avatar')
+    .populate('user_id', 'user_name full_name email avatar')
     .sort(sortOption)
     .limit(limit * 1)
     .skip((page - 1) * limit);
@@ -155,7 +188,7 @@ const getBookReviews = async (req, res) => {
       status: 'OK',
       success: true,
       data: {
-        reviews,
+        reviews: reviews.map(serializeReview),
         pagination: {
           current_page: parseInt(page),
           total_pages: Math.ceil(total / limit),
@@ -225,13 +258,13 @@ const updateReview = async (req, res) => {
     }
 
     await review.save();
-    await review.populate('user_id', 'username email');
+    await review.populate('user_id', 'user_name full_name email avatar');
 
     res.json({
       status: 'OK',
       success: true,
       message: 'Đánh giá đã được cập nhật',
-      data: review
+      data: serializeReview(review)
     });
 
   } catch (error) {
@@ -285,11 +318,19 @@ const canUserReview = async (req, res) => {
     const { book_id } = req.params;
     const user_id = req.user.id;
 
+    if (!mongoose.Types.ObjectId.isValid(book_id)) {
+      return res.status(400).json({
+        status: 'ERROR',
+        success: false,
+        message: 'ID sách không hợp lệ'
+      });
+    }
+
     // Kiểm tra đã mua sách
     const order = await Order.findOne({
       user_id: user_id,
-      status: 'completed',
-      'items.book_id': book_id
+      status: { $nin: ['cancelled'] },
+      'items.book_id': new mongoose.Types.ObjectId(book_id)
     });
 
     if (!order) {
@@ -316,7 +357,7 @@ const canUserReview = async (req, res) => {
         data: {
           can_review: false,
           reason: 'already_reviewed',
-          existing_review: existingReview
+          existing_review: serializeReview(existingReview)
         }
       });
     }

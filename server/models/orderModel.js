@@ -48,6 +48,10 @@ const orderSchema = new mongoose.Schema({
   note: {
     type: String
   },
+  sales_applied: {
+    type: Boolean,
+    default: false
+  },
   orderCode: {
     type: Number,
     unique: true

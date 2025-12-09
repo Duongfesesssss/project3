@@ -6,9 +6,22 @@ const voucherSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  description: {
+    type: String,
+    default: ''
+  },
   discount: {
     type: Number,
     required: true
+  },
+  discount_type: {
+    type: String,
+    enum: ['percentage', 'fixed'],
+    default: 'percentage'
+  },
+  max_discount: {
+    type: Number,
+    default: null
   },
   valid_from: {
     type: Date,
@@ -29,6 +42,33 @@ const voucherSchema = new mongoose.Schema({
   min_order_value: {
     type: Number,
     required: true
+  },
+  visibility: {
+    type: String,
+    enum: ['private', 'public'],
+    default: 'private'
+  },
+  owner_user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  source: {
+    type: String,
+    default: 'manual'
+  },
+  auto_generated: {
+    type: Boolean,
+    default: false
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive'],
+    default: 'active'
+  },
+  metadata: {
+    type: Object,
+    default: {}
   },
   created_at: {
     type: Date,

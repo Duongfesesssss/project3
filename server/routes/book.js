@@ -267,6 +267,92 @@ router.get('/:slug', async (req, res) => {
         },
       },
       { $unwind: { path: '$supplier', preserveNullAndEmptyArrays: true } },
+      // Thống kê đánh giá từ bảng reviews (chỉ review đã duyệt)
+      {
+        $lookup: {
+          from: 'reviews',
+          let: { bookId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$book_id', '$$bookId'] },
+                    { $eq: ['$status', 'approved'] }
+                  ]
+                }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                average_rating: { $avg: '$rating' },
+                total_reviews: { $sum: 1 }
+              }
+            }
+          ],
+          as: 'reviewStats'
+        }
+      },
+      // Thống kê số lượng bán dựa trên đơn đã thanh toán/đang giao/đã giao (loại bỏ hủy)
+      {
+        $lookup: {
+          from: 'orders',
+          let: { bookId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $in: ['$status', ['paid', 'processing', 'shipped', 'delivered']] }
+                  ]
+                }
+              }
+            },
+            { $unwind: '$items' },
+            {
+              $match: {
+                $expr: { $eq: ['$items.book_id', '$$bookId'] }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                sold: { $sum: '$items.quantity' }
+              }
+            }
+          ],
+          as: 'orderStats'
+        }
+      },
+      {
+        $addFields: {
+          average_rating: {
+            $ifNull: [{ $arrayElemAt: ['$reviewStats.average_rating', 0] }, 0]
+          },
+          total_reviews: {
+            $ifNull: [{ $arrayElemAt: ['$reviewStats.total_reviews', 0] }, 0]
+          },
+          sales_count: {
+            $ifNull: [
+              { $arrayElemAt: ['$orderStats.sold', 0] },
+              { $ifNull: ['$sales_count', '$sold_quantity'] }
+            ]
+          },
+          sold_quantity: {
+            $ifNull: [
+              { $arrayElemAt: ['$orderStats.sold', 0] },
+              '$sold_quantity'
+            ]
+          }
+        }
+      },
+      {
+        $project: {
+          reviewStats: 0,
+          orderStats: 0
+        }
+      }
     ]);
 
     if (!bookResult || bookResult.length === 0) {

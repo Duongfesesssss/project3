@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const MembershipTier = require('../models/membershipTierModel');
 const { MemberCard, MemberPointHistory } = require('../models/memberCardModel');
+const { Voucher } = require('../models/voucherModel');
 const User = require('../models/userModel');
 const {
   getOrCreateMemberCard,
@@ -8,6 +9,59 @@ const {
   adjustPointsForUser,
   recalculateTierForUser
 } = require('../services/memberService');
+
+const LOYALTY_VOUCHER_VALUE_PER_POINT = parseInt(process.env.LOYALTY_VOUCHER_VALUE_PER_POINT || '1000', 10);
+const LOYALTY_VOUCHER_VALID_DAYS = parseInt(process.env.LOYALTY_VOUCHER_VALID_DAYS || '30', 10);
+const LOYALTY_REDEEM_OPTIONS = {
+  50: { discount: 8, minOrderValue: 100000 },
+  100: { discount: 18, minOrderValue: 100000 }
+};
+
+const generateVoucherCode = (prefix = 'LOYAL') => {
+  const randomSegment = Math.floor(Math.random() * 1000)
+    .toString()
+    .padStart(3, '0');
+  return `${prefix}-${Date.now().toString(36).toUpperCase()}${randomSegment}`;
+};
+
+const createPersonalVoucherFromPoints = async ({ userId, points, note }) => {
+  if (!userId || !points || points <= 0) {
+    throw new Error('Thiếu thông tin để tạo voucher cá nhân');
+  }
+
+  const option = LOYALTY_REDEEM_OPTIONS[points];
+  if (!option) {
+    throw new Error('Gói đổi điểm không hợp lệ. Chỉ hỗ trợ 50 hoặc 100 điểm.');
+  }
+
+  const now = new Date();
+  const validUntil = new Date(now);
+  validUntil.setDate(validUntil.getDate() + LOYALTY_VOUCHER_VALID_DAYS);
+
+  const voucher = new Voucher({
+    code: generateVoucherCode(),
+    description: note || `Voucher giảm ${option.discount}% (đổi từ ${points} điểm)`,
+    discount: option.discount,
+    discount_type: 'percentage',
+    valid_from: now,
+    valid_until: validUntil,
+    usage_limit: 1,
+    min_order_value: option.minOrderValue,
+    visibility: 'private',
+    owner_user_id: userId,
+    source: 'loyalty',
+    auto_generated: true,
+    metadata: {
+      redeemed_points: points,
+      discount_percent: option.discount,
+      min_order_value: option.minOrderValue,
+      conversion_rate: 'percentage'
+    }
+  });
+
+  await voucher.save();
+  return voucher;
+};
 
 // Lấy thông tin thẻ của chính user
 const getMyMemberCard = async (req, res) => {
@@ -71,18 +125,63 @@ const redeemPoints = async (req, res) => {
       });
     }
 
+    const option = LOYALTY_REDEEM_OPTIONS[points];
+    if (!option) {
+      return res.status(400).json({
+        status: 'ERROR',
+        success: false,
+        message: 'Gói đổi điểm không hợp lệ. Chỉ hỗ trợ 50 hoặc 100 điểm.'
+      });
+    }
+
     const card = await redeemPointsForUser({
       userId: req.user._id,
       points,
       description: reason || 'Sử dụng điểm đổi ưu đãi',
-      referenceId: reference_id
+      referenceId: reference_id,
+      metadata: {
+        redeem_reason: reason || 'voucher',
+        converted_to: 'personal_voucher'
+      }
     });
+
+    let loyaltyVoucher = null;
+
+    try {
+      loyaltyVoucher = await createPersonalVoucherFromPoints({
+        userId: req.user._id,
+        points,
+        note: reason
+      });
+    } catch (error) {
+      console.error('Không thể tạo voucher cá nhân sau khi đổi điểm:', error);
+      await adjustPointsForUser({
+        userId: req.user._id,
+        deltaPoints: points,
+        source: 'adjust',
+        description: 'Hoàn điểm do lỗi tạo voucher',
+        referenceId: reference_id || `voucher_rollback_${Date.now()}`,
+        affectLifetime: false
+      });
+      return res.status(500).json({
+        status: 'ERROR',
+        success: false,
+        message: 'Không thể tạo voucher, điểm đã được hoàn lại. Vui lòng thử lại sau.'
+      });
+    }
+
+    const estimatedValue = Math.floor(option.minOrderValue * option.discount / 100);
 
     res.json({
       status: 'OK',
       success: true,
-      message: 'Đổi điểm thành công',
-      data: card
+      message: 'Đổi điểm thành công, voucher cá nhân đã được tạo',
+      data: {
+        card,
+        voucher: loyaltyVoucher,
+        points_spent: points,
+        estimated_value: estimatedValue
+      }
     });
   } catch (error) {
     console.error('Lỗi khi sử dụng điểm:', error);

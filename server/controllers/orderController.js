@@ -2,6 +2,7 @@ const Order = require('../models/orderModel');
 const Cart = require('../models/cartModel');
 const mongoose = require('mongoose');
 const { addPointsFromOrder } = require('../services/memberService');
+const { applySalesForOrder } = require('../services/orderInventoryService');
 
 // Tạo đơn hàng mới
 const createOrder = async (req, res) => {
@@ -204,7 +205,17 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
-    if (status === 'delivered') {
+    if (['paid', 'delivered', 'processing', 'shipped'].includes(status)) {
+      try {
+        // Cập nhật sold & tồn kho nếu chưa áp dụng
+        const applied = await applySalesForOrder(order._id);
+        if (!applied.applied) {
+          console.log('Bỏ qua applySales (đã áp dụng trước đó)', applied.reason);
+        }
+      } catch (invErr) {
+        console.error('Lỗi applySales khi đổi trạng thái đơn:', invErr);
+      }
+
       try {
         await addPointsFromOrder(order);
       } catch (bonusError) {

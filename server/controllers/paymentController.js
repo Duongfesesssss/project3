@@ -1,7 +1,8 @@
 const { createPayOSOrder, getPayOSOrderStatus, verifyPayOSWebhook } = require('../services/payosService');
 const Order = require('../models/orderModel');
+const { applySalesForOrder } = require('../services/orderInventoryService');
 
-// Auto-cancel đơn hàng sau 5 phút nếu chưa thanh toán
+// Auto-cancel đơn hàng sau 5 phút nếu chưa thanh toán (chưa áp dụng sales)
 const scheduleOrderCancellation = (orderId, orderCode) => {
   setTimeout(async () => {
     try {
@@ -120,6 +121,12 @@ exports.getPayOSPaymentStatus = async (req, res) => {
 
           if (updatedOrder) {
             console.log(`✅ Đã cập nhật đơn hàng ${orderCode} thành đã thanh toán từ status check`);
+            try {
+              const applied = await applySalesForOrder(updatedOrder._id);
+              if (!applied.applied) console.log('ℹ️ Bỏ qua applySales (đã áp dụng trước đó)', applied.reason);
+            } catch (invErr) {
+              console.error('❌ Lỗi applySales từ status check:', invErr);
+            }
           }
         } catch (dbError) {
           console.error('❌ Lỗi cập nhật database từ status check:', dbError);
@@ -176,6 +183,15 @@ exports.handlePayOSWebhook = async (req, res) => {
 
           if (updatedOrder) {
             console.log(`✅ Đã cập nhật đơn hàng ${data.orderCode} thành đã thanh toán qua webhook`);
+            // Áp dụng tồn kho & sold nếu chưa cộng
+            try {
+              const result = await applySalesForOrder(updatedOrder._id);
+              if (!result.applied) {
+                console.log('ℹ️ Bỏ qua applySales (đã áp dụng trước đó)', result.reason);
+              }
+            } catch (invErr) {
+              console.error('❌ Lỗi applySales khi nhận webhook:', invErr);
+            }
           } else {
             console.log(`❌ Không tìm thấy đơn hàng với orderCode: ${data.orderCode}`);
           }
@@ -244,6 +260,13 @@ exports.syncPaymentStatus = async (req, res) => {
 
       if (updatedOrder) {
         console.log(`✅ Manual sync thành công cho orderCode: ${orderCode}`);
+        try {
+          const applied = await applySalesForOrder(updatedOrder._id);
+          if (!applied.applied) console.log('ℹ️ Bỏ qua applySales (đã áp dụng trước đó)', applied.reason);
+        } catch (invErr) {
+          console.error('❌ Lỗi applySales từ manual sync:', invErr);
+        }
+
         return res.json({
           success: true,
           message: 'Đã cập nhật trạng thái thanh toán thành công',

@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const MembershipTier = require('../models/membershipTierModel');
 const { MemberCard, MemberPointHistory } = require('../models/memberCardModel');
 
-const POINTS_PER_CURRENCY_UNIT = 1000; // 1 điểm cho mỗi 1,000đ
+const POINTS_PER_CURRENCY_UNIT = 10000; // 1 điểm cho mỗi 10,000đ để khớp tỉ lệ mới
 const REVIEW_BONUS_POINTS = 20;
 
 const ensureDefaultTier = async () => {

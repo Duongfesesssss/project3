@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import Toast from 'primevue/toast';
@@ -12,6 +12,8 @@ import Divider from 'primevue/divider';
 import Card from 'primevue/card';
 import { definePageMeta } from '#imports';
 import { ThanhToanService } from '~/packages/base/services/thanh-toan.service';
+import { VoucherService, type ValidatedVoucherResponse } from '~/packages/base/services/voucher.service';
+import type { VoucherModel } from '~/packages/base/models/dto/response/voucher/voucher.model';
 import { useAuthStore } from '~/packages/base/stores/auth.store';
 
 const router = useRouter();
@@ -25,9 +27,12 @@ definePageMeta({
 
 // State
 const loading = ref(false);
-const checkoutData = ref(null);
-const appliedVoucher = ref(null);
+const checkoutData = ref<any>(null);
+const appliedVoucher = ref<ValidatedVoucherResponse | null>(null);
 const voucherCode = ref('');
+const availableVouchers = ref<VoucherModel[]>([]);
+const voucherLoading = ref(false);
+const validatingVoucher = ref(false);
 
 // Form data
 const customerInfo = ref({
@@ -44,13 +49,15 @@ const agreeTerms = ref(false);
 const saveInfo = ref(false);
 
 // Cart items from checkout data
-const cartItems = computed(() => {
-  return checkoutData.value?.items || [];
-});
+const cartItems = computed(() => checkoutData.value?.items ?? []);
 
 // Computed values
 const subtotal = computed(() => {
-  return checkoutData.value?.subtotal || 0;
+  return cartItems.value.reduce((sum, item) => {
+    const price = Number(item?.price) || 0;
+    const quantity = Number(item?.quantity) || 0;
+    return sum + price * quantity;
+  }, 0);
 });
 
 const baseShippingFee = computed(() => {
@@ -64,24 +71,9 @@ const shippingFee = computed(() => {
   return baseShippingFee.value;
 });
 
-const existingDiscount = computed(() => {
-  return checkoutData.value?.discountAmount || 0;
-});
+const existingDiscount = computed(() => checkoutData.value?.discountAmount || 0);
 
-const voucherDiscount = computed(() => {
-  if (!appliedVoucher.value) return 0;
-  
-  switch (appliedVoucher.value.type) {
-    case 'percentage':
-      return Math.floor(subtotal.value * appliedVoucher.value.value / 100);
-    case 'fixed':
-      return appliedVoucher.value.value;
-    case 'shipping':
-      return baseShippingFee.value;
-    default:
-      return 0;
-  }
-});
+const voucherDiscount = computed(() => appliedVoucher.value?.discountAmount || 0);
 
 const totalDiscount = computed(() => {
   return existingDiscount.value + voucherDiscount.value;
@@ -90,6 +82,8 @@ const totalDiscount = computed(() => {
 const total = computed(() => {
   return subtotal.value + shippingFee.value - totalDiscount.value;
 });
+
+const estimatedPoints = computed(() => Math.max(0, Math.floor(total.value / 10000)));
 
 const paymentMethods = [
   { value: 'cod', label: 'Thanh toán khi nhận hàng (COD)', icon: 'pi pi-money-bill' },
@@ -103,23 +97,22 @@ const shippingMethods = [
   { value: 'express', label: 'Giao hàng nhanh', time: '1-2 ngày', fee: 35000 }
 ];
 
-// Available vouchers
-const availableVouchers = ref([
-  {
-    code: 'NEWUSER',
-    label: 'Giảm 15% cho khách hàng mới',
-    type: 'percentage',
-    value: 15,
-    minAmount: 200000
-  },
-  {
-    code: 'SAVE100K',
-    label: 'Giảm 100.000đ cho đơn từ 1.000.000đ',
-    type: 'fixed',
-    value: 100000,
-    minAmount: 1000000
+const describeVoucher = (voucher: VoucherModel) => {
+  if (!voucher) return '';
+  const discountValue = Number(voucher.discount) || 0;
+  if (voucher.discount_type === 'percentage') {
+    const cap = voucher.max_discount
+      ? ` (tối đa ${Number(voucher.max_discount).toLocaleString('vi-VN')}đ)`
+      : '';
+    return `Giảm ${discountValue}%${cap}`;
   }
-]);
+  return `Giảm ${discountValue.toLocaleString('vi-VN')}đ`;
+};
+
+const formatVoucherDate = (value?: string | Date) => {
+  if (!value) return 'Không giới hạn';
+  return new Date(value).toLocaleDateString('vi-VN');
+};
 
 // Methods
 const loadCheckoutData = () => {
@@ -163,38 +156,94 @@ const loadUserInfo = () => {
   }
 };
 
-const applyVoucher = () => {
-  const voucher = availableVouchers.value.find(v => v.code === voucherCode.value.toUpperCase());
-  
-  if (!voucher) {
+const fetchAvailableVouchers = async () => {
+  if (!authStore.user?._id) return;
+  try {
+    voucherLoading.value = true;
+    const [personal, publics] = await Promise.all([
+      VoucherService.getMyVouchers(),
+      VoucherService.getPublicVouchers()
+    ]);
+    const merged = [...(personal || []), ...(publics || [])];
+    const unique = Array.from(
+      new Map(
+        merged
+          .filter((voucher) => voucher && voucher.code)
+          .map((voucher) => [voucher.code, voucher])
+      ).values()
+    );
+    availableVouchers.value = unique;
+  } catch (error: any) {
+    console.error('Không thể tải voucher:', error);
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
-      detail: 'Mã voucher không hợp lệ',
+      detail: error?.message || 'Không thể tải voucher khả dụng',
+      life: 3000
+    });
+  } finally {
+    voucherLoading.value = false;
+  }
+};
+
+const applyVoucher = async (presetCode?: string) => {
+  const targetCode = (presetCode ?? voucherCode.value).trim().toUpperCase();
+  if (!targetCode) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Thông báo',
+      detail: 'Vui lòng nhập mã voucher',
+      life: 2500
+    });
+    return;
+  }
+
+  if (!authStore.user?._id) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Vui lòng đăng nhập để áp dụng voucher',
       life: 3000
     });
     return;
   }
-  
-  if (subtotal.value < voucher.minAmount) {
+
+  try {
+    validatingVoucher.value = true;
+    const validation = await VoucherService.validateVoucher(targetCode, authStore.user._id, subtotal.value);
+    if (!validation) {
+      toast.add({
+        severity: 'error',
+        summary: 'Lỗi',
+        detail: 'Voucher không hợp lệ hoặc chưa đủ điều kiện',
+        life: 3000
+      });
+      return;
+    }
+    appliedVoucher.value = validation;
+    voucherCode.value = '';
+    toast.add({
+      severity: 'success',
+      summary: 'Thành công',
+      detail: `Đã áp dụng voucher ${validation.voucher.code}`,
+      life: 3000
+    });
+  } catch (error: any) {
     toast.add({
       severity: 'error',
       summary: 'Lỗi',
-      detail: `Đơn hàng tối thiểu ${voucher.minAmount.toLocaleString()}đ để áp dụng voucher này`,
+      detail: error?.message || 'Không thể áp dụng voucher',
       life: 3000
     });
-    return;
+  } finally {
+    validatingVoucher.value = false;
   }
-  
-  appliedVoucher.value = voucher;
-  voucherCode.value = '';
-  
-  toast.add({
-    severity: 'success',
-    summary: 'Thành công',
-    detail: `Đã áp dụng voucher ${voucher.code}`,
-    life: 3000
-  });
+};
+
+const applyVoucherFromList = (voucher: VoucherModel) => {
+  if (!voucher?.code) return;
+  voucherCode.value = voucher.code;
+  applyVoucher(voucher.code);
 };
 
 const removeVoucher = () => {
@@ -242,14 +291,39 @@ const handlePlaceOrder = async () => {
     
     // Địa chỉ giao hàng đã đầy đủ từ 1 trường
     const shippingAddress = customerInfo.value.address;
+    const itemsPayload = cartItems.value.reduce((acc, item) => {
+      const bookId = item?.book_id?._id || item?.book_id;
+      if (!bookId) {
+        return acc;
+      }
+      acc.push({
+        book_id: bookId,
+        quantity: Number(item.quantity) || 1,
+        price: Number(item.price) || 0
+      });
+      return acc;
+    }, [] as Array<{ book_id: string; quantity: number; price: number }>);
+
+    if (!itemsPayload.length) {
+      toast.add({
+        severity: 'error',
+        summary: 'Lỗi',
+        detail: 'Không tìm thấy sản phẩm trong đơn hàng',
+        life: 3000
+      });
+      return;
+    }
     
     // Gọi service tạo đơn hàng
     const result = await ThanhToanService.createOrder(
       authStore.user._id,
+      itemsPayload,
       shippingAddress,
       paymentMethod.value,
-      appliedVoucher.value?.code,
-      customerInfo.value.note
+      appliedVoucher.value?.voucher?._id,
+      customerInfo.value.note,
+      shippingFee.value,
+      voucherDiscount.value
     );
     
     if (result) {
@@ -288,10 +362,20 @@ const goBack = () => {
   router.push('/gio-hang');
 };
 
+watch(
+  () => authStore.user,
+  (user) => {
+    if (user) {
+      loadUserInfo();
+      fetchAvailableVouchers();
+    }
+  },
+  { immediate: true }
+);
+
 onMounted(() => {
   authStore.initAuth();
   loadCheckoutData();
-  loadUserInfo();
 });
 </script>
 
@@ -515,21 +599,57 @@ onMounted(() => {
                       v-model="voucherCode"
                       placeholder="Mã voucher"
                       class="flex-1"
+                      :disabled="validatingVoucher"
                     />
                     <Button 
-                      @click="applyVoucher"
+                      @click="applyVoucher()"
                       label="Áp dụng" 
                       outlined 
                       size="small" 
+                      :loading="validatingVoucher"
+                      :disabled="validatingVoucher"
                     />
                   </div>
+
+                  <div v-if="voucherLoading" class="text-sm text-gray-500 flex items-center gap-2 mb-3">
+                    <i class="pi pi-spin pi-spinner"></i>
+                    <span>Đang tải voucher khả dụng...</span>
+                  </div>
+                  <div v-else-if="availableVouchers.length" class="space-y-2 max-h-48 overflow-y-auto mb-3">
+                    <div
+                      v-for="voucher in availableVouchers"
+                      :key="voucher._id || voucher.code"
+                      class="p-3 border rounded-lg flex items-start justify-between gap-4"
+                    >
+                      <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                          <span class="font-semibold text-gray-900">{{ voucher.code }}</span>
+                          <span v-if="voucher.visibility === 'private'" class="text-xs px-2 py-0.5 rounded-full bg-pink-100 text-pink-700">
+                            Cá nhân
+                          </span>
+                        </div>
+                        <p class="text-sm text-gray-600">{{ describeVoucher(voucher) }}</p>
+                        <p class="text-xs text-gray-500">HSD: {{ formatVoucherDate(voucher.valid_until) }}</p>
+                      </div>
+                      <Button
+                        label="Chọn"
+                        size="small"
+                        text
+                        @click="applyVoucherFromList(voucher)"
+                        :disabled="validatingVoucher"
+                      />
+                    </div>
+                  </div>
+                  <div v-else class="text-xs text-gray-500 mb-3">Hiện chưa có voucher phù hợp.</div>
                   
                   <!-- Applied voucher -->
                   <div v-if="appliedVoucher" class="p-3 bg-green-50 border border-green-200 rounded-lg">
                     <div class="flex items-center justify-between">
                       <div>
-                        <span class="font-medium text-green-800">{{ appliedVoucher.code }}</span>
-                        <p class="text-sm text-green-600">{{ appliedVoucher.label }}</p>
+                        <span class="font-medium text-green-800">{{ appliedVoucher.voucher.code }}</span>
+                        <p class="text-sm text-green-700">{{ describeVoucher(appliedVoucher.voucher) }}</p>
+                        <p class="text-xs text-green-600 font-medium">Giảm {{ appliedVoucher.discountAmount.toLocaleString('vi-VN') }}đ</p>
+                        <p class="text-xs text-green-500">HSD: {{ formatVoucherDate(appliedVoucher.voucher.valid_until) }}</p>
                       </div>
                       <button @click="removeVoucher" class="text-green-600 hover:text-green-800">
                         <i class="pi pi-times"></i>
@@ -564,6 +684,9 @@ onMounted(() => {
                   <div class="flex justify-between text-lg font-bold">
                     <span>Tổng cộng</span>
                     <span class="text-red-600">{{ total.toLocaleString() }}đ</span>
+                  </div>
+                  <div class="text-xs text-gray-500">
+                    Bạn sẽ nhận khoảng <b>{{ estimatedPoints }}</b> điểm (10.000đ = 1 điểm) sau khi đơn hoàn tất.
                   </div>
                 </div>
 

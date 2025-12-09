@@ -83,7 +83,7 @@ const handleContinueShopping = () => {
 };
 
 const handleViewOrders = () => {
-  router.push('/tai-khoan/don-hang');
+  router.push('/don-hang-da-thanh-toan');
 };
 
 onMounted(async () => {

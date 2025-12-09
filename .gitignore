@@ -1,0 +1,5 @@
+# Root-level ignore rules
+.cursorignore
+.cursorrules
+.env.local
+.dockerignore

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { BookService } from '~/packages/base/services/book.service';
 import { GioHangService } from '~/packages/base/services/gio-hang.service';
+import { VoucherService } from '~/packages/base/services/voucher.service';
 import Carousel from 'primevue/carousel';
 import Button from 'primevue/button';
 import Popover from 'primevue/popover';
@@ -10,10 +11,12 @@ import { useToast } from 'primevue/usetoast';
 import { ref, computed, nextTick, onMounted } from 'vue';
 import Paginator from 'primevue/paginator';
 import type { BookModel } from '~/packages/base/models/dto/response/book/book.model';
+import type { VoucherModel } from '~/packages/base/models/dto/response/voucher/voucher.model';
 import { definePageMeta, useRouter } from '#imports';
 import { useWishlistStore } from '~/packages/base/stores/wishlist.store';
 import { useAuthStore } from '~/packages/base/stores/auth.store';
 import { useCartStore } from '~/packages/base/stores/cart.store';
+import { RecommendationService } from '~/packages/base/services/recommendation.service';
 
 definePageMeta({
   layout: 'default',
@@ -28,6 +31,10 @@ const authStore = useAuthStore();
 const cartStore = useCartStore();
 const router = useRouter();
 const addToCartId = ref<string | null>(null);
+const communityVouchers = ref<VoucherModel[]>([]);
+const loadingCommunityVouchers = ref(false);
+const recommended = ref<BookModel[]>([]);
+const loadingRecs = ref(false);
 
 const onLoadTable = () => {
   loading.value = true;
@@ -46,6 +53,8 @@ const onLoadTable = () => {
 onMounted(() => {
   wishlistStore.init();
   onLoadTable();
+  fetchCommunityVouchers();
+  loadRecommendations();
 });
 
 function toSlug(title: string): string {
@@ -67,6 +76,23 @@ const books = computed(() =>
     slug: toSlug(book.title),
   }))
 );
+
+const loadRecommendations = async () => {
+  try {
+    loadingRecs.value = true;
+    const recs = await RecommendationService.getPopular(12);
+    recommended.value = recs.map((r) => ({
+      ...r.book,
+      raw_sold: r.raw_sold,
+      image: r.book?.image_link || '/placeholder.jpg',
+      slug: toSlug(r.book?.title || ''),
+    }));
+  } catch (error) {
+    console.error('Không thể tải gợi ý', error);
+  } finally {
+    loadingRecs.value = false;
+  }
+};
 
 const featuredFirst = ref(0);
 
@@ -118,6 +144,16 @@ const closeDealsModal = () => {
 
 const toggleFavorite = (book: BookModel) => {
   if (!book?._id) {
+    return;
+  }
+  if (!authStore.user?._id) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Cần đăng nhập',
+      detail: 'Đăng nhập để lưu sách vào yêu thích',
+      life: 2500,
+    });
+    router.push('/login');
     return;
   }
   const updated = wishlistStore.toggleBook(book);
@@ -177,6 +213,56 @@ const addBookToCart = async (book: BookModel) => {
   } finally {
     addToCartId.value = null;
   }
+};
+
+const fetchCommunityVouchers = async () => {
+  try {
+    loadingCommunityVouchers.value = true;
+    const data = await VoucherService.getPublicVouchers();
+    const getTimeValue = (value?: string | Date) => (value ? new Date(value).getTime() : Number.MAX_SAFE_INTEGER);
+    communityVouchers.value = Array.isArray(data)
+      ? [...data].sort((a, b) => getTimeValue(a.valid_until) - getTimeValue(b.valid_until))
+      : [];
+  } catch (error) {
+    console.error('Không thể tải voucher cộng đồng:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tải danh sách voucher cộng đồng',
+      life: 2500,
+    });
+  } finally {
+    loadingCommunityVouchers.value = false;
+  }
+};
+
+const copyVoucherCode = async (code: string) => {
+  try {
+    await navigator.clipboard.writeText(code);
+    toast.add({
+      severity: 'success',
+      summary: 'Đã sao chép',
+      detail: `Đã copy mã ${code}`,
+      life: 2000,
+    });
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể copy mã, vui lòng thử lại',
+      life: 2500,
+    });
+  }
+};
+
+const formatVoucherCurrency = (value?: number) => {
+  const numberValue = typeof value === 'number' ? value : 0;
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(numberValue);
+};
+
+const formatVoucherDate = (value?: string | Date) => {
+  if (!value) return 'Không xác định';
+  return new Date(value).toLocaleDateString('vi-VN');
 };
 </script>
 
@@ -355,6 +441,48 @@ const addBookToCart = async (book: BookModel) => {
         </div>
       </section>
 
+      <!-- Recommendations Section -->
+      <section class="mt-16">
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <h2 class="text-3xl lg:text-4xl font-bold text-gray-900">Gợi ý cho bạn</h2>
+              <p class="text-xl text-gray-600">Dựa trên xu hướng mua nhiều</p>
+            </div>
+            <span class="text-sm text-gray-500">Cập nhật từ dữ liệu bán & review</span>
+          </div>
+
+          <div v-if="loadingRecs" class="text-center py-8 text-gray-500 flex items-center justify-center gap-2">
+            <i class="pi pi-spin pi-spinner"></i>
+            <span>Đang tải gợi ý...</span>
+          </div>
+
+          <div v-else-if="!recommended.length" class="text-center py-8 text-gray-500">
+            Chưa có gợi ý phù hợp. Hãy xem thêm các sách bán chạy.
+          </div>
+
+          <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div
+              v-for="book in recommended"
+              :key="book._id"
+              class="border rounded-xl p-3 bg-white hover:shadow-lg transition cursor-pointer"
+            >
+              <NuxtLink :to="`/book/${book.slug || book._id}`" class="block">
+                <div class="aspect-[3/4] bg-gray-50 rounded-lg overflow-hidden mb-3">
+                  <img :src="book.image_link || '/placeholder.jpg'" :alt="book.title" class="w-full h-full object-cover" />
+                </div>
+                <h3 class="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">{{ book.title }}</h3>
+                <p class="text-xs text-gray-500 line-clamp-1">{{ book.author || 'Tác giả đang cập nhật' }}</p>
+                <div class="mt-2 flex items-center justify-between">
+                  <span class="text-red-600 font-bold">{{ Number(book.price || 0).toLocaleString() }}₫</span>
+                  <span class="text-xs text-gray-500">Đã bán {{ book.raw_sold ?? book.sales_count ?? book.sold_quantity ?? 0 }}</span>
+                </div>
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Categories Section -->
       <section class="mt-16">
         <div class="bg-white rounded-2xl shadow-lg p-8">
@@ -455,22 +583,38 @@ const addBookToCart = async (book: BookModel) => {
 
         <!-- Voucher Codes -->
         <div class="bg-gray-50 rounded-xl p-6">
-          <h4 class="text-xl font-bold text-gray-900 mb-4">🎫 Mã giảm giá</h4>
-          <div class="grid gap-3">
-            <div class="flex items-center justify-between bg-white p-4 rounded-lg border-2 border-dashed border-gray-300">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-xl font-bold text-gray-900">🎫 Mã giảm giá</h4>
+            <Button
+              icon="pi pi-refresh"
+              label="Làm mới"
+              size="small"
+              outlined
+              :loading="loadingCommunityVouchers"
+              @click="fetchCommunityVouchers"
+            />
+          </div>
+          <div v-if="loadingCommunityVouchers" class="text-center py-6 text-gray-500">
+            <i class="pi pi-spin pi-spinner text-2xl mb-2"></i>
+            <p>Đang tải voucher cộng đồng...</p>
+          </div>
+          <div v-else-if="communityVouchers.length === 0" class="text-center py-4 text-gray-500">
+            Chưa có voucher cộng đồng nào đang hoạt động.
+          </div>
+          <div v-else class="grid gap-3">
+            <div
+              v-for="voucher in communityVouchers"
+              :key="voucher._id"
+              class="flex items-center justify-between bg-white p-4 rounded-lg border-2 border-dashed border-gray-300"
+            >
               <div>
-                <span class="font-bold text-lg text-red-600">BOOK20</span>
-                <p class="text-gray-600">Giảm 20% đơn từ 300k</p>
+                <span class="font-bold text-lg text-red-600">{{ voucher.code }}</span>
+                <p class="text-gray-600">
+                  Giảm {{ voucher.discount }}% đơn từ {{ formatVoucherCurrency(voucher.min_order_value) }}
+                </p>
+                <p class="text-xs text-gray-500">HSD: {{ formatVoucherDate(voucher.valid_until) }}</p>
               </div>
-              <Button label="Copy" size="small" outlined />
-            </div>
-            
-            <div class="flex items-center justify-between bg-white p-4 rounded-lg border-2 border-dashed border-gray-300">
-              <div>
-                <span class="font-bold text-lg text-blue-600">NEWBIE15</span>
-                <p class="text-gray-600">Giảm 15% cho khách hàng mới</p>
-              </div>
-              <Button label="Copy" size="small" outlined />
+              <Button label="Copy" size="small" outlined @click="copyVoucherCode(voucher.code)" />
             </div>
           </div>
         </div>

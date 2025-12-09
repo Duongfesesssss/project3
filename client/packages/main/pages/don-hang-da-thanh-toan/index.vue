@@ -79,7 +79,19 @@
               >
                 <!-- Book image -->
                 <div class="flex-shrink-0">
-                  <img 
+                  <NuxtLink
+                    v-if="getBookLink(item.book_id)"
+                    :to="getBookLink(item.book_id)"
+                    class="block"
+                  >
+                    <img 
+                      :src="item.book_id?.image_link || '/placeholder.jpg'" 
+                      :alt="item.book_id?.title || 'Không có tiêu đề'"
+                      class="w-20 h-24 object-cover rounded-lg shadow-sm"
+                    />
+                  </NuxtLink>
+                  <img
+                    v-else
                     :src="item.book_id?.image_link || '/placeholder.jpg'" 
                     :alt="item.book_id?.title || 'Không có tiêu đề'"
                     class="w-20 h-24 object-cover rounded-lg shadow-sm"
@@ -88,19 +100,36 @@
 
                 <!-- Book info -->
                 <div class="flex-1 min-w-0">
-                  <h3 class="font-semibold text-gray-900 line-clamp-2 mb-1">
+                  <NuxtLink
+                    v-if="getBookLink(item.book_id)"
+                    :to="getBookLink(item.book_id)"
+                    class="font-semibold text-gray-900 line-clamp-2 mb-1 hover:text-blue-600 transition"
+                  >
+                    {{ item.book_id?.title || 'Không có tiêu đề' }}
+                  </NuxtLink>
+                  <h3 v-else class="font-semibold text-gray-900 line-clamp-2 mb-1">
                     {{ item.book_id?.title || 'Không có tiêu đề' }}
                   </h3>
                   <p class="text-sm text-gray-600 mb-1">{{ item.book_id?.author || 'Không có tác giả' }}</p>
                   <p class="text-sm text-gray-500">{{ item.book_id?.publisher || 'Không có nhà xuất bản' }}</p>
                   
-                  <div class="mt-3 flex items-center justify-between">
-                    <!-- Price and quantity -->
-                    <div class="flex items-center space-x-4">
-                      <span class="text-lg font-bold text-red-600">
-                        {{ (item.price || 0).toLocaleString() }}đ
-                      </span>
-                      <span class="text-sm text-gray-600">x{{ item.quantity }}</span>
+                  <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex flex-col gap-2">
+                      <Button
+                        label="Đánh giá"
+                        icon="pi pi-star"
+                        size="small"
+                        outlined
+                        class="!w-max !text-amber-600 !border-amber-200 hover:!border-amber-400"
+                        :loading="isReviewButtonLoading(order._id, item.book_id?._id)"
+                        @click="openReviewDialog(order, item)"
+                      />
+                      <div class="flex items-center space-x-4">
+                        <span class="text-lg font-bold text-red-600">
+                          {{ (item.price || 0).toLocaleString() }}đ
+                        </span>
+                        <span class="text-sm text-gray-600">x{{ item.quantity }}</span>
+                      </div>
                     </div>
                     <div class="text-right">
                       <div class="text-lg font-bold text-gray-900">
@@ -178,6 +207,62 @@
       </div>
     </div>
   </div>
+
+  <!-- Review dialog -->
+  <Dialog
+    v-model:visible="reviewDialogVisible"
+    modal
+    :header="reviewModalTitle"
+    :style="{ width: '460px' }"
+    @hide="closeReviewDialog"
+  >
+    <div v-if="reviewTarget" class="space-y-4">
+      <div class="flex items-center gap-3">
+        <img
+          :src="reviewTarget.image"
+          :alt="reviewTarget.title"
+          class="w-16 h-20 rounded-lg object-cover shadow-sm"
+        />
+        <div>
+          <h3 class="font-semibold text-gray-900">{{ reviewTarget.title }}</h3>
+          <p class="text-sm text-gray-500">{{ reviewTarget.author }}</p>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Chọn số sao</label>
+        <Rating v-model="reviewRating" :cancel="false" class="text-amber-400" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Nội dung đánh giá</label>
+        <Textarea
+          v-model="reviewComment"
+          rows="4"
+          autoResize
+          class="w-full"
+          placeholder="Chia sẻ cảm nhận của bạn về cuốn sách này"
+        />
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <Button label="Hủy" outlined severity="secondary" @click="closeReviewDialog" />
+        <Button
+          label="Gửi đánh giá"
+          icon="pi pi-send"
+          class="!bg-blue-600 hover:!bg-blue-700"
+          :disabled="!reviewComment.trim() || !reviewRating"
+          :loading="submittingReview"
+          @click="submitReviewFromOrder"
+        />
+      </div>
+    </div>
+
+    <div v-else class="text-center text-gray-500">
+      <i class="pi pi-info-circle text-2xl mb-2"></i>
+      <p>Không tìm thấy thông tin sách để đánh giá.</p>
+    </div>
+  </Dialog>
 </template>
 
 <script setup>
@@ -187,6 +272,7 @@ import { useRouter } from 'vue-router';
 import { ThanhToanService } from '~/packages/base/services/thanh-toan.service';
 import { GioHangService } from '~/packages/base/services/gio-hang.service';
 import { useCartStore } from '~/packages/base/stores/cart.store';
+import { ReviewService } from '~/packages/base/services/review.service';
 
 definePageMeta({
   layout: 'default',
@@ -204,10 +290,18 @@ const orders = ref([]);
 const first = ref(0);
 const limit = ref(10);
 const totalRecords = ref(0);
+const reviewDialogVisible = ref(false);
+const reviewTarget = ref(null);
+const reviewRating = ref(5);
+const reviewComment = ref('');
+const submittingReview = ref(false);
+const reviewOrderId = ref('');
+const reviewEligibilityLoadingKey = ref('');
 
 // Computed
 const totalPages = computed(() => Math.ceil(totalRecords.value / limit.value));
 const currentPage = computed(() => Math.floor(first.value / limit.value) + 1);
+const reviewModalTitle = computed(() => reviewTarget.value ? `Đánh giá "${reviewTarget.value.title}"` : 'Đánh giá sách');
 
 // Methods
 const fetchPaidOrders = async () => {
@@ -270,6 +364,11 @@ const getStatusText = (status) => {
     'cancelled': 'Đã hủy'
   };
   return statusMap[status] || status;
+};
+
+const getBookLink = (book) => {
+  const slugOrId = book?.slug || book?._id;
+  return slugOrId ? `/book/${slugOrId}` : '';
 };
 
 const viewOrderDetail = (orderId) => {
@@ -335,6 +434,129 @@ const reorderItems = async (order) => {
 const onPageChange = (event) => {
   first.value = event.first;
   // Nếu cần phân trang từ server, gọi lại API ở đây
+};
+
+const getReviewLoadingKey = (orderId, bookId) => `${orderId}-${bookId || ''}`;
+
+const isReviewButtonLoading = (orderId, bookId) => {
+  return reviewEligibilityLoadingKey.value === getReviewLoadingKey(orderId, bookId);
+};
+
+const reviewReasonMessages = {
+  already_reviewed: 'Bạn đã đánh giá sách này rồi.',
+  not_purchased: 'Bạn cần hoàn tất đơn hàng để đánh giá.'
+};
+
+const openReviewDialog = async (order, item) => {
+  const bookId = item?.book_id?._id;
+  if (!bookId) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Thiếu dữ liệu',
+      detail: 'Không tìm thấy thông tin sách để đánh giá.',
+      life: 3000
+    });
+    return;
+  }
+
+  const key = getReviewLoadingKey(order._id, bookId);
+  reviewEligibilityLoadingKey.value = key;
+
+  try {
+    const result = await ReviewService.canUserReview(bookId);
+
+    if (!result) {
+      toast.add({
+        severity: 'error',
+        summary: 'Lỗi',
+        detail: 'Không kiểm tra được quyền đánh giá. Vui lòng thử lại.',
+        life: 3000
+      });
+      return;
+    }
+
+    if (!result.can_review) {
+      toast.add({
+        severity: 'info',
+        summary: 'Thông báo',
+        detail: reviewReasonMessages[result.reason] || 'Bạn chưa thể đánh giá sách này.',
+        life: 3000
+      });
+      return;
+    }
+
+    reviewTarget.value = {
+      orderId: result.order_id || order._id,
+      bookId,
+      title: item.book_id?.title || 'Không có tiêu đề',
+      author: item.book_id?.author || 'Không có tác giả',
+      image: item.book_id?.image_link || '/placeholder.jpg'
+    };
+    reviewOrderId.value = result.order_id || order._id;
+    reviewRating.value = 5;
+    reviewComment.value = '';
+    reviewDialogVisible.value = true;
+  } catch (error) {
+    console.error('Lỗi khi mở form đánh giá:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể mở form đánh giá lúc này.',
+      life: 3000
+    });
+  } finally {
+    reviewEligibilityLoadingKey.value = '';
+  }
+};
+
+const closeReviewDialog = () => {
+  reviewDialogVisible.value = false;
+  reviewTarget.value = null;
+  reviewOrderId.value = '';
+  reviewRating.value = 5;
+  reviewComment.value = '';
+};
+
+const submitReviewFromOrder = async () => {
+  if (!reviewTarget.value || !reviewOrderId.value) return;
+  if (!reviewComment.value.trim() || !reviewRating.value) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Thiếu nội dung',
+      detail: 'Vui lòng chọn số sao và nhập nhận xét.',
+      life: 3000
+    });
+    return;
+  }
+
+  submittingReview.value = true;
+  try {
+    await ReviewService.createReview({
+      book_id: reviewTarget.value.bookId,
+      order_id: reviewOrderId.value,
+      rating: reviewRating.value,
+      comment: reviewComment.value.trim()
+    });
+
+    toast.add({
+      severity: 'success',
+      summary: 'Thành công',
+      detail: 'Đánh giá của bạn đã được gửi.',
+      life: 3000
+    });
+
+    closeReviewDialog();
+  } catch (error) {
+    console.error('Lỗi khi gửi đánh giá:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: error?.message || 'Không thể gửi đánh giá. Vui lòng thử lại.',
+      life: 3000
+    });
+  } finally {
+    submittingReview.value = false;
+  }
 };
 
 onMounted(() => {

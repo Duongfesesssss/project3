@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 import { useRouter } from 'vue-router';
 import { GioHangService } from '~/packages/base/services/gio-hang.service';
 import { VoucherService } from '~/packages/base/services/voucher.service';
@@ -8,10 +9,13 @@ import { ThanhToanService } from '~/packages/base/services/thanh-toan.service';
 import type { GioHangModel } from '~/packages/base/models/dto/response/gio-hang/gio-hang.model';
 import type { VoucherModel } from '~/packages/base/models/dto/response/voucher/voucher.model';
 import { useCartStore } from '~/packages/base/stores/cart.store';
+import { useConfirmDialog } from '~/packages/base/composables/useConfirmDialog';
 
 const { data: authData } = useAuth();
 const toast = useToast();
 const router = useRouter();
+const confirm = useConfirm();
+const { showConfirmDialog } = useConfirmDialog();
 
 const cart = ref<GioHangModel | null>(null);
 const loading = ref(false);
@@ -98,7 +102,6 @@ const updateQuantity = async (itemId: string, newQuantity: number) => {
 };
 
 const removeItem = async (itemId: string) => {
-  if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?')) return;
   try {
     const userId = authData.value?.user?._id;
     if (!userId) {
@@ -117,6 +120,21 @@ const removeItem = async (itemId: string) => {
   } catch {
     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể xóa sản phẩm', life: 3000 });
   }
+};
+
+const confirmRemoveItem = (itemId: string) => {
+  showConfirmDialog(
+    confirm,
+    'Bạn có muốn xóa sản phẩm này khỏi giỏ hàng?',
+    'Xác nhận',
+    'pi pi-question-circle',
+    () => {
+      removeItem(itemId);
+    },
+    () => {},
+    '',
+    ' p-button-danger'
+  );
 };
 
 const toggleSelectAll = () => {
@@ -236,6 +254,11 @@ const proceedToCheckout = async () => {
   }
 };
 
+const getBookLink = (book: any) => {
+  const slugOrId = book?.slug || book?._id;
+  return slugOrId ? `/book/${slugOrId}` : '';
+};
+
 
 
 onMounted(() => {
@@ -247,6 +270,7 @@ onMounted(() => {
 <template>
   <div class="min-h-screen bg-gray-50 py-8">
     <Toast />
+    <ConfirmDialog group="templateConfirmDialog" />
     
     <div class="max-w-7xl mx-auto px-4">
       <!-- Breadcrumb -->
@@ -326,7 +350,19 @@ onMounted(() => {
 
                   <!-- Book image -->
                   <div class="flex-shrink-0">
+                    <NuxtLink
+                      v-if="getBookLink(item.book_id)"
+                      :to="getBookLink(item.book_id)"
+                      class="block rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <img 
+                        :src="item.book_id?.image_link || '/placeholder.jpg'" 
+                        :alt="item.book_id?.title || 'Không có tiêu đề'"
+                        class="w-20 h-24 object-cover rounded-lg shadow-sm cursor-pointer transition-transform hover:scale-[1.02]"
+                      />
+                    </NuxtLink>
                     <img 
+                      v-else
                       :src="item.book_id?.image_link || '/placeholder.jpg'" 
                       :alt="item.book_id?.title || 'Không có tiêu đề'"
                       class="w-20 h-24 object-cover rounded-lg shadow-sm"
@@ -336,7 +372,16 @@ onMounted(() => {
                   <!-- Book info -->
                   <div class="flex-1 min-w-0">
                     <h3 class="font-semibold text-gray-900 line-clamp-2 mb-1">
-                      {{ item.book_id?.title ?? 'Không có tiêu đề' }}
+                      <NuxtLink
+                        v-if="getBookLink(item.book_id)"
+                        :to="getBookLink(item.book_id)"
+                        class="hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                      >
+                        {{ item.book_id?.title ?? 'Không có tiêu đề' }}
+                      </NuxtLink>
+                      <span v-else>
+                        {{ item.book_id?.title ?? 'Không có tiêu đề' }}
+                      </span>
                     </h3>
                     <p class="text-sm text-gray-600 mb-1">{{ item.book_id?.author ?? 'Không có tác giả' }}</p>
                     <p class="text-sm text-gray-500">{{ item.book_id?.publisher ?? 'Không có nhà xuất bản' }}</p>
@@ -375,7 +420,7 @@ onMounted(() => {
 
                         <!-- Remove button -->
                         <button 
-                          @click="removeItem(item._id!)"
+                          @click="confirmRemoveItem(item._id!)"
                           class="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50"
                           title="Xóa sản phẩm"
                         >
