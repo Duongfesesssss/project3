@@ -38,7 +38,7 @@ services:
       - "3000:3000"
     environment:
       # Client-side fetch chạy ở trình duyệt → phải gọi domain public thông qua Nginx
-      - NUXT_PUBLIC_API_BASE=https://18.205.237.3
+      - NUXT_PUBLIC_API_BASE=https://bookie.io.vn
       - NUXT_PUBLIC_API_PREFIX=/api
       - NUXT_HOST=0.0.0.0
       - NUXT_PORT=3000
