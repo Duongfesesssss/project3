@@ -147,11 +147,26 @@
                 :loading="loading"
               />
               <Button
+                icon="pi pi-camera"
+                label="Tìm bằng hình ảnh"
+                class="px-8 py-3"
+                severity="secondary"
+                :loading="imageSearching"
+                @click="triggerImageInput"
+              />
+              <Button
                 icon="pi pi-refresh"
                 label="Đặt lại"
                 outlined
                 class="px-8 py-3"
                 @click="resetSearch"
+              />
+              <input
+                ref="imageInputRef"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="onImageSelected"
               />
             </div>
           </div>
@@ -300,6 +315,8 @@ const hasSearched = ref(false)
 const viewMode = ref('grid') // 'grid' | 'list'
 const searchResults = ref([])
 const totalResults = ref(0)
+const imageSearching = ref(false)
+const imageInputRef = ref<HTMLInputElement | null>(null)
 
 // Dropdown Data
 const genres = ref([])
@@ -467,6 +484,52 @@ const resetSearch = () => {
   totalResults.value = 0
   hasSearched.value = false
   paginationFirst.value = 0
+}
+
+const triggerImageInput = () => {
+  imageInputRef.value?.click()
+}
+
+const onImageSelected = async (event: Event) => {
+  const target = event.target as HTMLInputElement | null
+  const file = target?.files?.[0]
+  if (!file) return
+  await searchByImage(file)
+  if (target) {
+    target.value = ''
+  }
+}
+
+const searchByImage = async (file: File) => {
+  if (imageSearching.value) return
+  imageSearching.value = true
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch('/api/vision/search', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      throw new Error(`Upload hoặc nhận diện thất bại: ${response.status}`)
+    }
+
+    const result = await response.json()
+
+    if (result?.status === 'OK' && result.query) {
+      searchParams.keyword = result.query
+      await performSearch()
+    } else {
+      console.warn('Không trích xuất được văn bản hoặc gợi ý từ ảnh', result)
+    }
+  } catch (error) {
+    console.error('Lỗi tìm kiếm bằng hình ảnh:', error)
+  } finally {
+    imageSearching.value = false
+  }
 }
 
 const onPageChange = (event) => {

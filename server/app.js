@@ -1,17 +1,20 @@
 require('dotenv').config();
+const http = require('http');
 const express = require('express');
+const { Server } = require('socket.io');
 const { connectToDB } = require('./db');
 const cors = require('cors');
 
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const { setupSupportSocket } = require('./sockets/supportSocket');
 const app = express();
 const port = process.env.PORT || 8888;
-const authRoutes = require("./routes/auth");
-const bookRouter = require("./routes/book");
-const publisherRouter = require("./routes/publisherRoutes");
+const authRoutes = require('./routes/auth');
+const bookRouter = require('./routes/book');
+const publisherRouter = require('./routes/publisherRoutes');
 const supplierRouter = require('./routes/supplierRoutes');
-const genreRouter = require("./routes/genre-book");
+const genreRouter = require('./routes/genre-book');
 const cartRouter = require('./routes/cartRoutes');
 const orderRouter = require('./routes/orderRoutes');
 const voucherRouter = require('./routes/voucherRoutes');
@@ -23,6 +26,8 @@ const textToSpeechRouter = require('./routes/textToSpeechRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const memberRouter = require('./routes/memberRoutes');
 const recommendationRouter = require('./routes/recommendationRoutes');
+const supportRouter = require('./routes/supportRoutes');
+const visionRouter = require('./routes/visionRoutes');
 
 
 require('./models/stockTransactionModel');
@@ -134,6 +139,8 @@ app.use('/api/text-to-speech', textToSpeechRouter);
 app.use('/api/review', reviewRouter);
 app.use('/api/member', memberRouter);
 app.use('/api/recommendations', recommendationRouter);
+app.use('/api/support', supportRouter);
+app.use('/api/vision', visionRouter);
 
 
 const swaggerOptions = {
@@ -155,7 +162,18 @@ const swaggerOptions = {
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: (origin, callback) => callback(null, true),
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true,
+  },
+});
+
+setupSupportSocket(io);
+
 // Khởi động server
-app.listen(port, () => {
+httpServer.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });

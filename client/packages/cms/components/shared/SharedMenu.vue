@@ -40,6 +40,11 @@ const model = computed(() => {
               to: '/cms/the-loai',
             },
             {
+              label: 'Hỗ trợ khách hàng',
+              icon: 'pi pi-fw pi-comments',
+              to: '/cms/support',
+            },
+            {
               label: 'Quản lý đơn hàng',
               icon: 'pi pi-fw pi-shopping-cart',
               to: '/cms/don-hang',

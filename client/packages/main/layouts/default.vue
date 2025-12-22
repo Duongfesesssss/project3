@@ -3,6 +3,7 @@ import { useAuthStore } from '~/packages/base/stores/auth.store';
 import { useCartStore } from '~/packages/base/stores/cart.store';
 import ThongTinCaNhan from '~/components/shared/modals/ThongTinCaNhan.vue';
 import ThayDoiMatKhau from '~/components/shared/modals/ThayDoiMatKhau.vue';
+import SupportChatWidget from '~/components/support/SupportChatWidget.vue';
 
 useHead({
   htmlAttrs: {
@@ -575,6 +576,7 @@ const cartItemCount = computed(() => cartStore.totalQuantity);
       :is-visible="showChangePasswordModal" 
       @hide-modal="showChangePasswordModal = false" 
     />
+    <SupportChatWidget />
   </div>
 </template>
 
