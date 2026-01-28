@@ -9,8 +9,6 @@ definePageMeta({
 <template>
   <div>
 
-  sfadasdasđ
-
-  CMSSSSS 
+  Hello from the CMS Index Page! 
   </div>
 </template>
