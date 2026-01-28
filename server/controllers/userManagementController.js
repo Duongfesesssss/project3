@@ -8,8 +8,14 @@ const getAllUsers = async (req, res) => {
 
     // Tạo filter
     const filter = {};
-    if (role && ['customer', 'staff', 'admin'].includes(role)) {
-      filter.role = role;
+    if (role) {
+      // Hỗ trợ nhiều role: 'staff,admin' hoặc 'customer'
+      const roles = role.split(',').map(r => r.trim()).filter(r => ['customer', 'staff', 'admin'].includes(r));
+      if (roles.length === 1) {
+        filter.role = roles[0];
+      } else if (roles.length > 1) {
+        filter.role = { $in: roles };
+      }
     }
     if (is_active !== undefined) {
       filter.is_active = is_active === 'true';
