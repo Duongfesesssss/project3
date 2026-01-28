@@ -34,6 +34,11 @@ require('./models/stockTransactionModel');
 
 const multer = require('multer');
 const path = require('path');
+const { uploadBuffer } = require('./services/s3Service');
+
+// S3 public URL base
+const S3_PUBLIC_URL = `https://${process.env.S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com`;
+
 // Sử dụng middleware để xử lý dữ liệu JSON
 app.use(express.json());
 app.use(cors({
@@ -50,36 +55,39 @@ connectToDB();
 
 
 
-// Cấu hình multer để lưu trữ file
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Kiểm tra loại file để lưu vào thư mục tương ứng
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, 'uploads/images/'); // Lưu ảnh vào thư mục 'uploads/images'
-    } else if (file.mimetype.startsWith('video/')) {
-      cb(null, 'uploads/videos/'); // Lưu video vào thư mục 'uploads/videos'
-    } else {
-      cb(new Error('File không hợp lệ! Chỉ chấp nhận ảnh và video.'));
-    }
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
+// Cấu hình multer - dùng memory storage để upload lên S3
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
 });
 
-const upload = multer({ storage });
-
-// API tải ảnh lên
-app.post('/api/upload/images', upload.single('file'), (req, res) => {
+// API tải ảnh lên S3
+app.post('/api/upload/images', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Không có file ảnh nào được tải lên' });
     }
 
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/images/${req.file.filename}`;
+    if (!req.file.mimetype.startsWith('image/')) {
+      return res.status(400).json({ error: 'File không hợp lệ! Chỉ chấp nhận file ảnh.' });
+    }
+
+    const filename = `${Date.now()}-${req.file.originalname.replace(/\s+/g, '-')}`;
+    const s3Key = `uploads/${filename}`;
+
+    await uploadBuffer({
+      buffer: req.file.buffer,
+      mimeType: req.file.mimetype,
+      fileName: filename,
+      key: s3Key,
+    });
+
+    // Trả về S3 public URL trực tiếp
+    const fileUrl = `${S3_PUBLIC_URL}/${s3Key}`;
     res.json({
       url: fileUrl,
-      filename: req.file.filename,
+      filename: filename,
       mimetype: req.file.mimetype,
       size: req.file.size,
     });
@@ -89,9 +97,8 @@ app.post('/api/upload/images', upload.single('file'), (req, res) => {
   }
 });
 
-// API tải video
-app.post('/api/upload/videos', upload.single('file'), (req, res) => {
-
+// API tải video lên S3
+app.post('/api/upload/videos', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Không có file video nào được tải lên' });
@@ -101,10 +108,21 @@ app.post('/api/upload/videos', upload.single('file'), (req, res) => {
       return res.status(400).json({ error: 'File không hợp lệ! Chỉ chấp nhận file video.' });
     }
 
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/videos/${req.file.filename}`;
+    const filename = `${Date.now()}-${req.file.originalname.replace(/\s+/g, '-')}`;
+    const s3Key = `uploads/${filename}`;
+
+    await uploadBuffer({
+      buffer: req.file.buffer,
+      mimeType: req.file.mimetype,
+      fileName: filename,
+      key: s3Key,
+    });
+
+    // Trả về S3 public URL trực tiếp
+    const fileUrl = `${S3_PUBLIC_URL}/${s3Key}`;
     res.json({
       url: fileUrl,
-      filename: req.file.filename,
+      filename: filename,
       mimetype: req.file.mimetype,
       size: req.file.size,
     });
@@ -114,9 +132,16 @@ app.post('/api/upload/videos', upload.single('file'), (req, res) => {
   }
 });
 
-// Cung cấp thư mục tĩnh để truy cập ảnh và video đã tải lên
-app.use('/uploads/images', express.static(path.join(__dirname, 'uploads/images')));
-app.use('/uploads/videos', express.static(path.join(__dirname, 'uploads/videos')));
+// Redirect ảnh/video cũ (URL format cũ trong DB) tới S3 public URL
+app.get('/uploads/images/:filename', (req, res) => {
+  const s3Key = `uploads/${req.params.filename}`;
+  res.redirect(`${S3_PUBLIC_URL}/${s3Key}`);
+});
+
+app.get('/uploads/videos/:filename', (req, res) => {
+  const s3Key = `uploads/${req.params.filename}`;
+  res.redirect(`${S3_PUBLIC_URL}/${s3Key}`);
+});
 
 // Route cho đường dẫn gốc
 app.get('/', (req, res) => {
